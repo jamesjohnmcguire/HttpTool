@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Abot.Core;
 using Abot.Crawler;
 using Abot.Poco;
+using HtmlAgilityPack;
 
 namespace WebTools
 {
@@ -121,57 +122,190 @@ namespace WebTools
 		public void ProcessPageCrawlCompleted(object sender,
 			PageCrawlCompletedArgs e)
 		{
-			CrawledPage crawledPage = e.CrawledPage;
-
-			string page = crawledPage.Uri.Host +
-				crawledPage.Uri.PathAndQuery + crawledPage.Uri.Fragment;
-			pagesCrawed.Add(page);
-
-			if (crawledPage.WebException != null ||
-				crawledPage.HttpWebResponse.StatusCode != HttpStatusCode.OK)
+			try
 			{
-				Console.ForegroundColor = ConsoleColor.Red;
-			}
+				CrawledPage crawledPage = e.CrawledPage;
 
-			if ((true == showGood) || (crawledPage.WebException != null) ||
-				(crawledPage.HttpWebResponse.StatusCode != HttpStatusCode.OK))
-			{
-				Console.WriteLine("{0}: {1}",
-				crawledPage.HttpWebResponse.StatusCode,
-				crawledPage.Uri.AbsoluteUri);
-			}
+				string page = crawledPage.Uri.Host +
+					crawledPage.Uri.PathAndQuery + crawledPage.Uri.Fragment;
+				pagesCrawed.Add(page);
 
-			Console.ForegroundColor = ConsoleColor.White;
+				if (crawledPage.WebException != null ||
+					crawledPage.HttpWebResponse.StatusCode != HttpStatusCode.OK)
+				{
+					Console.ForegroundColor = ConsoleColor.Red;
+				}
 
-			string text = crawledPage.Content.Text;
-			if ((string.IsNullOrEmpty(text)) &&
-				((!crawledPage.Uri.AbsoluteUri.EndsWith(".jpg")) &&
-				(!crawledPage.Uri.AbsoluteUri.EndsWith(".pdf"))))
-			{
-				Console.ForegroundColor = ConsoleColor.Red;
-				Console.WriteLine("Page had no content {0}", crawledPage.Uri.AbsoluteUri);
-				Console.WriteLine("Parent: {0}", crawledPage.ParentUri.AbsoluteUri);
+				if ((true == showGood) || (crawledPage.WebException != null) ||
+					(crawledPage.HttpWebResponse.StatusCode != HttpStatusCode.OK))
+				{
+					string url = string.Empty;
+					if (!string.IsNullOrEmpty(crawledPage.Uri.AbsoluteUri))
+					{
+						url = crawledPage.Uri.AbsoluteUri;
+					}
+
+					if (null == crawledPage)
+					{
+						WriteError("crawledPage is null");
+					}
+					else if (null == crawledPage.HttpWebResponse)
+					{
+						WriteError("crawledPage.HttpWebResponse is null");
+					}
+
+					Console.WriteLine("{0}: {1}",
+						crawledPage.HttpWebResponse.StatusCode, url);
+				}
+
 				Console.ForegroundColor = ConsoleColor.White;
+				if ((!crawledPage.Uri.AbsoluteUri.EndsWith(".jpg")) &&
+					(!crawledPage.Uri.AbsoluteUri.EndsWith(".pdf")))
+				{
+					string text = crawledPage.Content.Text;
+
+					if (string.IsNullOrEmpty(text))
+					{
+						Console.ForegroundColor = ConsoleColor.Red;
+						string message = string.Format(
+							"Page had no content {0}",
+							crawledPage.Uri.AbsoluteUri);
+						WriteError(message);
+						message = string.Format("Parent: {0}",
+							crawledPage.ParentUri.AbsoluteUri);
+						WriteError(message);
+					}
+					else
+					{
+						var htmlAgilityPackDocument = crawledPage.HtmlDocument;
+						//var angleSharpHtmlDocument = crawledPage.AngleSharpHtmlDocument;
+
+						CheckContentErrors(crawledPage,
+							htmlAgilityPackDocument, text);
+						FourOhFourChecks(crawledPage, text);
+						CheckImages(crawledPage, htmlAgilityPackDocument);
+					}
+				}
+			}
+			catch (Exception exception)
+			{
+				WriteError(exception.ToString());
 			}
 
-			if (errors.Any(text.Contains))
-			{
-				Console.ForegroundColor = ConsoleColor.Red;
-				Console.WriteLine("Page has errors: {0}", crawledPage.Uri.AbsoluteUri);
-				Console.ForegroundColor = ConsoleColor.White;
-			}
-
-			if (fourOhfourPages.Any(text.Contains))
-			{
-				string output = fourOhfourPages.Single(text.Contains).ToString();
-				Console.ForegroundColor = ConsoleColor.Red;
-				Console.WriteLine("Page has 404 link: {0}", crawledPage.Uri.AbsoluteUri);
-				Console.WriteLine("404 link: {0}", output);
-				Console.ForegroundColor = ConsoleColor.White;
-			}
-			//var htmlAgilityPackDocument = crawledPage.HtmlDocument; //Html Agility Pack parser
-			//var angleSharpHtmlDocument = crawledPage.AngleSharpHtmlDocument; //AngleSharp parser
 			pageCount++;
+		}
+
+		private static void CheckContentErrors(CrawledPage crawledPage,
+			HtmlDocument document, string pageContent)
+		{
+			if (errors.Any(pageContent.Contains))
+			{
+				string message = string.Format("Page has errors: {0}",
+					crawledPage.Uri.AbsoluteUri);
+				WriteError(message);
+			}
+
+			//HtmlNode.ElementsFlags.Remove("option");
+
+			IEnumerable<HtmlAgilityPack.HtmlParseError> parseErrors =
+				document.ParseErrors;
+			if (null != parseErrors)
+			{
+				foreach (HtmlAgilityPack.HtmlParseError error in parseErrors)
+				{
+					//HtmlParseErrorCode.TagNotClosed:
+					if (!error.Reason.Equals(
+						"End tag </option> is not required"))
+					{
+						string message = string.Format(
+							"Page has error: {0} in {1} at line: {2}",
+							error.Reason, crawledPage.Uri.AbsoluteUri,
+							error.Line);
+						WriteError(message);
+					}
+				}
+			}
+		}
+
+		private static void CheckImages(CrawledPage crawledPage,
+			HtmlDocument document)
+		{
+			HtmlAgilityPack.HtmlNodeCollection nodes =
+				document.DocumentNode.SelectNodes(@"//img[@src]");
+
+			foreach (HtmlAgilityPack.HtmlNode image in nodes)
+			{
+				var source = image.Attributes["src"];
+				if (!source.Value.Equals("/cms/upimg/kagu/"))
+				{
+					string imageUrl = string.Format("{0}://{1}{2}",
+					crawledPage.Uri.Scheme, crawledPage.Uri.Host,
+					source.Value);
+
+					bool exists = URLExists(imageUrl);
+
+					if (false == exists)
+					{
+						string message = string.Format("image missing: {0} in {1}",
+							imageUrl, crawledPage.Uri.AbsoluteUri);
+						WriteError(message);
+					}
+				}
+			}
+		}
+
+		private static void FourOhFourChecks(CrawledPage crawledPage,
+			string pageContent)
+		{
+			if (fourOhfourPages.Any(pageContent.Contains))
+			{
+				string output = fourOhfourPages.Single(
+					pageContent.Contains).ToString();
+				string message = string.Format("Page has 404 link: {0}",
+					crawledPage.Uri.AbsoluteUri);
+				WriteError(message);
+				message = string.Format("404 link: {0}", output);
+				WriteError(message);
+			}
+		}
+
+		private static bool URLExists(string url)
+		{
+			bool result = true;
+			HttpWebResponse response = null;
+
+			try
+			{
+				WebRequest webRequest = WebRequest.Create(url);
+				webRequest.Timeout = 1200; // miliseconds
+				webRequest.Method = "HEAD";
+				response = (HttpWebResponse)webRequest.GetResponse();
+			}
+			catch
+			{
+				result = false;
+			}
+			finally
+			{
+				if (response != null)
+				{
+					response.Close();
+				}
+			}
+
+			return result;
+		}
+
+		private static void WriteError(string message)
+		{
+			Console.ForegroundColor = ConsoleColor.Red;
+			Console.WriteLine(message);
+			Console.ForegroundColor = ConsoleColor.White;
+		}
+
+		private static void ValidateFromW3Org(string url)
+		{
+
 		}
 	}
 }
