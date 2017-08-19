@@ -47,8 +47,8 @@ namespace HttpTool
 				{
 					Console.WriteLine("Starting...");
 					SiteTest tester = new SiteTest();
+					tester.SavePage = true;
 					tester.Test(arguments[0]);
-					//tester.Temp();
 				}
 			}
 			catch (Exception exception)

@@ -39,7 +39,14 @@ namespace WebTools
 			cookieJar.Add(cookie);
 		}
 
-		public string GetRequest(string url)
+		public HttpResponseMessage RequestGetResponse(string url)
+		{
+			HttpResponseMessage response = client.GetAsync(url).Result;
+
+			return response;
+		}
+
+		public string RequestGetResponseAsString(string url)
 		{
 			string response = client.GetStringAsync(url).Result;
 

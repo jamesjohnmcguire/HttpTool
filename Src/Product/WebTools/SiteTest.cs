@@ -8,6 +8,7 @@ using HtmlAgilityPack;
 using Newtonsoft.Json;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using DigitalZenWorks.Common.Utils;
 
 namespace WebTools
 {
@@ -22,6 +23,8 @@ namespace WebTools
 		private IList<string> pagesCrawed = null;
 		private bool showGood = false;
 
+		public bool SavePage { get; set; }
+
 		public SiteTest()
 		{
 			pagesCrawed = new List<string>();
@@ -29,10 +32,6 @@ namespace WebTools
 			client = new RestClient();
 		}
 
-		public void Temp()
-		{
-			string response = client.GetRequest("http://dzw.localhost");
-		}
 		public void Test(string url)
 		{
 			pageCount = 0;
@@ -42,21 +41,13 @@ namespace WebTools
 			crawler.PageCrawlStarting += ProcessPageCrawlStarted;
 			crawler.PageCrawlCompletedAsync += ProcessPageCrawlCompleted;
 
-			CrawlDecision doCrawl = new CrawlDecision();
-			doCrawl.Allow = true;
-			CrawlDecision dontCrawl = new CrawlDecision();
-			dontCrawl.Allow = false;
-			dontCrawl.Reason = "Don't want to repeat crawled pages";
-
 			crawler.ShouldCrawlPage((pageToCrawl, crawlContext) =>
 			{
-				if (pagesCrawed.Contains(pageToCrawl.Uri.AbsolutePath))
-				{
-					return dontCrawl;
-				}
-
-				return doCrawl;
+				return CrawlPage(pageToCrawl);
 			});
+
+			Login("https://www.euro-casa.co.jp/mariner/product/27",
+				"jamesjohnmcguire@gmail.com", "jamesjohnmcguire@gmail.com");
 
 			Uri uri = new Uri(url);
 			CrawlResult result = crawler.Crawl(uri);
@@ -87,6 +78,15 @@ namespace WebTools
 					crawledPage.HttpWebResponse.StatusCode != HttpStatusCode.OK)
 				{
 					Console.ForegroundColor = ConsoleColor.Red;
+				}
+
+				if (crawledPage.HttpWebRequest.RequestUri.AbsoluteUri !=
+					crawledPage.HttpWebResponse.ResponseUri.AbsoluteUri)
+				{
+					//This is a redirect
+					Console.WriteLine("Redirected from:{0} to: {1}",
+						crawledPage.HttpWebRequest.RequestUri.AbsoluteUri,
+						crawledPage.HttpWebResponse.ResponseUri.AbsoluteUri);
 				}
 
 				if ((true == showGood) || (crawledPage.WebException != null) ||
@@ -139,7 +139,17 @@ namespace WebTools
 							htmlAgilityPackDocument, text);
 						CheckImages(crawledPage, htmlAgilityPackDocument);
 
-						ValidateFromW3Org(crawledPage.Uri.ToString());
+						//ValidateFromW3Org(crawledPage.Uri.ToString());
+
+						if (true == SavePage)
+						{
+							string[] parts = crawledPage.Uri.LocalPath.Split(
+								new char[] { '/' });
+							string path = parts.Last() + crawledPage.Uri.Query;
+							path = path.Replace("?", "__");
+							path = path.Replace('\\', '-');
+							FileUtils.SaveFile(text, path);
+						}
 					}
 				}
 			}
@@ -158,7 +168,7 @@ namespace WebTools
 
 			string message = string.Format("Checking: {0}",
 				page.Uri.AbsolutePath);
-			WriteStatus(message);
+			//WriteStatus(message);
 		}
 
 		private static void CheckContentErrors(CrawledPage crawledPage,
@@ -234,23 +244,28 @@ namespace WebTools
 			Console.SetCursorPosition(0, currentLineCursor);
 		}
 
+		private CrawlDecision CrawlPage(PageToCrawl page)
+		{
+			CrawlDecision doCrawl = new CrawlDecision();
+			doCrawl.Allow = true;
+
+			if (pagesCrawed.Contains(page.Uri.AbsolutePath))
+			{
+				doCrawl.Reason = "Don't want to repeat crawled pages";
+				doCrawl.Allow = false;
+			}
+
+			return doCrawl;
+		}
+
 		private void Login(string url, string username, string password)
 		{
-			client.AddCookie("EuroCasaEmail", "jamesjohnmcguire@gmail.com");
+			string[] keys = { "mode", "id", "section", "section_id", "email",
+				"email_check", "submit" };
+			string[] values = { "login", "27", "brand", "6", username,
+				password, "送信" };
 
-			IList<KeyValuePair<string, string>> parameters =
-				new List<KeyValuePair<string, string>>();
-
-			KeyValuePair<string, string> pair =
-				new KeyValuePair<string, string>("email", username);
-			parameters.Add(pair);
-
-			pair =
-				new KeyValuePair<string, string>("email_check", password);
-			parameters.Add(pair);
-
-			string response =  client.Request(HttpMethod.Post,
-				@"https://www.euro-casa.co.jp/mariner/product/27", parameters);
+			client.Request(HttpMethod.Post, url, keys, values);
 		}
 
 		private static bool URLExists(string url)
@@ -284,7 +299,7 @@ namespace WebTools
 		{
 			string validator = string.Format(
 				"http://validator.w3.org/nu/?doc={0}&out=json", url);
-			string response = client.GetRequest(validator);
+			string response = client.RequestGetResponseAsString(validator);
 
 			//IList<ValidationResult> results = JsonConvert.DeserializeObject<
 			//	IList<ValidationResult>>(response);
