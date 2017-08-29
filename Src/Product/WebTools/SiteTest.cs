@@ -14,14 +14,21 @@ namespace WebTools
 {
 	public class SiteTest
 	{
+		private DocumentChecks checks = DocumentChecks.Basic |
+			DocumentChecks.ContentErrors | DocumentChecks.EmptyContent |
+			DocumentChecks.ImagesExist | DocumentChecks.ParseErrors |
+			DocumentChecks.Redirect;
 		private RestClient client = null;
 		private static string[] errors = { "A PHP Error was encountered",
 			"A Database Error Occurred", "Parse error",
 			"データベースエラーが発生しました" };
+		private static string[] ignoreTypes =
+			{ "gif", "jpg", "jpeg", "pdf", "png" };
 		private IList<string> imagesChecked = null;
 		private int pageCount = 0;
 		private IList<string> pagesCrawed = null;
 		private bool showGood = false;
+		private static Object thisLock = new Object();
 
 		public bool SavePage { get; set; }
 
@@ -35,8 +42,6 @@ namespace WebTools
 		public void Test(string url)
 		{
 			pageCount = 0;
-			//CrawlConfiguration crawlConfig =
-			//	AbotConfigurationSectionHandler.LoadFromXml().Convert();
 			PoliteWebCrawler crawler = new PoliteWebCrawler();
 			crawler.PageCrawlStarting += ProcessPageCrawlStarted;
 			crawler.PageCrawlCompletedAsync += ProcessPageCrawlCompleted;
@@ -73,28 +78,17 @@ namespace WebTools
 			{
 				CrawledPage crawledPage = e.CrawledPage;
 				string url = crawledPage.Uri.AbsoluteUri;
+
 				pagesCrawed.Add(url);
 
-				if (crawledPage.WebException != null ||
-					crawledPage.HttpWebResponse.StatusCode != HttpStatusCode.OK)
+				if (IsHttpError(crawledPage))
 				{
-					Console.ForegroundColor = ConsoleColor.Red;
 					string message = string.Format("Error: {0}", url);
 					WriteError(message);
-				}
-
-				if ((crawledPage.WebException != null) ||
-					(crawledPage.HttpWebResponse.StatusCode !=
-					HttpStatusCode.OK))
-				{
-					if (!string.IsNullOrEmpty(crawledPage.Uri.AbsoluteUri))
-					{
-						url = crawledPage.Uri.AbsoluteUri;
-					}
 
 					if (null == crawledPage.HttpWebResponse)
 					{
-						string message = string.Format(
+						message = string.Format(
 							"crawledPage.HttpWebResponse is null: {0}", url);
 						WriteError(message);
 					}
@@ -106,60 +100,21 @@ namespace WebTools
 				}
 				else if (true == showGood)
 				{
-					Console.ForegroundColor = ConsoleColor.White;
 					Console.WriteLine("{0}: {1}",
 							crawledPage.HttpWebResponse.StatusCode, url);
 				}
 
-				string requestUri =
-					crawledPage.HttpWebRequest.RequestUri.AbsoluteUri;
-				string responseUri =
-					crawledPage.HttpWebResponse.ResponseUri.AbsoluteUri;
-				if (!requestUri.Equals(responseUri))
+				CheckRedirects(crawledPage);
+				bool hasContent = CheckForEmptyContent(crawledPage);
+
+				// if page has content and it's not one of types we're ignoring
+				if ((true == hasContent) && (!ignoreTypes.Any(url.EndsWith)))
 				{
-					//This is a redirect
-					Console.WriteLine("Redirected from:{0} to: {1}",
-						crawledPage.HttpWebRequest.RequestUri.AbsoluteUri,
-						crawledPage.HttpWebResponse.ResponseUri.AbsoluteUri);
-				}
-
-				if ((!crawledPage.Uri.AbsoluteUri.EndsWith(".jpg")) &&
-					(!crawledPage.Uri.AbsoluteUri.EndsWith(".pdf")))
-				{
-					string text = crawledPage.Content.Text;
-
-					if (string.IsNullOrEmpty(text))
-					{
-						Console.ForegroundColor = ConsoleColor.Red;
-						string message = string.Format(
-							"Page had no content {0}",
-							crawledPage.Uri.AbsoluteUri);
-						WriteError(message);
-						message = string.Format("Parent: {0}",
-							crawledPage.ParentUri.AbsoluteUri);
-						WriteError(message);
-					}
-					else
-					{
-						var htmlAgilityPackDocument = crawledPage.HtmlDocument;
-						//var angleSharpHtmlDocument = crawledPage.AngleSharpHtmlDocument;
-
-						CheckContentErrors(crawledPage,
-							htmlAgilityPackDocument, text);
-						CheckImages(crawledPage, htmlAgilityPackDocument);
-
-						//ValidateFromW3Org(crawledPage.Uri.ToString());
-
-						if (true == SavePage)
-						{
-							string[] parts = crawledPage.Uri.LocalPath.Split(
-								new char[] { '/' });
-							string path = parts.Last() + crawledPage.Uri.Query;
-							path = path.Replace("?", "__");
-							path = path.Replace('\\', '-');
-							FileUtils.SaveFile(text, path);
-						}
-					}
+					CheckContentErrors(crawledPage);
+					CheckParseErrors(crawledPage);
+					CheckImages(crawledPage);
+					//ValidateFromW3Org(crawledPage.Uri.ToString());
+					SaveDocument(crawledPage);
 				}
 			}
 			catch (Exception exception)
@@ -177,69 +132,138 @@ namespace WebTools
 
 			string message = string.Format("Checking: {0}",
 				page.Uri.AbsolutePath);
-			//WriteStatus(message);
+			WriteStatus(message);
 		}
 
-		private static void CheckContentErrors(CrawledPage crawledPage,
-			HtmlDocument document, string pageContent)
+		private void CheckContentErrors(CrawledPage crawledPage)
 		{
-			if (errors.Any(pageContent.Contains))
+			if (checks.HasFlag(DocumentChecks.ContentErrors))
 			{
-				string message = string.Format("Page has errors: {0}",
-					crawledPage.Uri.AbsoluteUri);
-				WriteError(message);
-			}
+				string url = crawledPage.Uri.AbsoluteUri;
 
-			//HtmlNode.ElementsFlags.Remove("option");
-
-			IEnumerable<HtmlAgilityPack.HtmlParseError> parseErrors =
-				document.ParseErrors;
-			if (null != parseErrors)
-			{
-				foreach (HtmlAgilityPack.HtmlParseError error in parseErrors)
+				if (!ignoreTypes.Any(url.EndsWith))
 				{
-					//HtmlParseErrorCode.TagNotClosed:
-					if (!error.Reason.Equals(
-						"End tag </option> is not required"))
+					string text = crawledPage.Content.Text;
+
+					if (errors.Any(text.Contains))
 					{
-						string message = string.Format(
-							"Page has error: {0} in {1} at line: {2}",
-							error.Reason, crawledPage.Uri.AbsoluteUri,
-							error.Line);
+						string message = string.Format("Page has errors: {0}",
+							crawledPage.Uri.AbsoluteUri);
 						WriteError(message);
 					}
 				}
 			}
 		}
 
-		private void CheckImages(CrawledPage crawledPage,
-			HtmlDocument document)
+		private bool CheckForEmptyContent(CrawledPage crawledPage)
 		{
+			bool hasContent = true;
+			if (checks.HasFlag(DocumentChecks.EmptyContent) ||
+				checks.HasFlag(DocumentChecks.ContentErrors) ||
+				checks.HasFlag(DocumentChecks.ImagesExist) ||
+				checks.HasFlag(DocumentChecks.ParseErrors) ||
+				checks.HasFlag(DocumentChecks.W3cValidation))
+			{
+				string text = crawledPage.Content.Text;
+
+				if (string.IsNullOrEmpty(text))
+				{
+					hasContent = false;
+
+					string message = string.Format("Page had no content {0}",
+						crawledPage.Uri.AbsoluteUri);
+					WriteError(message);
+					message = string.Format("Parent: {0}",
+						crawledPage.ParentUri.AbsoluteUri);
+					WriteError(message);
+				}
+			}
+
+			return hasContent;
+		}
+
+		private void CheckImages(CrawledPage crawledPage)
+		{
+			HtmlDocument htmlAgilityPackDocument =
+				crawledPage.HtmlDocument;
 			HtmlAgilityPack.HtmlNodeCollection nodes =
-				document.DocumentNode.SelectNodes(@"//img[@src]");
+				htmlAgilityPackDocument.DocumentNode.SelectNodes(
+				@"//img[@src]");
 
 			foreach (HtmlAgilityPack.HtmlNode image in nodes)
 			{
 				var source = image.Attributes["src"];
 				if (!imagesChecked.Contains(source.Value))
 				{
-					if (!source.Value.Equals("/cms/upimg/kagu/"))
+					string imageUrl = string.Format("{0}://{1}{2}",
+						crawledPage.Uri.Scheme, crawledPage.Uri.Host,
+						source.Value);
+
+					bool exists = URLExists(imageUrl);
+
+					if (false == exists)
 					{
-						string imageUrl = string.Format("{0}://{1}{2}",
-							crawledPage.Uri.Scheme, crawledPage.Uri.Host,
-							source.Value);
+						string message = string.Format(
+							"image missing: {0} in {1}",
+							imageUrl, crawledPage.Uri.AbsoluteUri);
+						WriteError(message);
+					}
 
-						bool exists = URLExists(imageUrl);
+					imagesChecked.Add(source.Value);
+				}
+			}
+		}
 
-						if (false == exists)
+		private void CheckParseErrors(CrawledPage crawledPage)
+		{
+			if (checks.HasFlag(DocumentChecks.ParseErrors))
+			{
+				HtmlDocument htmlAgilityPackDocument =
+					crawledPage.HtmlDocument;
+				//var angleSharpHtmlDocument =
+				//	crawledPage.AngleSharpHtmlDocument;
+
+				HtmlNode.ElementsFlags.Remove("option");
+				IEnumerable<HtmlAgilityPack.HtmlParseError> parseErrors =
+					htmlAgilityPackDocument.ParseErrors;
+				if (null != parseErrors)
+				{
+					foreach (HtmlAgilityPack.HtmlParseError error in
+						parseErrors)
+					{
+						if (error.Code != HtmlParseErrorCode.TagNotClosed)
+						//if (!error.Reason.Equals(
+						//	"End tag </option> is not required"))
 						{
 							string message = string.Format(
-								"image missing: {0} in {1}",
-								imageUrl, crawledPage.Uri.AbsoluteUri);
+								"Page has error: {0} in {1} at line: {2}",
+								error.Reason, crawledPage.Uri.AbsoluteUri,
+								error.Line);
 							WriteError(message);
 						}
+					}
+				}
+			}
+		}
 
-						imagesChecked.Add(source.Value);
+		private void CheckRedirects(CrawledPage crawledPage)
+		{
+			if (checks.HasFlag(DocumentChecks.Redirect))
+			{
+				string requestUri =
+					crawledPage.HttpWebRequest.RequestUri.AbsoluteUri;
+
+				if (null != crawledPage.HttpWebResponse)
+				{
+					string responseUri =
+						crawledPage.HttpWebResponse.ResponseUri.AbsoluteUri;
+					if (!requestUri.Equals(responseUri))
+					{
+						//This is a redirect
+						ClearCurrentConsoleLine();
+						Console.WriteLine("Redirected from:{0} to: {1}",
+							crawledPage.HttpWebRequest.RequestUri.AbsoluteUri,
+							crawledPage.HttpWebResponse.ResponseUri.AbsoluteUri);
 					}
 				}
 			}
@@ -267,6 +291,19 @@ namespace WebTools
 			return doCrawl;
 		}
 
+		private static bool IsHttpError(CrawledPage crawledPage)
+		{
+			bool error = false;
+
+			if (crawledPage.WebException != null ||
+				crawledPage.HttpWebResponse.StatusCode != HttpStatusCode.OK)
+			{
+				error = true;
+			}
+
+			return error;
+		}
+
 		private void Login(string url, string username, string password)
 		{
 			string[] keys = { "mode", "id", "section", "section_id", "email",
@@ -275,6 +312,20 @@ namespace WebTools
 				password, "送信" };
 
 			client.Request(HttpMethod.Post, url, keys, values);
+		}
+
+		private void SaveDocument(CrawledPage crawledPage)
+		{
+			if (true == SavePage)
+			{
+				string text = crawledPage.Content.Text;
+				string[] parts = crawledPage.Uri.LocalPath.Split(
+					new char[] { '/' });
+				string path = parts.Last() + crawledPage.Uri.Query;
+				path = path.Replace("?", "__");
+				path = path.Replace('\\', '-');
+				FileUtils.SaveFile(text, path);
+			}
 		}
 
 		private static bool URLExists(string url)
@@ -325,17 +376,22 @@ namespace WebTools
 
 		private static void WriteError(string message)
 		{
-			Console.ForegroundColor = ConsoleColor.Red;
-			Console.WriteLine(message);
-			Console.ForegroundColor = ConsoleColor.White;
+			lock (thisLock)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				ClearCurrentConsoleLine();
+				Console.WriteLine(message);
+				Console.ForegroundColor = ConsoleColor.White;
+			}
 		}
 
 		private static void WriteStatus(string message)
 		{
-			ClearCurrentConsoleLine();
-			//Console.SetCursorPosition(0, Console.CursorTop);
-			Console.Write(message);
-			//Console.WriteLine(message);
+			lock (thisLock)
+			{
+				ClearCurrentConsoleLine();
+				Console.Write(message);
+			}
 		}
 	}
 }
