@@ -47,7 +47,7 @@ namespace HttpTool
 				{
 					Console.WriteLine("Starting...");
 					SiteTest tester = new SiteTest();
-					tester.SavePage = true;
+
 					tester.Test(arguments[0]);
 				}
 			}

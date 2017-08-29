@@ -46,8 +46,8 @@ namespace WebTools
 				return CrawlPage(pageToCrawl);
 			});
 
-			Login("https://www.euro-casa.co.jp/mariner/product/27",
-				"jamesjohnmcguire@gmail.com", "jamesjohnmcguire@gmail.com");
+			//Login("https://www.euro-casa.co.jp/mariner/product/27",
+			//	"jamesjohnmcguire@gmail.com", "jamesjohnmcguire@gmail.com");
 
 			Uri uri = new Uri(url);
 			CrawlResult result = crawler.Crawl(uri);
@@ -72,28 +72,21 @@ namespace WebTools
 			try
 			{
 				CrawledPage crawledPage = e.CrawledPage;
-				pagesCrawed.Add(crawledPage.Uri.AbsolutePath);
+				string url = crawledPage.Uri.AbsoluteUri;
+				pagesCrawed.Add(url);
 
 				if (crawledPage.WebException != null ||
 					crawledPage.HttpWebResponse.StatusCode != HttpStatusCode.OK)
 				{
 					Console.ForegroundColor = ConsoleColor.Red;
+					string message = string.Format("Error: {0}", url);
+					WriteError(message);
 				}
 
-				if (crawledPage.HttpWebRequest.RequestUri.AbsoluteUri !=
-					crawledPage.HttpWebResponse.ResponseUri.AbsoluteUri)
-				{
-					//This is a redirect
-					Console.WriteLine("Redirected from:{0} to: {1}",
-						crawledPage.HttpWebRequest.RequestUri.AbsoluteUri,
-						crawledPage.HttpWebResponse.ResponseUri.AbsoluteUri);
-				}
-
-				if ((true == showGood) || (crawledPage.WebException != null) ||
+				if ((crawledPage.WebException != null) ||
 					(crawledPage.HttpWebResponse.StatusCode !=
 					HttpStatusCode.OK))
 				{
-					string url = string.Empty;
 					if (!string.IsNullOrEmpty(crawledPage.Uri.AbsoluteUri))
 					{
 						url = crawledPage.Uri.AbsoluteUri;
@@ -110,10 +103,26 @@ namespace WebTools
 						Console.WriteLine("{0}: {1}",
 							crawledPage.HttpWebResponse.StatusCode, url);
 					}
-
+				}
+				else if (true == showGood)
+				{
+					Console.ForegroundColor = ConsoleColor.White;
+					Console.WriteLine("{0}: {1}",
+							crawledPage.HttpWebResponse.StatusCode, url);
 				}
 
-				Console.ForegroundColor = ConsoleColor.White;
+				string requestUri =
+					crawledPage.HttpWebRequest.RequestUri.AbsoluteUri;
+				string responseUri =
+					crawledPage.HttpWebResponse.ResponseUri.AbsoluteUri;
+				if (!requestUri.Equals(responseUri))
+				{
+					//This is a redirect
+					Console.WriteLine("Redirected from:{0} to: {1}",
+						crawledPage.HttpWebRequest.RequestUri.AbsoluteUri,
+						crawledPage.HttpWebResponse.ResponseUri.AbsoluteUri);
+				}
+
 				if ((!crawledPage.Uri.AbsoluteUri.EndsWith(".jpg")) &&
 					(!crawledPage.Uri.AbsoluteUri.EndsWith(".pdf")))
 				{
