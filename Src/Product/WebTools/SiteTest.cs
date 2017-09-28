@@ -31,11 +31,13 @@ namespace WebTools
 		private static Object thisLock = new Object();
 
 		public bool SavePage { get; set; }
+		public bool ValidateHtml { get; set; }
 
 		public SiteTest()
 		{
 			pagesCrawed = new List<string>();
 			imagesChecked = new List<string>();
+			ValidateHtml = true;
 			client = new RestClient();
 		}
 
@@ -105,15 +107,23 @@ namespace WebTools
 				}
 
 				CheckRedirects(crawledPage);
-				bool hasContent = CheckForEmptyContent(crawledPage);
 
 				// if page has content and it's not one of types we're ignoring
-				if ((true == hasContent) && (!ignoreTypes.Any(url.EndsWith)))
+				if (!ignoreTypes.Any(url.EndsWith))
 				{
-					CheckContentErrors(crawledPage);
-					CheckParseErrors(crawledPage);
-					CheckImages(crawledPage);
-					//ValidateFromW3Org(crawledPage.Uri.ToString());
+					bool hasContent = CheckForEmptyContent(crawledPage);
+					if (true == hasContent)
+					{
+						CheckContentErrors(crawledPage);
+						CheckParseErrors(crawledPage);
+						CheckImages(crawledPage);
+
+						if (true == ValidateHtml)
+						{
+							ValidateFromW3Org(crawledPage.Uri.ToString());
+						}
+					}
+
 					SaveDocument(crawledPage);
 				}
 			}
@@ -147,7 +157,8 @@ namespace WebTools
 
 					if (errors.Any(text.Contains))
 					{
-						string message = string.Format("Page has errors: {0}",
+						string message = string.Format(
+							"Page contains error messages: {0}",
 							crawledPage.Uri.AbsoluteUri);
 						WriteError(message);
 					}
@@ -158,11 +169,7 @@ namespace WebTools
 		private bool CheckForEmptyContent(CrawledPage crawledPage)
 		{
 			bool hasContent = true;
-			if (checks.HasFlag(DocumentChecks.EmptyContent) ||
-				checks.HasFlag(DocumentChecks.ContentErrors) ||
-				checks.HasFlag(DocumentChecks.ImagesExist) ||
-				checks.HasFlag(DocumentChecks.ParseErrors) ||
-				checks.HasFlag(DocumentChecks.W3cValidation))
+			if (checks.HasFlag(DocumentChecks.EmptyContent))
 			{
 				string text = crawledPage.Content.Text;
 
@@ -170,12 +177,17 @@ namespace WebTools
 				{
 					hasContent = false;
 
-					string message = string.Format("Page had no content {0}",
-						crawledPage.Uri.AbsoluteUri);
-					WriteError(message);
-					message = string.Format("Parent: {0}",
-						crawledPage.ParentUri.AbsoluteUri);
-					WriteError(message);
+					if (!crawledPage.HttpWebResponse.ContentType.Equals(
+						"application/rss+xml; charset=UTF-8"))
+					{
+						string message = string.Format(
+							"Page had no content {0}",
+							crawledPage.Uri.AbsoluteUri);
+						WriteError(message);
+						message = string.Format("Parent: {0}",
+							crawledPage.ParentUri.AbsoluteUri);
+						WriteError(message);
+					}
 				}
 			}
 
@@ -195,9 +207,10 @@ namespace WebTools
 				var source = image.Attributes["src"];
 				if (!imagesChecked.Contains(source.Value))
 				{
-					string imageUrl = string.Format("{0}://{1}{2}",
-						crawledPage.Uri.Scheme, crawledPage.Uri.Host,
-						source.Value);
+					string baseUrl = string.Format("{0}://{1}",
+						crawledPage.Uri.Scheme, crawledPage.Uri.Host);
+					string imageUrl =
+						GetAbsoluteUrlString(baseUrl, source.Value);
 
 					bool exists = URLExists(imageUrl);
 
@@ -236,7 +249,7 @@ namespace WebTools
 						//	"End tag </option> is not required"))
 						{
 							string message = string.Format(
-								"Page has error: {0} in {1} at line: {2}",
+								"HtmlAgilityPack: {0} in {1} at line: {2}",
 								error.Reason, crawledPage.Uri.AbsoluteUri,
 								error.Line);
 							WriteError(message);
@@ -273,7 +286,8 @@ namespace WebTools
 		{
 			int currentLineCursor = Console.CursorTop;
 			Console.SetCursorPosition(0, Console.CursorTop);
-			Console.Write(new string(' ', Console.WindowWidth));
+			Console.Write('.');
+			Console.Write(new string(' ', Console.WindowWidth - 2));
 			Console.SetCursorPosition(0, currentLineCursor);
 		}
 
@@ -289,6 +303,14 @@ namespace WebTools
 			}
 
 			return doCrawl;
+		}
+
+		private static string GetAbsoluteUrlString(string baseUrl, string url)
+		{
+			var uri = new Uri(url, UriKind.RelativeOrAbsolute);
+			if (!uri.IsAbsoluteUri)
+				uri = new Uri(new Uri(baseUrl), uri);
+			return uri.ToString();
 		}
 
 		private static bool IsHttpError(CrawledPage crawledPage)
@@ -369,8 +391,11 @@ namespace WebTools
 
 			foreach(ValidationResult result in results)
 			{
-				Console.WriteLine("{0}:{1} line: {2} - {3}", result.Type,
-					result.SubType, result.LastLine, result.Message);
+				string message = string.Format(
+					"W3 Validation for page {0} Result: {1}:{2} line: " +
+					"{3} - {4}", url, result.Type, result.SubType,
+					result.LastLine, result.Message);
+				WriteError(message);
 			}
 		}
 
