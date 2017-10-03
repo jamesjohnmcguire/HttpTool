@@ -51,12 +51,13 @@ namespace WebTools
 				pageContent.Text = response.Content.ReadAsStringAsync().Result;
 				crawledPage.DownloadContentCompleted = DateTime.Now;
 			}
-			catch (WebException e)
+			catch (WebException exception)
 			{
-				crawledPage.WebException = e;
+				crawledPage.WebException = exception;
 			}
-			catch (Exception e)
+			catch (Exception exception)
 			{
+				throw;
 			}
 
 			return crawledPage;

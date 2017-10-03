@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace WebTools
 {
 	[Flags]
-	enum DocumentChecks
+	public enum DocumentChecks
 	{
 		None = 0,
 		Basic = 1,

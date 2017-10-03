@@ -14,10 +14,6 @@ namespace WebTools
 {
 	public class SiteTest
 	{
-		private DocumentChecks checks = DocumentChecks.Basic |
-			DocumentChecks.ContentErrors | DocumentChecks.EmptyContent |
-			DocumentChecks.ImagesExist | DocumentChecks.ParseErrors |
-			DocumentChecks.Redirect;
 		private RestClient client = null;
 		private static string[] errors = { "A PHP Error was encountered",
 			"A Database Error Occurred", "Parse error",
@@ -30,6 +26,7 @@ namespace WebTools
 		private bool showGood = false;
 		private static Object thisLock = new Object();
 
+		public DocumentChecks Tests { get; set; }
 		public bool SavePage { get; set; }
 		public bool ValidateHtml { get; set; }
 
@@ -147,7 +144,7 @@ namespace WebTools
 
 		private void CheckContentErrors(CrawledPage crawledPage)
 		{
-			if (checks.HasFlag(DocumentChecks.ContentErrors))
+			if (Tests.HasFlag(DocumentChecks.ContentErrors))
 			{
 				string url = crawledPage.Uri.AbsoluteUri;
 
@@ -169,7 +166,7 @@ namespace WebTools
 		private bool CheckForEmptyContent(CrawledPage crawledPage)
 		{
 			bool hasContent = true;
-			if (checks.HasFlag(DocumentChecks.EmptyContent))
+			if (Tests.HasFlag(DocumentChecks.EmptyContent))
 			{
 				string text = crawledPage.Content.Text;
 
@@ -229,7 +226,7 @@ namespace WebTools
 
 		private void CheckParseErrors(CrawledPage crawledPage)
 		{
-			if (checks.HasFlag(DocumentChecks.ParseErrors))
+			if (Tests.HasFlag(DocumentChecks.ParseErrors))
 			{
 				HtmlDocument htmlAgilityPackDocument =
 					crawledPage.HtmlDocument;
@@ -261,7 +258,7 @@ namespace WebTools
 
 		private void CheckRedirects(CrawledPage crawledPage)
 		{
-			if (checks.HasFlag(DocumentChecks.Redirect))
+			if (Tests.HasFlag(DocumentChecks.Redirect))
 			{
 				string requestUri =
 					crawledPage.HttpWebRequest.RequestUri.AbsoluteUri;

@@ -9,6 +9,9 @@ namespace HttpTool
 {
 	internal class Program
 	{
+		private string command = string.Empty;
+		private TestSubOptions options = null;
+
 		static int Main(string[] args)
 		{
 			int returnCode = -1;
@@ -45,15 +48,76 @@ namespace HttpTool
 				}
 				else
 				{
-					Console.WriteLine("Starting...");
 					SiteTest tester = new SiteTest();
 
-					tester.Test(arguments[0]);
+					switch (command)
+					{
+						case "standard":
+						{
+							tester.Tests = DocumentChecks.Basic |
+								DocumentChecks.ContentErrors;
+							break;
+						}
+						case "testall":
+						{
+							tester.Tests = DocumentChecks.Basic |
+								DocumentChecks.ContentErrors |
+								DocumentChecks.EmptyContent |
+								DocumentChecks.ImagesExist |
+								DocumentChecks.ParseErrors |
+								DocumentChecks.Redirect |
+								DocumentChecks.W3cValidation;
+							break;
+						}
+						case "agilitypack":
+						{
+							tester.Tests = DocumentChecks.Basic |
+								DocumentChecks.ContentErrors |
+								DocumentChecks.ParseErrors;
+							break;
+						}
+						case "empty":
+						{
+							tester.Tests = DocumentChecks.Basic |
+								DocumentChecks.ContentErrors |
+								DocumentChecks.EmptyContent;
+							break;
+						}
+						case "images":
+						{
+							tester.Tests = DocumentChecks.Basic |
+								DocumentChecks.ContentErrors |
+								DocumentChecks.EmptyContent |
+								DocumentChecks.ImagesExist;
+							break;
+						}
+						case "redirects":
+						{
+							tester.Tests = DocumentChecks.Basic |
+								DocumentChecks.ContentErrors |
+								DocumentChecks.Redirect;
+							break;
+						}
+						case "validate":
+						{
+							tester.Tests = DocumentChecks.Basic |
+								DocumentChecks.ContentErrors |
+								DocumentChecks.EmptyContent |
+								DocumentChecks.W3cValidation;
+							break;
+						}
+					}
+
+					TestSubOptions subOptions = (TestSubOptions)this.options;
+					Console.WriteLine("Running tests on: {0}", options.Url);
+
+					tester.Test(options.Url);
 				}
 			}
 			catch (Exception exception)
 			{
 				Console.WriteLine(exception.ToString());
+				Environment.Exit(CommandLine.Parser.DefaultExitCodeFail);
 			}
 
 			return successCode;
@@ -77,9 +141,16 @@ namespace HttpTool
 		protected internal bool ValidateArguments(string[] arguments)
 		{
 			bool result = false;
+			Options options = new Options();
 
-			// Ensure we have a URL
-			if (arguments.Length > 0)
+			if (CommandLine.Parser.Default.ParseArguments(arguments, options,
+				(verb, additionalOptions) =>
+			{
+				// if parsing succeeds the verb name and correct instance
+				// will be passed to onVerbCommand delegate (string,object)
+				command = verb;
+				this.options = (TestSubOptions)additionalOptions;
+			  }))
 			{
 				result = true;
 			}
