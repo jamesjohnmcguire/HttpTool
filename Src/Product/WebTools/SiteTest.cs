@@ -174,8 +174,9 @@ namespace WebTools
 				{
 					hasContent = false;
 
-					if (!crawledPage.HttpWebResponse.ContentType.Equals(
-						"application/rss+xml; charset=UTF-8"))
+					if ((null != crawledPage) && (null != crawledPage.HttpWebResponse) &&
+						(!crawledPage.HttpWebResponse.ContentType.Equals(
+						"application/rss+xml; charset=UTF-8")))
 					{
 						string message = string.Format(
 							"Page had no content {0}",
