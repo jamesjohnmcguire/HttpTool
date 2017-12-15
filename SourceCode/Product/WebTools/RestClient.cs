@@ -30,7 +30,9 @@ namespace WebTools
 
 			client = new HttpClient(clientHandler);
 			client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent",
-				"Mozilla/5.0 (Windows NT 6.2; WOW64; rv:19.0) Gecko/20100101 Firefox/19.0");
+				"Mozilla/5.0 (Windows NT 6.2; WOW64; rv:19.0) " +
+				"Gecko/20100101 Firefox/19.0");
+			client.Timeout = TimeSpan.FromMinutes(1);
 		}
 
 		public void AddCookie(string name, string value)
@@ -48,8 +50,20 @@ namespace WebTools
 
 		public string RequestGetResponseAsString(string url)
 		{
-			string response = client.GetStringAsync(url).Result;
-
+			string response = string.Empty;
+			try
+			{
+				response = client.GetStringAsync(url).Result;
+			}
+			catch (TaskCanceledException exception)
+			{
+				System.Diagnostics.Debug.WriteLine(exception.ToString());
+				if (false ==
+					exception.CancellationToken.IsCancellationRequested)
+				{
+					System.Diagnostics.Debug.WriteLine("likely a time out");
+				}
+			}
 			return response;
 		}
 
