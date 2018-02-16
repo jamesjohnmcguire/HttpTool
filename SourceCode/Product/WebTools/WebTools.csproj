@@ -2,7 +2,46 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <Platforms>AnyCPU;x64;x86</Platforms>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>$(SolutionDir)\Bin\$(Configuration)\$(Platform)</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+    <OutputPath>$(SolutionDir)\Bin\$(Configuration)\$(Platform)</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutputPath>$(SolutionDir)\Bin\$(Configuration)\$(Platform)</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>$(SolutionDir)\Bin\$(Configuration)\$(Platform)</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+    <OutputPath>$(SolutionDir)\Bin\$(Configuration)\$(Platform)</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutputPath>$(SolutionDir)\Bin\$(Configuration)\$(Platform)</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <OutputPath>$(SolutionDir)\Bin\$(Configuration)\$(Platform)</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>$(SolutionDir)\Bin\$(Configuration)\$(Platform)</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>$(SolutionDir)\Bin\$(Configuration)\$(Platform)</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>$(SolutionDir)\Bin\$(Configuration)\$(Platform)</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+   <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+</PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="abot" Version="1.6.0.2" />
@@ -10,7 +49,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\External\UtilsNET\UtilsNet.csproj" />
+    <ProjectReference Include="..\UtilitiesNET\UtilitiesNET.csproj" />
   </ItemGroup>
 
 </Project>
