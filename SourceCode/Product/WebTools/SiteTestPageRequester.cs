@@ -8,6 +8,7 @@ using Abot.Core;
 using Abot.Poco;
 using System.Net;
 using System.Net.Http;
+using System.Collections.Specialized;
 
 namespace WebTools
 {
@@ -15,12 +16,23 @@ namespace WebTools
 	{
 		public RestClient RestClient { get; set; }
 
+		private static CrawlConfiguration crawlConfig = new CrawlConfiguration
+		{
+			UserAgentString = "Mozilla/5.0 (Windows NT 10.0; WOW64; " +
+			"rv:53.0) Gecko/20100101 Firefox/53.0" };
+
+		public SiteTestPageRequester(RestClient restClient) : base(crawlConfig)
+		{
+			RestClient = restClient;
+		}
+
 		public SiteTestPageRequester(CrawlConfiguration config) : base(config)
 		{
 
 		}
 
-		public override CrawledPage MakeRequest(Uri uri, Func<CrawledPage, CrawlDecision> shouldDownloadContent)
+		public override CrawledPage MakeRequest(Uri uri,
+			Func<CrawledPage, CrawlDecision> shouldDownloadContent)
 		{
 			if (uri == null)
 				throw new ArgumentNullException("uri");
@@ -30,7 +42,8 @@ namespace WebTools
 			try
 			{
 				crawledPage.RequestStarted = DateTime.Now;
-				HttpResponseMessage response = RestClient.RequestGetResponse(uri.AbsoluteUri);
+				HttpResponseMessage response =
+					RestClient.RequestGetResponse(uri.AbsoluteUri);
 				crawledPage.DownloadContentStarted = DateTime.Now;
 				PageContent pageContent = new PageContent();
 				Stream stream = response.Content.ReadAsStreamAsync().Result;
@@ -38,7 +51,8 @@ namespace WebTools
 				stream.CopyTo(memory);
 				pageContent.Bytes = memory.ToArray();
 				pageContent.Charset = response.Content.Headers.ContentType.CharSet;
-				foreach(string contentEncoding in response.Content.Headers.ContentEncoding)
+				foreach(string contentEncoding in
+					response.Content.Headers.ContentEncoding)
 				{
 					pageContent.Encoding = GetEncoding(contentEncoding);
 				}
@@ -50,6 +64,27 @@ namespace WebTools
 
 				pageContent.Text = response.Content.ReadAsStringAsync().Result;
 				crawledPage.DownloadContentCompleted = DateTime.Now;
+
+				// complete the page properties
+				crawledPage.HttpWebRequest = (HttpWebRequest)WebRequest.Create(
+					RestClient.RequestMessage.RequestUri);
+
+				Byte[] byteArray =
+					RestClient.Response.Content.ReadAsByteArrayAsync().Result;
+				NameValueCollection myCol = new NameValueCollection();
+
+				foreach (var pair in RestClient.Response.Headers)
+				{
+					myCol.Add(pair.Key, pair.Value.First<string>());
+				}
+				HttpWebResponseWrapper responseWrapper =
+					new HttpWebResponseWrapper(RestClient.Response.StatusCode,
+					RestClient.Response.Content.Headers.ContentType.ToString(),
+					byteArray, myCol);
+				responseWrapper.ResponseUri =
+					RestClient.ResponseMessage.RequestUri;
+				crawledPage.HttpWebResponse = responseWrapper;
+				crawledPage.Content = pageContent;
 			}
 			catch (WebException exception)
 			{

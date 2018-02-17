@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using WebTools;
 
 namespace HttpTool
@@ -12,7 +8,7 @@ namespace HttpTool
 		private string command = string.Empty;
 		private TestSubOptions options = null;
 
-		static int Main(string[] args)
+		private static int Main(string[] args)
 		{
 			int returnCode = -1;
 
@@ -52,13 +48,13 @@ namespace HttpTool
 
 					switch (command)
 					{
-						case "standard":
+					case "standard":
 						{
 							tester.Tests = DocumentChecks.Basic |
 								DocumentChecks.ContentErrors;
 							break;
 						}
-						case "testall":
+					case "testall":
 						{
 							tester.Tests = DocumentChecks.Basic |
 								DocumentChecks.ContentErrors |
@@ -69,21 +65,31 @@ namespace HttpTool
 								DocumentChecks.W3cValidation;
 							break;
 						}
-						case "agilitypack":
+					case "enhanced":
+						{
+							tester.Tests = DocumentChecks.Basic |
+								DocumentChecks.ContentErrors |
+								DocumentChecks.EmptyContent |
+								DocumentChecks.ImagesExist |
+								DocumentChecks.ParseErrors |
+								DocumentChecks.Redirect;
+							break;
+						}
+					case "agilitypack":
 						{
 							tester.Tests = DocumentChecks.Basic |
 								DocumentChecks.ContentErrors |
 								DocumentChecks.ParseErrors;
 							break;
 						}
-						case "empty":
+					case "empty":
 						{
 							tester.Tests = DocumentChecks.Basic |
 								DocumentChecks.ContentErrors |
 								DocumentChecks.EmptyContent;
 							break;
 						}
-						case "images":
+					case "images":
 						{
 							tester.Tests = DocumentChecks.Basic |
 								DocumentChecks.ContentErrors |
@@ -91,14 +97,14 @@ namespace HttpTool
 								DocumentChecks.ImagesExist;
 							break;
 						}
-						case "redirects":
+					case "redirects":
 						{
 							tester.Tests = DocumentChecks.Basic |
 								DocumentChecks.ContentErrors |
 								DocumentChecks.Redirect;
 							break;
 						}
-						case "validate":
+					case "validate":
 						{
 							tester.Tests = DocumentChecks.Basic |
 								DocumentChecks.ContentErrors |
@@ -130,7 +136,7 @@ namespace HttpTool
 		/////////////////////////////////////////////////////////////////////
 		protected internal void ShowUsage()
 		{
-			Console.WriteLine("usage: HttpTool <URL>");
+			Console.WriteLine("usage: HttpTool <command> <URL>");
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -150,7 +156,7 @@ namespace HttpTool
 				// will be passed to onVerbCommand delegate (string,object)
 				command = verb;
 				this.options = (TestSubOptions)additionalOptions;
-			  }))
+			}))
 			{
 				result = true;
 			}

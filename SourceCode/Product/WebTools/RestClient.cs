@@ -17,11 +17,16 @@ namespace WebTools
 		private HttpClient client = null;
 		private CookieContainer cookieJar = null;
 
+		public HttpRequestMessage RequestMessage { get; set; }
+		public HttpResponseMessage Response { get; set; }
+		public HttpRequestMessage ResponseMessage { get; set; }
+
 		public RestClient()
 		{
 			cookieJar = new CookieContainer();
 			HttpClientHandler clientHandler = new HttpClientHandler();
 			clientHandler.CookieContainer = cookieJar;
+			clientHandler.AllowAutoRedirect = true;
 
 			// actually doesn't seem to work
 			//NetworkCredential credentials =
@@ -200,14 +205,53 @@ namespace WebTools
 
 			try
 			{
-				HttpResponseMessage response = null;
+				Response = null;
 
 				if (method == HttpMethod.Post)
 				{
-					response = client.PostAsync(requestUrl, content).Result;
+					// save this as clients may want know this
+					RequestMessage = new HttpRequestMessage();
+					RequestMessage.RequestUri = new Uri(requestUrl);
+					RequestMessage.Method = method;
+
+					Response = client.PostAsync(requestUrl, content).Result;
+					int statusCode = (int)Response.StatusCode;
+
+					// We want to handle redirects ourselves so that we can
+					// determine the final redirect Location (via header)
+					if (statusCode >= 300 && statusCode <= 399)
+					{
+						var redirectUri = Response.Headers.Location;
+						if (!redirectUri.IsAbsoluteUri)
+						{
+							string authority =
+								RequestMessage.RequestUri.GetLeftPart(
+									UriPartial.Authority);
+							redirectUri = new Uri(authority + redirectUri);
+						}
+
+						string message = string.Format("Redirecting to {0}",
+							redirectUri);
+						System.Diagnostics.Debug.WriteLine(message);
+
+						responseContent =
+							GetResponse(method, requestUrl, content);
+					}
+					else if (!Response.IsSuccessStatusCode)
+					{
+						//IsError = true;
+						System.Diagnostics.Debug.WriteLine(
+							"status code not ok");
+					}
+					else
+					{
+						ResponseMessage = new HttpRequestMessage();
+						ResponseMessage.RequestUri = new Uri(requestUrl);
+						ResponseMessage.Method = method;
+					}
 				}
 
-				responseContent = response.Content.ReadAsStringAsync().Result;
+				responseContent = Response.Content.ReadAsStringAsync().Result;
 
 				if (responseContent.IndexOf("error",
 					StringComparison.OrdinalIgnoreCase) > -1)

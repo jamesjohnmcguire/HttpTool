@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using CommandLine;
+﻿using CommandLine;
 using CommandLine.Text;
 
 namespace HttpTool
@@ -15,6 +10,9 @@ namespace HttpTool
 
 		[VerbOption("testall", HelpText = "Run all tests.")]
 		public TestSubOptions TestAllVerb { get; set; }
+
+		[VerbOption("enhanced", HelpText = "Run all enhanced tests.")]
+		public TestSubOptions TestEnhancedVerb { get; set; }
 
 		[VerbOption("agilitypack", HelpText = "Run agilitypack tests.")]
 		public TestSubOptions AgilityPackVerb { get; set; }

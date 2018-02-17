@@ -27,6 +27,7 @@ namespace WebTools
 		private static Object thisLock = new Object();
 
 		public DocumentChecks Tests { get; set; }
+		public bool LogOn { get; set; }
 		public bool SavePage { get; set; }
 		public bool ValidateHtml { get; set; }
 
@@ -34,14 +35,22 @@ namespace WebTools
 		{
 			pagesCrawed = new List<string>();
 			imagesChecked = new List<string>();
-			ValidateHtml = true;
+			LogOn = true;
+			//ValidateHtml = true;
 			client = new RestClient();
 		}
 
 		public void Test(string url)
 		{
 			pageCount = 0;
-			PoliteWebCrawler crawler = new PoliteWebCrawler();
+			SiteTestPageRequester pageRequester = null;
+
+			if (true == LogOn)
+			{
+				pageRequester = new SiteTestPageRequester(client);
+			}
+			PoliteWebCrawler crawler = new PoliteWebCrawler(null, null, null,
+				null, pageRequester, null, null, null, null);
 			crawler.PageCrawlStarting += ProcessPageCrawlStarted;
 			crawler.PageCrawlCompletedAsync += ProcessPageCrawlCompleted;
 
@@ -50,8 +59,12 @@ namespace WebTools
 				return CrawlPage(pageToCrawl);
 			});
 
-			//Login("https://www.euro-casa.co.jp/mariner/product/27",
-			//	"jamesjohnmcguire@gmail.com", "jamesjohnmcguire@gmail.com");
+			if (true == LogOn)
+			{
+				Login("https://www.euro-casa.co.jp/mariner/product/27",
+					"jamesjohnmcguire@gmail.com",
+					"jamesjohnmcguire@gmail.com");
+			}
 
 			Uri uri = new Uri(url);
 			CrawlResult result = crawler.Crawl(uri);
@@ -315,8 +328,9 @@ namespace WebTools
 		{
 			bool error = false;
 
-			if (crawledPage.WebException != null ||
-				crawledPage.HttpWebResponse.StatusCode != HttpStatusCode.OK)
+			if ((null != crawledPage.WebException) ||
+				((null != crawledPage.HttpWebResponse) &&
+				(crawledPage.HttpWebResponse.StatusCode != HttpStatusCode.OK)))
 			{
 				error = true;
 			}
