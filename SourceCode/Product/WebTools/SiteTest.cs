@@ -1,34 +1,36 @@
-﻿using System;
+﻿using Abot.Crawler;
+using Abot.Poco;
+using DigitalZenWorks.Common.Utils;
+using HtmlAgilityPack;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using Abot.Crawler;
-using Abot.Poco;
-using HtmlAgilityPack;
-using Newtonsoft.Json;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using DigitalZenWorks.Common.Utils;
 
 namespace WebTools
 {
 	public class SiteTest
 	{
 		private RestClient client = null;
+
 		private static string[] errors = { "A PHP Error was encountered",
 			"A Database Error Occurred", "Parse error",
 			"データベースエラーが発生しました" };
+
 		private static string[] ignoreTypes =
 			{ "gif", "jpg", "jpeg", "pdf", "png" };
+
 		private IList<string> imagesChecked = null;
 		private int pageCount = 0;
 		private IList<string> pagesCrawed = null;
 		private bool showGood = false;
 		private static Object thisLock = new Object();
 
-		public DocumentChecks Tests { get; set; }
 		public bool LogOn { get; set; }
 		public bool SavePage { get; set; }
+		public DocumentChecks Tests { get; set; }
 		public bool ValidateHtml { get; set; }
 
 		public SiteTest()
@@ -401,7 +403,7 @@ namespace WebTools
 				PageValidationResult>(response);
 			IList<ValidationResult> results = pageResults.Messages;
 
-			foreach(ValidationResult result in results)
+			foreach (ValidationResult result in results)
 			{
 				string message = string.Format(
 					"W3 Validation for page {0} Result: {1}:{2} line: " +

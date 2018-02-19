@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.IO;
-using System.Text;
-using System.Threading.Tasks;
-using Abot.Core;
+﻿using Abot.Core;
 using Abot.Poco;
+using System;
+using System.Collections.Specialized;
+using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Collections.Specialized;
+using System.Text;
 
 namespace WebTools
 {
@@ -19,7 +17,8 @@ namespace WebTools
 		private static CrawlConfiguration crawlConfig = new CrawlConfiguration
 		{
 			UserAgentString = "Mozilla/5.0 (Windows NT 10.0; WOW64; " +
-			"rv:53.0) Gecko/20100101 Firefox/53.0" };
+				"rv:53.0) Gecko/20100101 Firefox/53.0"
+		};
 
 		public SiteTestPageRequester(RestClient restClient) : base(crawlConfig)
 		{
@@ -28,7 +27,6 @@ namespace WebTools
 
 		public SiteTestPageRequester(CrawlConfiguration config) : base(config)
 		{
-
 		}
 
 		public override CrawledPage MakeRequest(Uri uri,
@@ -51,7 +49,7 @@ namespace WebTools
 				stream.CopyTo(memory);
 				pageContent.Bytes = memory.ToArray();
 				pageContent.Charset = response.Content.Headers.ContentType.CharSet;
-				foreach(string contentEncoding in
+				foreach (string contentEncoding in
 					response.Content.Headers.ContentEncoding)
 				{
 					pageContent.Encoding = GetEncoding(contentEncoding);

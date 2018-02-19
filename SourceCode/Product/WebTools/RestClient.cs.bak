@@ -1,43 +1,41 @@
 ﻿#define USE_HTTPWebRequest
-
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace WebTools
 {
-	public delegate void LogMessage(string level, string message);
-
 	public class RestClient : INotifyPropertyChanged
 
 	{
-		private HttpClient client = null;
 		private string clientId = null;
 		private string clientSecret = null;
-		private CookieContainer cookieJar = null;
 		private static string[] errors = { "A PHP Error was encountered",
 			"A Database Error Occurred", "Parse error",
 			"データベースエラーが発生しました" };
 
-		public string AccessToken { get; set; }
-		public bool Authenticate { get; set; }
-		public string Host { get; set; }
-		public bool IncludeSourceInError { get; set; }
-		public bool IsError { get; set; }
-		public LogMessage Logger { get; set; }
-		public string RefreshToken { get; set; }
-		public string RefreshTokenEndPoint { get; set; }
+		private HttpClient client = null;
+		private CookieContainer cookieJar = null;
+
 		public HttpRequestMessage RequestMessage { get; set; }
 		public HttpResponseMessage Response { get; set; }
 		public HttpRequestMessage ResponseMessage { get; set; }
+
+		public string AccessToken { get; set; }
+		public bool Authenticate { get; set; }
+		public Error Error { get; set; }
+		public string Host { get; set; }
+		public bool IncludeSourceInError { get; set; }
+		public bool IsError { get; set; }
+		public string RefreshToken { get; set; }
+		public string RefreshTokenEndPoint { get; set; }
 
 		public event PropertyChangedEventHandler PropertyChanged;
 
@@ -87,22 +85,6 @@ namespace WebTools
 			cookieJar.Add(cookie);
 		}
 
-		public IList<KeyValuePair<string, string>> GetClientParameters()
-		{
-			IList<KeyValuePair<string, string>> parameters =
-				new List<KeyValuePair<string, string>>();
-
-			KeyValuePair<string, string> pair =
-				new KeyValuePair<string, string>("client_id", clientId);
-			parameters.Add(pair);
-
-			pair =
-				new KeyValuePair<string, string>("client_secret", clientSecret);
-			parameters.Add(pair);
-
-			return parameters;
-		}
-
 		public HttpResponseMessage RequestGetResponse(string url)
 		{
 			HttpResponseMessage response = client.GetAsync(url).Result;
@@ -140,46 +122,25 @@ namespace WebTools
 				FormUrlEncodedContent content =
 					new FormUrlEncodedContent(parameters);
 
-				bool isComplete =
-					Uri.IsWellFormedUriString(requestUrl, UriKind.Absolute);
-				if (false == isComplete)
-				{
-					requestUrl = string.Format(@"{0}{1}", Host, requestUrl);
-				}
-
-				DoAuthentication();
-
 				responseContent = GetResponse(method, requestUrl, content);
-
-				if (true == IsError)
-				{
-					// see if it just a matter of an expired token
-					bool refreshed = RefeshToken(responseContent);
-
-					if (true == refreshed)
-					{
-						// call again with new tokens
-						responseContent =
-							GetResponse(method, requestUrl, content);
-					}
-				}
 			}
 			catch (Exception exception) when (exception is ArgumentException ||
 				exception is ArgumentNullException ||
 				exception is ArgumentOutOfRangeException ||
-				exception is FileNotFoundException ||
 				exception is IOException ||
-				exception is JsonSerializationException ||
+				exception is FileNotFoundException ||
 				exception is NotSupportedException ||
 				exception is ObjectDisposedException ||
 				exception is System.FormatException ||
 				exception is UnauthorizedAccessException)
 			{
-				IsError = true;
-				if (null != Logger)
-				{
-					Logger("error", exception.ToString());
-				}
+				//IsError = true;
+				System.Diagnostics.Debug.WriteLine(exception.ToString());
+				//Log.Error(exception.ToString());
+
+				//Error = new Error();
+				//Error.ErrorType = Errors.UnknownError;
+				//Error.Description = exception.ToString();
 
 				responseContent = string.Format("{ \"error\":\"exception\"," +
 					"\"error_description\":\"{0}\"}", exception.ToString());
@@ -206,6 +167,7 @@ namespace WebTools
 					// replaces matching token in request.Resource
 					request.AddUrlSegment(parameter.Variable, parameter.Value);
 				}
+
 			}
 
 			// easily add HTTP Headers
@@ -259,7 +221,7 @@ namespace WebTools
 			string[] values)
 		{
 			IList<KeyValuePair<string, string>> parameters =
-				GetClientParameters();
+				new List<KeyValuePair<string, string>>();
 
 			var items = keys.Zip(values, (key, value) =>
 				new { Key = key, Value = value });
@@ -269,40 +231,19 @@ namespace WebTools
 				KeyValuePair<string, string> pair =
 					new KeyValuePair<string, string>(item.Key, item.Value);
 				parameters.Add(pair);
+
 			}
 
-			return Request(method, query, parameters);
-		}
-
-		private void DoAuthentication()
-		{
-			if (true == Authenticate)
-			{
-				string clientAuthorization =
-					string.Format("{0}:{1}", clientId, clientSecret);
-
-				// this works
-				byte[] bytes = new UTF8Encoding().GetBytes(clientAuthorization);
-				client.DefaultRequestHeaders.Authorization =
-					new AuthenticationHeaderValue("Basic",
-					Convert.ToBase64String(bytes));
-
-				Authenticate = false;
-			}
-			else
-			{
-				client.DefaultRequestHeaders.Clear();
-			}
+			return Request(HttpMethod.Post, query, parameters);
 		}
 
 		private string GetResponse(HttpMethod method, string requestUrl,
-			FormUrlEncodedContent content)
+					FormUrlEncodedContent content)
 		{
 			string responseContent = null;
 
 			try
 			{
-				IsError = false;
 				Response = null;
 
 				if (method == HttpMethod.Post)
@@ -351,137 +292,35 @@ namespace WebTools
 
 				responseContent = Response.Content.ReadAsStringAsync().Result;
 
-				if (false == Response.IsSuccessStatusCode)
+				if (responseContent.IndexOf("error",
+					StringComparison.OrdinalIgnoreCase) > -1)
 				{
-					IsError = true;
-
-					Logger("error", Response.ReasonPhrase);
-
-					if (!IsValidJsonError(responseContent))
-					{
-						string error = Response.StatusCode.ToString();
-						if (true == IncludeSourceInError)
-						{
-							responseContent = string.Format("{{ \"error\":" +
-								"\"{0}\",\"error_description\":\"{1}\"}}",
-								error, responseContent);
-						}
-						else
-						{
-							responseContent = string.Format("{{ \"error\":" +
-								"\"{0}\",\"error_description\":\"{1}\"}}",
-								error,
-								"An unidentified server error occurred");
-						}
-					}
-				}
-
-				if (errors.Any(responseContent.Contains))
-				{
-					IsError = true;
+					//IsError = true;
 				}
 			}
 			catch (Exception exception) when (exception is ArgumentException ||
 				exception is ArgumentNullException ||
 				exception is ArgumentOutOfRangeException ||
-				exception is FileNotFoundException ||
 				exception is IOException ||
-				exception is JsonSerializationException ||
+				exception is FileNotFoundException ||
 				exception is NotSupportedException ||
 				exception is ObjectDisposedException ||
 				exception is System.FormatException ||
 				exception is UnauthorizedAccessException)
 			{
-				IsError = true;
-				if (null != Logger)
-				{
-					Logger("error", exception.ToString());
-				}
+				//IsError = true;
+				System.Diagnostics.Debug.WriteLine(exception.ToString());
+				//Log.Error(exception.ToString());
+
+				//Error = new Error();
+				//Error.ErrorType = Errors.UnknownError;
+				//Error.Description = exception.ToString();
 
 				responseContent = string.Format("{ \"error\":\"exception\"," +
 					"\"error_description\":\"{0}\"}", exception.ToString());
 			}
 
 			return responseContent;
-		}
-
-		private bool IsValidJsonError(string test)
-		{
-			bool valid = false;
-
-			try
-			{
-				ErrorResponse response =
-					JsonConvert.DeserializeObject<ErrorResponse>(test);
-
-				valid = true;
-			}
-			catch (Exception exception) when (exception is JsonReaderException)
-			{
-			}
-
-			return valid;
-		}
-
-		private bool RefeshToken(string response)
-		{
-			bool updated = false;
-
-			try
-			{
-				if (response.IndexOf("error",
-					StringComparison.OrdinalIgnoreCase) >= 0)
-				{
-					string[] refreshErrors = { "expired_token" ,
-						"Malformed auth header", "invalid_token"};
-					Token serverResponse =
-						JsonConvert.DeserializeObject<Token>(response);
-
-					if (refreshErrors.Contains(serverResponse.error))
-					{
-						string refresh = RequestRefreshToken(
-							RefreshTokenEndPoint, RefreshToken);
-						if (refresh.IndexOf("error",
-							StringComparison.OrdinalIgnoreCase) == -1)
-						{
-							Token refreshResponse =
-							JsonConvert.DeserializeObject<Token>(response);
-
-							AccessToken = refreshResponse.access_token;
-							RefreshToken = refreshResponse.refresh_token;
-							OnPropertyChanged("AccessToken");
-							OnPropertyChanged("RefreshToken");
-
-							updated = true;
-						}
-					}
-				}
-			}
-			catch (Exception exception) when (exception is JsonReaderException)
-			{
-				IsError = true;
-				if (null != Logger)
-				{
-					Logger("error", exception.ToString());
-				}
-			}
-
-			return updated;
-		}
-
-		public string RequestRefreshToken(string endpoint,
-			string refreshToken)
-		{
-			string[] keys = { "grant_type", "refresh_token", "client_id",
-			"client_secret" };
-			string[] values = { "refresh_token", refreshToken, clientId,
-				clientSecret };
-
-			Authenticate = true;
-
-			string response = Request(HttpMethod.Post, endpoint, keys, values);
-
-			return response;
 		}
 	}
 }
