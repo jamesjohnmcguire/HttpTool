@@ -4,7 +4,7 @@ namespace HttpTool
 {
 	public class TestSubOptions : CommonSubOptions
 	{
-		[ValueOption(1)]
+		[Option("url")]
 		public string Url { get; set; }
 	}
 }

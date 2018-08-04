@@ -11,10 +11,10 @@ namespace HttpTool
 		[Option('l', "logfile", HelpText = "Log message to this log file.")]
 		public bool LogFile { get; set; }
 
-		[HelpVerbOption]
-		public string GetUsage(string verb)
-		{
-			return HelpText.AutoBuild(this, verb);
-		}
+		//[HelpVerbOption]
+		//public string GetUsage(string verb)
+		//{
+		//	return HelpText.AutoBuild(this, verb);
+		//}
 	}
 }

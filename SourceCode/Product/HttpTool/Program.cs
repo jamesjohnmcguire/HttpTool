@@ -122,8 +122,9 @@ namespace HttpTool
 			}
 			catch (Exception exception)
 			{
+				int code = (int)CommandLine.ParserResultType.NotParsed;
 				Console.WriteLine(exception.ToString());
-				Environment.Exit(CommandLine.Parser.DefaultExitCodeFail);
+				Environment.Exit(code);
 			}
 
 			return successCode;
@@ -149,17 +150,17 @@ namespace HttpTool
 			bool result = false;
 			Options options = new Options();
 
-			if (CommandLine.Parser.Default.ParseArguments(arguments, options,
-				(verb, additionalOptions) =>
-			{
-				// if parsing succeeds the verb name and correct instance
-				// will be passed to onVerbCommand delegate (string,object)
-				command = verb;
-				this.options = (TestSubOptions)additionalOptions;
-			}))
-			{
-				result = true;
-			}
+			//if (CommandLine.Parser.Default.ParseArguments(arguments, options,
+			//	(verb, additionalOptions) =>
+			//{
+			//	// if parsing succeeds the verb name and correct instance
+			//	// will be passed to onVerbCommand delegate (string,object)
+			//	command = verb;
+			//	this.options = (TestSubOptions)additionalOptions;
+			//}))
+			//{
+			//	result = true;
+			//}
 
 			return result;
 		}
