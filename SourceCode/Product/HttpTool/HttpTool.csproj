@@ -6,7 +6,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>HttpTool</RootNamespace>
     <AssemblyName>HttpTool</AssemblyName>
-    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
