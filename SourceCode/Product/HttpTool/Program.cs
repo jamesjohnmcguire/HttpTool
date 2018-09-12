@@ -1,13 +1,18 @@
-﻿using System;
+﻿/////////////////////////////////////////////////////////////////////////////
+// $Id$
+// <copyright file="Program.cs" company="James John McGuire">
+// Copyright © 2016 - 2018 James John McGuire. All Rights Reserved.
+// </copyright>
+/////////////////////////////////////////////////////////////////////////////
+
+using CommandLine;
+using System;
 using WebTools;
 
 namespace HttpTool
 {
 	internal class Program
 	{
-		private string command = string.Empty;
-		private TestSubOptions options = null;
-
 		private static int Main(string[] args)
 		{
 			int returnCode = -1;
@@ -30,94 +35,36 @@ namespace HttpTool
 		/// The main processing function
 		/// </summary>
 		/////////////////////////////////////////////////////////////////////
-		protected internal bool Run(string[] arguments)
+		private bool Run(string[] arguments)
 		{
-			bool successCode = false;
+			bool result = false;
 
 			try
 			{
-				successCode = ValidateArguments(arguments);
+				ParserResult<object> commandLine =
+					Parser.Default.ParseArguments<AgilityPack, Empty, Enhanced,
+					Images, Redirects, Standard, TestAll, Validate>(arguments);
 
-				if (false == successCode)
+				result = ValidateArguments(commandLine);
+
+				if (true == result)
 				{
-					ShowUsage();
-				}
-				else
-				{
+					Action<object> action = Parsing;
+
+					Parsed<object> parsed =
+						(Parsed<object>)commandLine.WithParsed<object>(
+							action);
+
 					SiteTest tester = new SiteTest();
 
-					switch (command)
-					{
-					case "standard":
-						{
-							tester.Tests = DocumentChecks.Basic |
-								DocumentChecks.ContentErrors;
-							break;
-						}
-					case "testall":
-						{
-							tester.Tests = DocumentChecks.Basic |
-								DocumentChecks.ContentErrors |
-								DocumentChecks.EmptyContent |
-								DocumentChecks.ImagesExist |
-								DocumentChecks.ParseErrors |
-								DocumentChecks.Redirect |
-								DocumentChecks.W3cValidation;
-							break;
-						}
-					case "enhanced":
-						{
-							tester.Tests = DocumentChecks.Basic |
-								DocumentChecks.ContentErrors |
-								DocumentChecks.EmptyContent |
-								DocumentChecks.ImagesExist |
-								DocumentChecks.ParseErrors |
-								DocumentChecks.Redirect;
-							break;
-						}
-					case "agilitypack":
-						{
-							tester.Tests = DocumentChecks.Basic |
-								DocumentChecks.ContentErrors |
-								DocumentChecks.ParseErrors;
-							break;
-						}
-					case "empty":
-						{
-							tester.Tests = DocumentChecks.Basic |
-								DocumentChecks.ContentErrors |
-								DocumentChecks.EmptyContent;
-							break;
-						}
-					case "images":
-						{
-							tester.Tests = DocumentChecks.Basic |
-								DocumentChecks.ContentErrors |
-								DocumentChecks.EmptyContent |
-								DocumentChecks.ImagesExist;
-							break;
-						}
-					case "redirects":
-						{
-							tester.Tests = DocumentChecks.Basic |
-								DocumentChecks.ContentErrors |
-								DocumentChecks.Redirect;
-							break;
-						}
-					case "validate":
-						{
-							tester.Tests = DocumentChecks.Basic |
-								DocumentChecks.ContentErrors |
-								DocumentChecks.EmptyContent |
-								DocumentChecks.W3cValidation;
-							break;
-						}
-					}
+					tester.Tests = GetTests(parsed);
 
-					TestSubOptions subOptions = (TestSubOptions)this.options;
-					Console.WriteLine("Running tests on: {0}", options.Url);
+					Options option = (Options)parsed.Value;
+					string url = option.Url.AbsoluteUri;
 
-					tester.Test(options.Url);
+					Console.WriteLine("Running tests on: {0}", url);
+
+					tester.Test(url);
 				}
 			}
 			catch (Exception exception)
@@ -127,17 +74,93 @@ namespace HttpTool
 				Environment.Exit(code);
 			}
 
-			return successCode;
+			return result;
 		}
 
-		/////////////////////////////////////////////////////////////////////
-		/// <summary>
-		/// ShowUsage - Displays a message on how to use this application.
-		/// </summary>
-		/////////////////////////////////////////////////////////////////////
-		protected internal void ShowUsage()
+		private DocumentChecks GetTests(Parsed<object> parsed)
 		{
-			Console.WriteLine("usage: HttpTool <command> <URL>");
+			DocumentChecks tests = DocumentChecks.Basic;
+
+			switch (parsed.Value)
+			{
+				case Standard standard:
+				{
+					tests = DocumentChecks.Basic |
+						DocumentChecks.ContentErrors;
+					break;
+				}
+
+				case TestAll testall:
+				{
+					tests = DocumentChecks.Basic |
+						DocumentChecks.ContentErrors |
+						DocumentChecks.EmptyContent |
+						DocumentChecks.ImagesExist |
+						DocumentChecks.ParseErrors |
+						DocumentChecks.Redirect |
+						DocumentChecks.W3cValidation;
+					break;
+				}
+
+				case Enhanced enhanced:
+				{
+					tests = DocumentChecks.Basic |
+						DocumentChecks.ContentErrors |
+						DocumentChecks.EmptyContent |
+						DocumentChecks.ImagesExist |
+						DocumentChecks.ParseErrors |
+						DocumentChecks.Redirect;
+					break;
+				}
+
+				case AgilityPack agilitypack:
+				{
+					tests = DocumentChecks.Basic |
+						DocumentChecks.ContentErrors |
+						DocumentChecks.ParseErrors;
+					break;
+				}
+
+				case Empty empty:
+				{
+					tests = DocumentChecks.Basic |
+						DocumentChecks.ContentErrors |
+						DocumentChecks.EmptyContent;
+					break;
+				}
+
+				case Images images:
+				{
+					tests = DocumentChecks.Basic |
+						DocumentChecks.ContentErrors |
+						DocumentChecks.EmptyContent |
+						DocumentChecks.ImagesExist;
+					break;
+				}
+
+				case Redirects redirects:
+				{
+					tests = DocumentChecks.Basic |
+						DocumentChecks.ContentErrors |
+						DocumentChecks.Redirect;
+					break;
+				}
+
+				case Validate validate:
+				{
+					tests = DocumentChecks.Basic |
+						DocumentChecks.ContentErrors |
+						DocumentChecks.EmptyContent |
+						DocumentChecks.W3cValidation;
+					break;
+				}
+			}
+
+			return tests;
+		}
+
+		private void Parsing(object options)
+		{
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -145,22 +168,15 @@ namespace HttpTool
 		/// Summary for ValidateArguments.
 		/// </summary>
 		/////////////////////////////////////////////////////////////////////
-		protected internal bool ValidateArguments(string[] arguments)
+		private bool ValidateArguments(
+			ParserResult<object> commandLine)
 		{
 			bool result = false;
-			Options options = new Options();
 
-			//if (CommandLine.Parser.Default.ParseArguments(arguments, options,
-			//	(verb, additionalOptions) =>
-			//{
-			//	// if parsing succeeds the verb name and correct instance
-			//	// will be passed to onVerbCommand delegate (string,object)
-			//	command = verb;
-			//	this.options = (TestSubOptions)additionalOptions;
-			//}))
-			//{
-			//	result = true;
-			//}
+			if (commandLine.Tag == ParserResultType.Parsed)
+			{
+				result = true;
+			}
 
 			return result;
 		}

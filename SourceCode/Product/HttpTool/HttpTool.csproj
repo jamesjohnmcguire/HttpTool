@@ -61,11 +61,17 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CommonSubOptions.cs" />
+    <Compile Include="AgilityPack.cs" />
+    <Compile Include="Empty.cs" />
+    <Compile Include="Enhanced.cs" />
+    <Compile Include="Images.cs" />
     <Compile Include="Options.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TestSubOptions.cs" />
+    <Compile Include="Redirects.cs" />
+    <Compile Include="Standard.cs" />
+    <Compile Include="TestAll.cs" />
+    <Compile Include="Validate.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">

@@ -1,18 +1,16 @@
 ﻿/////////////////////////////////////////////////////////////////////////////
-// $Id$
-// <copyright file="Options.cs" company="James John McGuire">
+// $Id: $
+// <copyright file="Redirects.cs" company="James John McGuire">
 // Copyright © 2016 - 2018 James John McGuire. All Rights Reserved.
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
 
 using CommandLine;
-using System;
 
 namespace HttpTool
 {
-	public class Options
+	[Verb("redirects", HelpText = "Run redirect tests.")]
+	public class Redirects : Options
 	{
-		[Value(1, HelpText = "The URL of the site to test.")]
-		public Uri Url { get; set; }
 	}
 }
