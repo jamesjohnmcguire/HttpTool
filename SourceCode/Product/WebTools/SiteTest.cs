@@ -215,27 +215,30 @@ namespace WebTools
 				htmlAgilityPackDocument.DocumentNode.SelectNodes(
 				@"//img[@src]");
 
-			foreach (HtmlAgilityPack.HtmlNode image in nodes)
+			if (null != nodes)
 			{
-				var source = image.Attributes["src"];
-				if (!imagesChecked.Contains(source.Value))
+				foreach (HtmlAgilityPack.HtmlNode image in nodes)
 				{
-					string baseUrl = string.Format("{0}://{1}",
-						crawledPage.Uri.Scheme, crawledPage.Uri.Host);
-					string imageUrl =
-						GetAbsoluteUrlString(baseUrl, source.Value);
-
-					bool exists = URLExists(imageUrl);
-
-					if (false == exists)
+					var source = image.Attributes["src"];
+					if (!imagesChecked.Contains(source.Value))
 					{
-						string message = string.Format(
-							"image missing: {0} in {1}",
-							imageUrl, crawledPage.Uri.AbsoluteUri);
-						WriteError(message);
-					}
+						string baseUrl = string.Format("{0}://{1}",
+							crawledPage.Uri.Scheme, crawledPage.Uri.Host);
+						string imageUrl =
+							GetAbsoluteUrlString(baseUrl, source.Value);
 
-					imagesChecked.Add(source.Value);
+						bool exists = URLExists(imageUrl);
+
+						if (false == exists)
+						{
+							string message = string.Format(
+								"image missing: {0} in {1}",
+								imageUrl, crawledPage.Uri.AbsoluteUri);
+							WriteError(message);
+						}
+
+						imagesChecked.Add(source.Value);
+					}
 				}
 			}
 		}
