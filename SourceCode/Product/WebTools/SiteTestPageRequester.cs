@@ -33,7 +33,9 @@ namespace WebTools
 			Func<CrawledPage, CrawlDecision> shouldDownloadContent)
 		{
 			if (uri == null)
-				throw new ArgumentNullException("uri");
+			{
+				throw new ArgumentNullException(nameof(uri));
+			}
 
 			CrawledPage crawledPage = new CrawledPage(uri);
 

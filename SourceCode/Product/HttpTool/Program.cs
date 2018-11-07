@@ -77,7 +77,7 @@ namespace HttpTool
 			return result;
 		}
 
-		private DocumentChecks GetTests(Parsed<object> parsed)
+		private static DocumentChecks GetTests(Parsed<object> parsed)
 		{
 			DocumentChecks tests = DocumentChecks.Basic;
 
@@ -159,7 +159,7 @@ namespace HttpTool
 			return tests;
 		}
 
-		private void Parsing(object options)
+		private static void Parsing(object options)
 		{
 		}
 
@@ -168,8 +168,7 @@ namespace HttpTool
 		/// Summary for ValidateArguments.
 		/// </summary>
 		/////////////////////////////////////////////////////////////////////
-		private bool ValidateArguments(
-			ParserResult<object> commandLine)
+		private static bool ValidateArguments(ParserResult<object> commandLine)
 		{
 			bool result = false;
 

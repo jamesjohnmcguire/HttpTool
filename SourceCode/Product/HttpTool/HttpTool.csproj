@@ -64,6 +64,7 @@
     <Compile Include="AgilityPack.cs" />
     <Compile Include="Empty.cs" />
     <Compile Include="Enhanced.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Images.cs" />
     <Compile Include="Options.cs" />
     <Compile Include="Program.cs" />
