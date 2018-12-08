@@ -38,12 +38,16 @@ namespace WebTools
 			pagesCrawed = new List<string>();
 			imagesChecked = new List<string>();
 			LogOn = true;
-			//ValidateHtml = true;
 			client = new RestClient();
 		}
 
 		public void Test(string url)
 		{
+			if (!url.Contains("localhost"))
+			{
+				ValidateHtml = true;
+			}
+
 			pageCount = 0;
 			SiteTestPageRequester pageRequester = null;
 
@@ -130,7 +134,8 @@ namespace WebTools
 						CheckParseErrors(crawledPage);
 						CheckImages(crawledPage);
 
-						if (true == ValidateHtml)
+						if ((true == ValidateHtml) &&
+							(!IsHttpError(crawledPage)))
 						{
 							ValidateFromW3Org(crawledPage.Uri.ToString());
 						}
@@ -394,25 +399,27 @@ namespace WebTools
 			return result;
 		}
 
-		private void ValidateFromW3Org(string url)
+		private async void ValidateFromW3Org(string url)
 		{
 			string validator = string.Format(
 				"http://validator.w3.org/nu/?doc={0}&out=json", url);
-			string response = client.RequestGetResponseAsString(validator);
+			string response =
+				await client.Request(validator).ConfigureAwait(false);
 
-			//IList<ValidationResult> results = JsonConvert.DeserializeObject<
-			//	IList<ValidationResult>>(response);
-			PageValidationResult pageResults = JsonConvert.DeserializeObject<
-				PageValidationResult>(response);
-			IList<ValidationResult> results = pageResults.Messages;
-
-			foreach (ValidationResult result in results)
+			if (!string.IsNullOrWhiteSpace(response))
 			{
-				string message = string.Format(
-					"W3 Validation for page {0} Result: {1}:{2} line: " +
-					"{3} - {4}", url, result.Type, result.SubType,
-					result.LastLine, result.Message);
-				WriteError(message);
+				PageValidationResult pageResults = JsonConvert.DeserializeObject<
+					PageValidationResult>(response);
+				IList<ValidationResult> results = pageResults.Messages;
+
+				foreach (ValidationResult result in results)
+				{
+					string message = string.Format(
+						"W3 Validation for page {0} Result: {1}:{2} line: " +
+						"{3} - {4}", url, result.Type, result.SubType,
+						result.LastLine, result.Message);
+					WriteError(message);
+				}
 			}
 		}
 
