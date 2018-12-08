@@ -17,12 +17,12 @@ namespace WebTools
 	public delegate void LogMessage(string level, string message);
 
 	public class RestClient : INotifyPropertyChanged
-
 	{
 		private HttpClient client = null;
 		private string clientId = null;
 		private string clientSecret = null;
 		private CookieContainer cookieJar = null;
+
 		private static string[] errors = { "A PHP Error was encountered",
 			"A Database Error Occurred", "Parse error",
 			"データベースエラーが発生しました" };
@@ -57,15 +57,17 @@ namespace WebTools
 			//new NetworkCredential(clientId, clientSecret);
 			//clientHandler.Credentials = credentials;
 
+			string userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+				"AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 " +
+				"Safari/537.36";
+
 			client = new HttpClient(clientHandler);
-			client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent",
-				"Mozilla/5.0 (Windows NT 6.2; WOW64; rv:19.0) " +
-				"Gecko/20100101 Firefox/19.0");
+			client.DefaultRequestHeaders.Add("User-Agent", userAgent);
 			client.Timeout = TimeSpan.FromMinutes(1);
 		}
 
-		public RestClient(string host, string clientId, string clientSecret) :
-			this()
+		public RestClient(string host, string clientId, string clientSecret)
+			: this()
 		{
 			Host = host;
 			this.clientId = clientId;
@@ -127,6 +129,48 @@ namespace WebTools
 				}
 			}
 			return response;
+		}
+
+		public async Task<string> Request(string requestUrl)
+		{
+			string responseContent = null;
+
+			try
+			{
+				bool isComplete =
+					Uri.IsWellFormedUriString(requestUrl, UriKind.Absolute);
+				if (false == isComplete)
+				{
+					requestUrl = string.Format(@"{0}{1}", Host, requestUrl);
+				}
+
+				DoAuthentication();
+
+				responseContent =
+					await GetResponse(requestUrl).ConfigureAwait(false);
+			}
+			catch (Exception exception) when (exception is ArgumentException ||
+				exception is ArgumentNullException ||
+				exception is ArgumentOutOfRangeException ||
+				exception is FileNotFoundException ||
+				exception is IOException ||
+				exception is JsonSerializationException ||
+				exception is NotSupportedException ||
+				exception is ObjectDisposedException ||
+				exception is System.FormatException ||
+				exception is UnauthorizedAccessException)
+			{
+				IsError = true;
+				if (null != Logger)
+				{
+					Logger("error", exception.ToString());
+				}
+
+				responseContent = string.Format("{ \"error\":\"exception\"," +
+					"\"error_description\":\"{0}\"}", exception.ToString());
+			}
+
+			return responseContent;
 		}
 
 		public string Request(HttpMethod method, string requestUrl,
@@ -291,8 +335,45 @@ namespace WebTools
 			}
 			else
 			{
-				client.DefaultRequestHeaders.Clear();
+				client.DefaultRequestHeaders.Authorization = null;
 			}
+		}
+
+		private async Task<string> GetResponse(string requestUrl)
+		{
+			string responseContent = null;
+			IsError = false;
+
+			try
+			{
+				HttpResponseMessage response = null;
+				Uri uri = new Uri(requestUrl);
+
+				responseContent = await client.GetStringAsync(uri).
+						ConfigureAwait(false);
+
+				if (errors.Any(responseContent.Contains))
+				{
+					IsError = true;
+				}
+			}
+			catch (Exception exception) when (exception is ArgumentException ||
+				exception is ArgumentNullException ||
+				exception is ArgumentOutOfRangeException ||
+				exception is IOException ||
+				exception is FileNotFoundException ||
+				exception is FormatException ||
+				exception is HttpRequestException ||
+				exception is NotSupportedException ||
+				exception is NullReferenceException ||
+				exception is ObjectDisposedException ||
+				exception is System.Net.WebException ||
+				exception is UnauthorizedAccessException)
+			{
+				IsError = true;
+			}
+
+			return responseContent;
 		}
 
 		private string GetResponse(HttpMethod method, string requestUrl,
