@@ -69,7 +69,7 @@ namespace WebTools
 				crawledPage.HttpWebRequest = (HttpWebRequest)WebRequest.Create(
 					RestClient.RequestMessage.RequestUri);
 
-				Byte[] byteArray =
+				byte[] byteArray =
 					RestClient.Response.Content.ReadAsByteArrayAsync().Result;
 				NameValueCollection myCol = new NameValueCollection();
 
@@ -90,7 +90,7 @@ namespace WebTools
 			{
 				crawledPage.WebException = exception;
 			}
-			catch (Exception exception)
+			catch
 			{
 				throw;
 			}

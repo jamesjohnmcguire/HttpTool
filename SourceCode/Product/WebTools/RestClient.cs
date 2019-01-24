@@ -166,8 +166,9 @@ namespace WebTools
 					Logger("error", exception.ToString());
 				}
 
-				responseContent = string.Format("{ \"error\":\"exception\"," +
-					"\"error_description\":\"{0}\"}", exception.ToString());
+				responseContent = string.Format(
+					"{ \"error\":\"exception\",\"error_description\":\"{0}\"}",
+					exception.ToString());
 			}
 
 			return responseContent;
@@ -225,8 +226,9 @@ namespace WebTools
 					Logger("error", exception.ToString());
 				}
 
-				responseContent = string.Format("{ \"error\":\"exception\"," +
-					"\"error_description\":\"{0}\"}", exception.ToString());
+				responseContent = string.Format(
+					"{ \"error\":\"exception\",\"error_description\":\"{0}\"}",
+					exception.ToString());
 			}
 
 			return responseContent;
@@ -328,8 +330,9 @@ namespace WebTools
 				// this works
 				byte[] bytes = new UTF8Encoding().GetBytes(clientAuthorization);
 				client.DefaultRequestHeaders.Authorization =
-					new AuthenticationHeaderValue("Basic",
-					Convert.ToBase64String(bytes));
+					new AuthenticationHeaderValue(
+						"Basic",
+						Convert.ToBase64String(bytes));
 
 				Authenticate = false;
 			}
@@ -346,7 +349,6 @@ namespace WebTools
 
 			try
 			{
-				HttpResponseMessage response = null;
 				Uri uri = new Uri(requestUrl);
 
 				responseContent = await client.GetStringAsync(uri).
