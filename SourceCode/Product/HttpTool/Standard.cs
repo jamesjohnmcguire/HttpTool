@@ -1,5 +1,5 @@
 ﻿/////////////////////////////////////////////////////////////////////////////
-// $Id: $
+// $Id$
 // <copyright file="Standard.cs" company="James John McGuire">
 // Copyright © 2016 - 2018 James John McGuire. All Rights Reserved.
 // </copyright>
