@@ -75,9 +75,8 @@ namespace WebTools
 
 			if (true == LogOn)
 			{
-				Login("https://www.euro-casa.co.jp/mariner/product/27",
-				//Login("https://www.euro-casa.co.jp/test/mariner/product/27",
-				//Login("http://euro.localhost/mariner/product/27",
+				//Login("https://www.euro-casa.co.jp/mariner/product/27",
+				Login("http://euro.localhost/mariner/product/27",
 					"jamesjohnmcguire@gmail.com",
 					"jamesjohnmcguire@gmail.com");
 			}
@@ -106,7 +105,7 @@ namespace WebTools
 				bool hasContent = true;
 				bool contentErrors = false;
 				bool imagesCheck = true;
-				bool parseErrors = false;
+				bool parseErrors = true;
 				bool problemsFound = false;
 				bool w3validation = true;
 
