@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -141,7 +142,11 @@ namespace WebTools
 					Uri.IsWellFormedUriString(requestUrl, UriKind.Absolute);
 				if (false == isComplete)
 				{
-					requestUrl = string.Format(@"{0}{1}", Host, requestUrl);
+					requestUrl = string.Format(
+						CultureInfo.InvariantCulture,
+						@"{0}{1}",
+						Host,
+						requestUrl);
 				}
 
 				DoAuthentication();
@@ -167,6 +172,7 @@ namespace WebTools
 				}
 
 				responseContent = string.Format(
+					CultureInfo.InvariantCulture,
 					"{ \"error\":\"exception\",\"error_description\":\"{0}\"}",
 					exception.ToString());
 			}
@@ -189,7 +195,11 @@ namespace WebTools
 					Uri.IsWellFormedUriString(requestUrl, UriKind.Absolute);
 				if (false == isComplete)
 				{
-					requestUrl = string.Format(@"{0}{1}", Host, requestUrl);
+					requestUrl = string.Format(
+					CultureInfo.InvariantCulture,
+					@"{0}{1}",
+					Host,
+					requestUrl);
 				}
 
 				DoAuthentication();
@@ -227,6 +237,7 @@ namespace WebTools
 				}
 
 				responseContent = string.Format(
+					CultureInfo.InvariantCulture,
 					"{ \"error\":\"exception\",\"error_description\":\"{0}\"}",
 					exception.ToString());
 			}
@@ -325,7 +336,11 @@ namespace WebTools
 			if (true == Authenticate)
 			{
 				string clientAuthorization =
-					string.Format("{0}:{1}", clientId, clientSecret);
+					string.Format(
+						CultureInfo.InvariantCulture,
+						"{0}:{1}",
+						clientId,
+						clientSecret);
 
 				// this works
 				byte[] bytes = new UTF8Encoding().GetBytes(clientAuthorization);
@@ -411,8 +426,11 @@ namespace WebTools
 							redirectUri = new Uri(authority + redirectUri);
 						}
 
-						string message = string.Format("Redirecting to {0}",
+						string message = string.Format(
+							CultureInfo.InvariantCulture,
+							"Redirecting to {0}",
 							redirectUri);
+
 						System.Diagnostics.Debug.WriteLine(message);
 
 						responseContent =
@@ -445,13 +463,18 @@ namespace WebTools
 						string error = Response.StatusCode.ToString();
 						if (true == IncludeSourceInError)
 						{
-							responseContent = string.Format("{{ \"error\":" +
+							responseContent = string.Format(
+								CultureInfo.InvariantCulture,
+								"{{ \"error\":" +
 								"\"{0}\",\"error_description\":\"{1}\"}}",
-								error, responseContent);
+								error,
+								responseContent);
 						}
 						else
 						{
-							responseContent = string.Format("{{ \"error\":" +
+							responseContent = string.Format(
+								CultureInfo.InvariantCulture,
+								"{{ \"error\":" +
 								"\"{0}\",\"error_description\":\"{1}\"}}",
 								error,
 								"An unidentified server error occurred");
@@ -481,8 +504,11 @@ namespace WebTools
 					Logger("error", exception.ToString());
 				}
 
-				responseContent = string.Format("{ \"error\":\"exception\"," +
-					"\"error_description\":\"{0}\"}", exception.ToString());
+				responseContent = string.Format(
+					CultureInfo.InvariantCulture,
+					"{ \"error\":\"exception\"," +
+					"\"error_description\":\"{0}\"}",
+					exception.ToString());
 			}
 
 			return responseContent;
