@@ -1,0 +1,6 @@
+[submodule "SourceCode/Product/DatabaseLibraryNet"]
+	path = SourceCode/Product/DatabaseLibraryNet
+	url = https://jamesjohnmcguire@bitbucket.org/jamesjohnmcguire/databaseLibraryNet.git
+[submodule "SourceCode/Product/UtilitiesNet"]
+	path = SourceCode/Product/UtilitiesNet
+	url = https://jamesjohnmcguire@bitbucket.org/jamesjohnmcguire/utilitiesnet.git
