@@ -22,7 +22,7 @@ namespace WebTools
 			"データベースエラーが発生しました" };
 
 		private static string[] ignoreTypes =
-			{ "gif", "jpg", "jpeg", "pdf", "png" };
+			{ "GIF", "JPG", "JPEG", "PDF", "PNG" };
 
 		private IList<string> imagesChecked = null;
 		private int pageCount = 0;
@@ -161,7 +161,7 @@ namespace WebTools
 
 					// if page has content and
 					// it's not one of types we're ignoring
-					if (!ignoreTypes.Any(url.EndsWith))
+					if (!ignoreTypes.Any(url.ToUpperInvariant().EndsWith))
 					{
 						hasContent = CheckForEmptyContent(crawledPage);
 
