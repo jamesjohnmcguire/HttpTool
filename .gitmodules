@@ -4,3 +4,6 @@
 [submodule "SourceCode/Product/UtilitiesNet"]
 	path = SourceCode/Product/UtilitiesNet
 	url = https://jamesjohnmcguire@bitbucket.org/jamesjohnmcguire/utilitiesnet.git
+[submodule "SourceCode/Product/NativeWindowsUtilities"]
+	path = SourceCode/Product/NativeWindowsUtilities
+	url = https://jamesjohnmcguire@bitbucket.org/jamesjohnmcguire/nativewindowsutilities.git
