@@ -7,3 +7,9 @@
 [submodule "SourceCode/Product/NativeWindowsUtilities"]
 	path = SourceCode/Product/NativeWindowsUtilities
 	url = https://jamesjohnmcguire@bitbucket.org/jamesjohnmcguire/nativewindowsutilities.git
+[submodule "SourceCode/Product/Include"]
+	path = SourceCode/Product/Include
+	url = https://jamesjohnmcguire@bitbucket.org/jamesjohnmcguire/nativewindowsincludes.git
+[submodule "NativeWindowsUtilities"]
+	path = NativeWindowsUtilities
+	url = https://jamesjohnmcguire@bitbucket.org/jamesjohnmcguire/nativewindowsutilities.git
