@@ -10,7 +10,7 @@
 
 	<ItemGroup>
 		<AdditionalFiles Include="stylecop.json" />
-		<PackageReference Include="abot" Version="1.6.0.15" />
+		<PackageReference Include="abot" Version="1.6.0.17" />
 		<PackageReference Include="newtonsoft.json" Version="12.0.1" />
 		<ProjectReference Include="..\UtilitiesNET\UtilitiesNET.csproj" />
 	</ItemGroup>
