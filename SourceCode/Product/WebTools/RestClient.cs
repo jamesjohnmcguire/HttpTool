@@ -20,8 +20,8 @@ namespace WebTools
 	public class RestClient : INotifyPropertyChanged
 	{
 		private HttpClient client = null;
-		private string clientId = null;
-		private string clientSecret = null;
+		private readonly string clientId = null;
+		private readonly string clientSecret = null;
 		private CookieContainer cookieJar = null;
 
 		private static string[] errors = { "A PHP Error was encountered",
@@ -514,7 +514,7 @@ namespace WebTools
 			return responseContent;
 		}
 
-		private bool IsValidJsonError(string test)
+		private static bool IsValidJsonError(string test)
 		{
 			bool valid = false;
 
@@ -541,8 +541,13 @@ namespace WebTools
 				if (response.IndexOf("error",
 					StringComparison.OrdinalIgnoreCase) >= 0)
 				{
-					string[] refreshErrors = { "expired_token" ,
-						"Malformed auth header", "invalid_token"};
+					string[] refreshErrors =
+					{
+						"expired_token",
+						"Malformed auth header",
+						"invalid_token"
+					};
+
 					Token serverResponse =
 						JsonConvert.DeserializeObject<Token>(response);
 
