@@ -75,9 +75,12 @@ namespace WebTools
 
 			if (true == LogOn)
 			{
-				Login("https://www.euro-casa.co.jp/mariner/product/27",
-				//Login("https://www.euro-casa.co.jp/test/mariner/product/27",
-				//Login("http://euro.localhost/mariner/product/27",
+				string loginUrl = string.Format(
+					CultureInfo.InvariantCulture,
+					"{0}/mariner/product/27",
+					url);
+				Login(
+					loginUrl,
 					"jamesjohnmcguire@gmail.com",
 					"jamesjohnmcguire@gmail.com");
 			}
