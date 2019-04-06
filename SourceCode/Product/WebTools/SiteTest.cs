@@ -1,6 +1,6 @@
 ﻿using Abot.Crawler;
 using Abot.Poco;
-using DigitalZenWorks.Common.Utils;
+using DigitalZenWorks.Common.Utilities;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
 using System;
