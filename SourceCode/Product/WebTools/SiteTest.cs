@@ -472,11 +472,23 @@ namespace WebTools
 			try
 			{
 				WebRequest webRequest = WebRequest.Create(url);
-				webRequest.Timeout = 1200; // miliseconds
+				webRequest.Timeout = 5000; // miliseconds
 				webRequest.Method = "HEAD";
 				response = (HttpWebResponse)webRequest.GetResponse();
 			}
-			catch
+			catch (Exception exception) when (exception is ArgumentException ||
+				exception is ArgumentNullException ||
+				exception is ArgumentOutOfRangeException ||
+				exception is System.IO.FileNotFoundException ||
+				exception is FormatException ||
+				exception is System.IO.IOException ||
+				exception is JsonSerializationException ||
+				exception is NotImplementedException ||
+				exception is NotSupportedException ||
+				exception is ObjectDisposedException ||
+				exception is System.Security.SecurityException ||
+				exception is UnauthorizedAccessException ||
+				exception is UriFormatException)
 			{
 				result = false;
 			}
