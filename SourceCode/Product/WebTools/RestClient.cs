@@ -456,7 +456,10 @@ namespace WebTools
 				{
 					IsError = true;
 
-					Logger("error", Response.ReasonPhrase);
+					if (null != Logger)
+					{
+						Logger("error", Response.ReasonPhrase);
+					}
 
 					if (!IsValidJsonError(responseContent))
 					{
