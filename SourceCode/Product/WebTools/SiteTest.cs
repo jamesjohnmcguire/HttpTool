@@ -39,7 +39,6 @@ namespace WebTools
 		{
 			pagesCrawed = new List<string>();
 			imagesChecked = new List<string>();
-			LogOn = true;
 			client = new RestClient();
 		}
 
@@ -48,6 +47,12 @@ namespace WebTools
 			pageCount = 0;
 			SiteTestPageRequester pageRequester = null;
 			baseUri = new Uri(url);
+
+			// only login for known sites
+			if (url.Contains("euro"))
+			{
+				LogOn = true;
+			}
 
 			if (true == LogOn)
 			{
