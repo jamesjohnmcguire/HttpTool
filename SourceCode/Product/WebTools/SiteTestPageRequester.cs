@@ -29,8 +29,8 @@ namespace WebTools
 		{
 		}
 
-		public override CrawledPage MakeRequest(Uri uri,
-			Func<CrawledPage, CrawlDecision> shouldDownloadContent)
+		public override CrawledPage MakeRequest(
+			Uri uri, Func<CrawledPage, CrawlDecision> shouldDownloadContent)
 		{
 			if (uri == null)
 			{
@@ -50,7 +50,9 @@ namespace WebTools
 				MemoryStream memory = new MemoryStream();
 				stream.CopyTo(memory);
 				pageContent.Bytes = memory.ToArray();
-				pageContent.Charset = response.Content.Headers.ContentType.CharSet;
+				pageContent.Charset =
+					response.Content.Headers.ContentType.CharSet;
+
 				foreach (string contentEncoding in
 					response.Content.Headers.ContentEncoding)
 				{
@@ -77,18 +79,31 @@ namespace WebTools
 				{
 					myCol.Add(pair.Key, pair.Value.First<string>());
 				}
+
 				HttpWebResponseWrapper responseWrapper =
-					new HttpWebResponseWrapper(RestClient.Response.StatusCode,
-					RestClient.Response.Content.Headers.ContentType.ToString(),
-					byteArray, myCol);
-				responseWrapper.ResponseUri =
-					RestClient.ResponseMessage.RequestUri;
-				crawledPage.HttpWebResponse = responseWrapper;
-				crawledPage.Content = pageContent;
+					new HttpWebResponseWrapper(
+						RestClient.Response.StatusCode,
+						RestClient.Response.Content.
+							Headers.ContentType.ToString(),
+						byteArray,
+						myCol);
+
+				if (RestClient.ResponseMessage != null)
+				{
+					responseWrapper.ResponseUri =
+						RestClient.ResponseMessage.RequestUri;
+					crawledPage.HttpWebResponse = responseWrapper;
+					crawledPage.Content = pageContent;
+				}
 			}
-			catch (WebException exception)
+			catch (Exception exception) when
+				(exception is NullReferenceException ||
+				exception is WebException)
 			{
-				crawledPage.WebException = exception;
+				if (exception is WebException webException)
+				{
+					crawledPage.WebException = webException;
+				}
 			}
 			catch
 			{
