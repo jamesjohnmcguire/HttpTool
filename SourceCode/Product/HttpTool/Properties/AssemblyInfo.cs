@@ -1,5 +1,4 @@
 ﻿/////////////////////////////////////////////////////////////////////////////
-// $Id$
 // <copyright file="AssemblyInfo.cs" company="James John McGuire">
 // Copyright © 2016 - 2018 James John McGuire. All Rights Reserved.
 // </copyright>
