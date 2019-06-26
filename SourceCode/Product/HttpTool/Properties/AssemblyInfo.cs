@@ -1,6 +1,6 @@
 ﻿/////////////////////////////////////////////////////////////////////////////
 // <copyright file="AssemblyInfo.cs" company="James John McGuire">
-// Copyright © 2016 - 2018 James John McGuire. All Rights Reserved.
+// Copyright © 2016 - 2019 James John McGuire. All Rights Reserved.
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
 
@@ -16,7 +16,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("HttpTool")]
-[assembly: AssemblyCopyright("Copyright ©  2017")]
+[assembly: AssemblyCopyright("Copyright ©  2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

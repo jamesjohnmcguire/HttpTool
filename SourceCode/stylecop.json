@@ -3,7 +3,7 @@
   "settings": {
     "documentationRules": {
       "companyName": "James John McGuire",
-      "copyrightText": "Copyright © 2016 - 2018 {companyName}. All Rights Reserved.",
+      "copyrightText": "Copyright © 2016 - 2019 {companyName}. All Rights Reserved.",
       "xmlHeader": true,
       "fileNamingConvention": "metadata"
     },
