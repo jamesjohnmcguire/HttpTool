@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UtilitiesNET", "UtilitiesNe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebTools", "WebTools\WebTools.csproj", "{5C021EC4-7366-4814-8F41-F0E5C0FDD5EA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpTool", "HttpTool\HttpTool.csproj", "{A09EE823-AEFD-4FCD-A19A-8F04A20A1759}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HttpTool", "HttpTool\HttpTool.csproj", "{A09EE823-AEFD-4FCD-A19A-8F04A20A1759}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
