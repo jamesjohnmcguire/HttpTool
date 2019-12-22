@@ -84,6 +84,11 @@ namespace WebTools
 			}
 		}
 
+		/// <summary>
+		/// Add a cookie into the cookie jar.
+		/// </summary>
+		/// <param name="name">The name of the cookie.</param>
+		/// <param name="value">The value of the cookie.</param>
 		public void AddCookie(string name, string value)
 		{
 			Cookie cookie = new Cookie(name, value);
