@@ -1,5 +1,5 @@
-﻿using Abot.Core;
-using Abot.Poco;
+﻿using Abot2.Core;
+using Abot2.Poco;
 using System;
 using System.Collections.Specialized;
 using System.IO;
@@ -7,10 +7,11 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace WebTools
 {
-	public class SiteTestPageRequester : PageRequester
+	public class SiteTestPageRequester : Abot2.Core.IPageRequester
 	{
 		public RestClient RestClient { get; set; }
 
@@ -20,16 +21,27 @@ namespace WebTools
 				"rv:53.0) Gecko/20100101 Firefox/53.0"
 		};
 
-		public SiteTestPageRequester(RestClient restClient) : base(crawlConfig)
+		public SiteTestPageRequester(RestClient restClient)
 		{
 			RestClient = restClient;
 		}
 
-		public SiteTestPageRequester(CrawlConfiguration config) : base(config)
+		public SiteTestPageRequester(CrawlConfiguration config)
 		{
 		}
 
-		public override CrawledPage MakeRequest(
+		public void Dispose()
+		{
+			RestClient = null;
+		}
+
+		public virtual async Task<CrawledPage> MakeRequestAsync(Uri uri)
+		{
+			return await MakeRequestAsync(uri, (x) =>
+				new CrawlDecision { Allow = true }).ConfigureAwait(false);
+		}
+
+		public virtual async Task<CrawledPage> MakeRequestAsync(
 			Uri uri, Func<CrawledPage, CrawlDecision> shouldDownloadContent)
 		{
 			if (uri == null)
@@ -64,12 +76,12 @@ namespace WebTools
 					pageContent.Encoding = Encoding.UTF8;
 				}
 
-				pageContent.Text = response.Content.ReadAsStringAsync().Result;
+				pageContent.Text = await response.Content.ReadAsStringAsync();
 				crawledPage.DownloadContentCompleted = DateTime.Now;
 
 				// complete the page properties
-				crawledPage.HttpWebRequest = (HttpWebRequest)WebRequest.Create(
-					RestClient.RequestMessage.RequestUri);
+				//crawledPage.HttpWebRequest = (HttpWebRequest)WebRequest.Create(
+				//	RestClient.RequestMessage.RequestUri);
 
 				byte[] byteArray =
 					RestClient.Response.Content.ReadAsByteArrayAsync().Result;
@@ -80,19 +92,19 @@ namespace WebTools
 					myCol.Add(pair.Key, pair.Value.First<string>());
 				}
 
-				HttpWebResponseWrapper responseWrapper =
-					new HttpWebResponseWrapper(
-						RestClient.Response.StatusCode,
-						RestClient.Response.Content.
-							Headers.ContentType.ToString(),
-						byteArray,
-						myCol);
+				//HttpWebResponseWrapper responseWrapper =
+				//	new HttpWebResponseWrapper(
+				//		RestClient.Response.StatusCode,
+				//		RestClient.Response.Content.
+				//			Headers.ContentType.ToString(),
+				//		byteArray,
+				//		myCol);
 
 				if (RestClient.ResponseMessage != null)
 				{
-					responseWrapper.ResponseUri =
-						RestClient.ResponseMessage.RequestUri;
-					crawledPage.HttpWebResponse = responseWrapper;
+					//responseWrapper.ResponseUri =
+					//	RestClient.ResponseMessage.RequestUri;
+					//crawledPage.HttpWebResponse = responseWrapper;
 					crawledPage.Content = pageContent;
 				}
 			}
@@ -100,9 +112,9 @@ namespace WebTools
 				(exception is NullReferenceException ||
 				exception is WebException)
 			{
-				if (exception is WebException webException)
+				if (exception is HttpRequestException webException)
 				{
-					crawledPage.WebException = webException;
+					crawledPage.HttpRequestException = webException;
 				}
 			}
 			catch

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using Abot.Core;
-using Abot.Poco;
+using Abot2.Core;
+using Abot2.Poco;
 using HtmlAgilityPack;
 
 namespace WebTools
@@ -10,8 +10,10 @@ namespace WebTools
 	/// Parser that uses Html Agility Pack http://htmlagilitypack.codeplex.com/ to parse page links
 	/// </summary>
 	[Serializable]
-	public class SiteTestLinkParser : HapHyperLinkParser
+	public class SiteTestLinkParser : HyperLinkParser
 	{
+		protected override string ParserType => throw new NotImplementedException();
+
 		public SiteTestLinkParser()
 			: base()
 		{
@@ -23,13 +25,13 @@ namespace WebTools
 			if (HasRobotsNoFollow(crawledPage))
 				return hrefValues;
 
-			HtmlNodeCollection aTags = crawledPage.HtmlDocument.DocumentNode.SelectNodes("//a[@href]");
-			HtmlNodeCollection areaTags = crawledPage.HtmlDocument.DocumentNode.SelectNodes("//area[@href]");
-			HtmlNodeCollection canonicals = crawledPage.HtmlDocument.DocumentNode.SelectNodes("//link[@rel='canonical'][@href]");
+			//HtmlNodeCollection aTags = crawledPage.HtmlDocument.DocumentNode.SelectNodes("//a[@href]");
+			//HtmlNodeCollection areaTags = crawledPage.HtmlDocument.DocumentNode.SelectNodes("//area[@href]");
+			//HtmlNodeCollection canonicals = crawledPage.HtmlDocument.DocumentNode.SelectNodes("//link[@rel='canonical'][@href]");
 
-			hrefValues.AddRange(GetLinks(aTags));
-			hrefValues.AddRange(GetLinks(areaTags));
-			hrefValues.AddRange(GetLinks(canonicals));
+			//hrefValues.AddRange(GetLinks(aTags));
+			//hrefValues.AddRange(GetLinks(areaTags));
+			//hrefValues.AddRange(GetLinks(canonicals));
 
 			return hrefValues;
 		}
@@ -37,11 +39,11 @@ namespace WebTools
 		protected override string GetBaseHrefValue(CrawledPage crawledPage)
 		{
 			string hrefValue = "";
-			HtmlNode node = crawledPage.HtmlDocument.DocumentNode.SelectSingleNode("//base");
+			//HtmlNode node = crawledPage.HtmlDocument.DocumentNode.SelectSingleNode("//base");
 
-			//Must use node.InnerHtml instead of node.InnerText since "aaa<br />bbb" will be returned as "aaabbb"
-			if (node != null)
-				hrefValue = node.GetAttributeValue("href", "").Trim();
+			////Must use node.InnerHtml instead of node.InnerText since "aaa<br />bbb" will be returned as "aaabbb"
+			//if (node != null)
+			//	hrefValue = node.GetAttributeValue("href", "").Trim();
 
 			return hrefValue;
 		}
@@ -49,9 +51,9 @@ namespace WebTools
 		protected override string GetMetaRobotsValue(CrawledPage crawledPage)
 		{
 			string robotsMeta = null;
-			HtmlNode robotsNode = crawledPage.HtmlDocument.DocumentNode.SelectSingleNode("//meta[translate(@name,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')='robots']");
-			if (robotsNode != null)
-				robotsMeta = robotsNode.GetAttributeValue("content", "");
+			//HtmlNode robotsNode = crawledPage.HtmlDocument.DocumentNode.SelectSingleNode("//meta[translate(@name,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')='robots']");
+			//if (robotsNode != null)
+			//	robotsMeta = robotsNode.GetAttributeValue("content", "");
 
 			return robotsMeta;
 		}
@@ -91,7 +93,9 @@ namespace WebTools
 			}
 			catch (Exception e)
 			{
-				_logger.InfoFormat("Error dentitizing uri: {0} This usually means that it contains unexpected characters", hrefValue);
+				Console.WriteLine(
+					"Error dentitizing uri: {0} This usually means that it contains unexpected characters",
+					hrefValue);
 			}
 
 			return dentitizedHref;
@@ -100,7 +104,8 @@ namespace WebTools
 		protected virtual bool HasRelNoFollow(HtmlNode node)
 		{
 			HtmlAttribute attr = node.Attributes["rel"];
-			return _config.IsRespectAnchorRelNoFollowEnabled && (attr != null && attr.Value.ToLower().Trim() == "nofollow");
+			return this.Config.IsRespectAnchorRelNoFollowEnabled &&
+				(attr != null && attr.Value.ToLower().Trim() == "nofollow");
 		}
 	}
 }
