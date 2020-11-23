@@ -1,4 +1,10 @@
-﻿#define USE_HTTPWebRequest
+﻿/////////////////////////////////////////////////////////////////////////////
+// <copyright file="RestClient.cs" company="James John McGuire">
+// Copyright © 2016 - 2020 James John McGuire. All Rights Reserved.
+// </copyright>
+/////////////////////////////////////////////////////////////////////////////
+
+#define USE_HTTPWebRequest
 
 using Newtonsoft.Json;
 using System;
