@@ -19,22 +19,25 @@ using System.Threading.Tasks;
 
 namespace WebTools
 {
-	public class SiteTest
+	public class SiteTest : IDisposable
 	{
-		private RestClient client = null;
+		private readonly RestClient client = null;
 
-		private static string[] errors = { "A PHP Error was encountered",
+		private static readonly string[] errors =
+		{
+			"A PHP Error was encountered",
 			"A Database Error Occurred", "Parse error",
-			"データベースエラーが発生しました" };
+			"データベースエラーが発生しました"
+		};
 
-		private static string[] ignoreTypes =
+		private static readonly string[] ignoreTypes =
 			{ "GIF", "JPG", "JPEG", "PDF", "PNG" };
 
-		private IList<string> imagesChecked = null;
+		private readonly IList<string> imagesChecked = null;
 		private int pageCount = 0;
-		private IList<string> pagesCrawed = null;
-		private bool showGood = false;
-		private static object thisLock = new object();
+		private readonly IList<string> pagesCrawed = null;
+		private readonly bool showGood = false;
+		private readonly static object thisLock = new object();
 		private Uri baseUri = null;
 
 		public bool LogOn { get; set; }
@@ -48,53 +51,38 @@ namespace WebTools
 			client = new RestClient();
 		}
 
+		/// <summary>
+		/// Disposes the object resources.
+		/// </summary>
+		public void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
 		public void Test(string url)
 		{
 			pageCount = 0;
 			SiteTestPageRequester pageRequester = null;
 			baseUri = new Uri(url);
 
-			// only login for known sites
-			if (url.Contains("euro"))
-			{
-				LogOn = true;
-			}
+			CrawlConfiguration crawlConfiguration = new CrawlConfiguration();
 
-			if (true == LogOn)
-			{
-				pageRequester = new SiteTestPageRequester(client);
-			}
+			crawlConfiguration.MaxConcurrentThreads = 4;
+			crawlConfiguration.UserAgentString =
+				"Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+				"AppleWebKit/537.36 (KHTML, like Gecko) " +
+				"Chrome/60.0.3112.113 Safari/537.36 bot";
+			crawlConfiguration.MaxPagesToCrawl = 10000;
+			crawlConfiguration.DownloadableContentTypes =
+				"text/html, text/plain, image/jpeg, image/pjpeg, image/png";
+			crawlConfiguration.CrawlTimeoutSeconds = 100;
 
-			PoliteWebCrawler crawler = new PoliteWebCrawler(
-				null,
-				null,
-				null,
-				null,
-				pageRequester,
-				null,
-				null,
-				null,
-				null);
+			PoliteWebCrawler crawler =
+				new PoliteWebCrawler(crawlConfiguration);
 
 			crawler.PageCrawlStarting += ProcessPageCrawlStarted;
 			crawler.PageCrawlCompleted += ProcessPageCrawlCompleted;
-
-			//crawler.ShouldCrawlPage((pageToCrawl, crawlContext) =>
-			//{
-			//	return CrawlPage(pageToCrawl);
-			//});
-
-			if (true == LogOn)
-			{
-				string loginUrl = string.Format(
-					CultureInfo.InvariantCulture,
-					"{0}/mariner/product/27",
-					url);
-				Login(
-					loginUrl,
-					"jamesjohnmcguire@gmail.com",
-					"jamesjohnmcguire@gmail.com");
-			}
 
 			CrawlResult result = crawler.CrawlAsync(baseUri).Result;
 
@@ -230,6 +218,22 @@ namespace WebTools
 			WriteStatus(message);
 		}
 
+		/// <summary>
+		/// Disposes of disposable resources.
+		/// </summary>
+		/// <param name="disposing">Indicates whether disposing is taking
+		/// place.</param>
+		protected virtual void Dispose(bool disposing)
+		{
+			if (disposing)
+			{
+				// dispose managed resources
+				client.Dispose();
+			}
+
+			// free native resources
+		}
+
 		private bool CheckContentErrors(CrawledPage crawledPage)
 		{
 			bool result = true;
@@ -301,7 +305,9 @@ namespace WebTools
 				//HtmlAgilityPack.HtmlNodeCollection nodes =
 				//	htmlAgilityPackDocument.DocumentNode.SelectNodes(
 				//	@"//img[@src]");
-				var nodes = htmlAgilityPackDocument.DocumentElement.QuerySelectorAll(@"//img[@src]");
+				var nodes =
+					htmlAgilityPackDocument.DocumentElement.QuerySelectorAll(
+						@"//img[@src]");
 
 				if (null != nodes)
 				{
