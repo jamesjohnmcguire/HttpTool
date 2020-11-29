@@ -60,10 +60,13 @@ namespace WebTools
 			GC.SuppressFinalize(this);
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage(
+			"Style",
+			"IDE0017:Simplify object initialization",
+			Justification = "Don't agree with this rule.")]
 		public void Test(string url)
 		{
 			pageCount = 0;
-			SiteTestPageRequester pageRequester = null;
 			baseUri = new Uri(url);
 
 			CrawlConfiguration crawlConfiguration = new CrawlConfiguration();
@@ -422,20 +425,6 @@ namespace WebTools
 			Console.SetCursorPosition(0, currentLineCursor);
 		}
 
-		private CrawlDecision CrawlPage(PageToCrawl page)
-		{
-			CrawlDecision doCrawl = new CrawlDecision();
-			doCrawl.Allow = true;
-
-			if (pagesCrawed.Contains(page.Uri.AbsolutePath))
-			{
-				doCrawl.Reason = "Don't want to repeat crawled pages";
-				doCrawl.Allow = false;
-			}
-
-			return doCrawl;
-		}
-
 		private static string GetAbsoluteUrlString(string baseUrl, string url)
 		{
 			var uri = new Uri(url, UriKind.RelativeOrAbsolute);
@@ -457,16 +446,6 @@ namespace WebTools
 			}
 
 			return error;
-		}
-
-		private void Login(string url, string username, string password)
-		{
-			string[] keys = { "mode", "id", "section", "section_id", "email",
-				"email_check", "submit" };
-			string[] values = { "login", "27", "brand", "6", username,
-				password, "送信" };
-
-			client.Request(HttpMethod.Post, url, keys, values);
 		}
 
 		private void SaveDocument(CrawledPage crawledPage)

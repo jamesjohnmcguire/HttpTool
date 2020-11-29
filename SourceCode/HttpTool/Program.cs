@@ -127,7 +127,7 @@ namespace HttpTool
 						(Parsed<object>)commandLine.WithParsed<object>(
 							action);
 
-					SiteTest tester = new SiteTest();
+					using SiteTest tester = new SiteTest();
 
 					tester.Tests = GetTests(parsed);
 
