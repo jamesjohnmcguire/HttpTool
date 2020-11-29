@@ -21,11 +21,12 @@ namespace WebTools
 	{
 		public RestClient RestClient { get; set; }
 
-		private static CrawlConfiguration crawlConfig = new CrawlConfiguration
-		{
-			UserAgentString = "Mozilla/5.0 (Windows NT 10.0; WOW64; " +
-				"rv:53.0) Gecko/20100101 Firefox/53.0"
-		};
+		private static readonly CrawlConfiguration crawlConfig =
+			new CrawlConfiguration
+			{
+				UserAgentString = "Mozilla/5.0 (Windows NT 10.0; WOW64; " +
+					"rv:53.0) Gecko/20100101 Firefox/53.0"
+			};
 
 		public SiteTestPageRequester(RestClient restClient)
 		{
@@ -38,7 +39,8 @@ namespace WebTools
 
 		public void Dispose()
 		{
-			RestClient = null;
+			Dispose(true);
+			GC.SuppressFinalize(this);
 		}
 
 		public virtual async Task<CrawledPage> MakeRequestAsync(Uri uri)
@@ -129,6 +131,22 @@ namespace WebTools
 			}
 
 			return crawledPage;
+		}
+
+		/// <summary>
+		/// Disposes of disposable resources.
+		/// </summary>
+		/// <param name="disposing">Indicates whether disposing is taking
+		/// place.</param>
+		protected virtual void Dispose(bool disposing)
+		{
+			if (disposing)
+			{
+				// dispose managed resources
+				RestClient = null;
+			}
+
+			// free native resources
 		}
 
 		protected virtual Encoding GetEncoding(string charset)
