@@ -21,8 +21,6 @@ namespace WebTools
 {
 	public class SiteTest : IDisposable
 	{
-		private readonly RestClient client = null;
-
 		private static readonly string[] errors =
 		{
 			"A PHP Error was encountered",
@@ -35,17 +33,18 @@ namespace WebTools
 			"GIF", "JPG", "JPEG", "PDF", "PNG"
 		};
 
+		private static readonly object thisLock = new object();
+
+		private readonly RestClient client = null;
+
 		private readonly IList<string> imagesChecked;
 
-		private int pageCount;
 		private readonly IList<string> pagesCrawed;
+
+		private int pageCount;
+
 		private readonly bool showGood;
-		private readonly static object thisLock = new object();
-		private Uri baseUri = null;
-
-		public bool SavePage { get; set; }
-
-		public DocumentChecks Tests { get; set; }
+		private Uri baseUri;
 
 		public SiteTest()
 		{
@@ -64,6 +63,19 @@ namespace WebTools
 			: this(tests)
 		{
 			baseUri = new Uri(url);
+		}
+
+		public bool SavePage { get; set; }
+
+		public DocumentChecks Tests { get; set; }
+
+		public static void ClearCurrentConsoleLine()
+		{
+			int currentLineCursor = Console.CursorTop;
+			Console.SetCursorPosition(0, Console.CursorTop);
+			Console.Write('.');
+			Console.Write(new string(' ', Console.WindowWidth - 2));
+			Console.SetCursorPosition(0, currentLineCursor);
 		}
 
 		/// <summary>
@@ -257,6 +269,91 @@ namespace WebTools
 			// free native resources
 		}
 
+		private static string GetAbsoluteUrlString(string baseUrl, string url)
+		{
+			var uri = new Uri(url, UriKind.RelativeOrAbsolute);
+			if (!uri.IsAbsoluteUri)
+			{
+				uri = new Uri(new Uri(baseUrl), uri);
+			}
+
+			return uri.ToString();
+		}
+
+		private static bool IsHttpError(CrawledPage crawledPage)
+		{
+			bool error = false;
+
+			if ((null != crawledPage.HttpRequestException) ||
+				((null != crawledPage.HttpResponseMessage) &&
+				(crawledPage.HttpResponseMessage.StatusCode !=
+					HttpStatusCode.OK)))
+			{
+				error = true;
+			}
+
+			return error;
+		}
+
+		private static bool URLExists(string url)
+		{
+			bool result = true;
+			HttpWebResponse response = null;
+
+			try
+			{
+				WebRequest webRequest = WebRequest.Create(url);
+				webRequest.Timeout = 5000; // miliseconds
+				webRequest.Method = "HEAD";
+				response = (HttpWebResponse)webRequest.GetResponse();
+			}
+			catch (Exception exception) when (exception is ArgumentException ||
+				exception is ArgumentNullException ||
+				exception is ArgumentOutOfRangeException ||
+				exception is System.IO.FileNotFoundException ||
+				exception is FormatException ||
+				exception is System.IO.IOException ||
+				exception is JsonSerializationException ||
+				exception is NotImplementedException ||
+				exception is NotSupportedException ||
+				exception is ObjectDisposedException ||
+				exception is System.Security.SecurityException ||
+				exception is UnauthorizedAccessException ||
+				exception is UriFormatException)
+			{
+				result = false;
+			}
+			finally
+			{
+				if (response != null)
+				{
+					response.Close();
+				}
+			}
+
+			return result;
+		}
+
+		private static void WriteError(string message)
+		{
+			lock (thisLock)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				ClearCurrentConsoleLine();
+				Console.WriteLine(message);
+				Console.ForegroundColor = ConsoleColor.White;
+			}
+		}
+
+		private static void WriteStatus(string message)
+		{
+			lock (thisLock)
+			{
+				ClearCurrentConsoleLine();
+				Console.Write(message);
+			}
+		}
+
 		private bool CheckContentErrors(CrawledPage crawledPage)
 		{
 			bool result = true;
@@ -433,41 +530,6 @@ namespace WebTools
 			}
 		}
 
-		public static void ClearCurrentConsoleLine()
-		{
-			int currentLineCursor = Console.CursorTop;
-			Console.SetCursorPosition(0, Console.CursorTop);
-			Console.Write('.');
-			Console.Write(new string(' ', Console.WindowWidth - 2));
-			Console.SetCursorPosition(0, currentLineCursor);
-		}
-
-		private static string GetAbsoluteUrlString(string baseUrl, string url)
-		{
-			var uri = new Uri(url, UriKind.RelativeOrAbsolute);
-			if (!uri.IsAbsoluteUri)
-			{
-				uri = new Uri(new Uri(baseUrl), uri);
-			}
-
-			return uri.ToString();
-		}
-
-		private static bool IsHttpError(CrawledPage crawledPage)
-		{
-			bool error = false;
-
-			if ((null != crawledPage.HttpRequestException) ||
-				((null != crawledPage.HttpResponseMessage) &&
-				(crawledPage.HttpResponseMessage.StatusCode !=
-					HttpStatusCode.OK)))
-			{
-				error = true;
-			}
-
-			return error;
-		}
-
 		private void SaveDocument(CrawledPage crawledPage)
 		{
 			if (true == SavePage)
@@ -480,45 +542,6 @@ namespace WebTools
 				path = path.Replace('\\', '-');
 				FileUtils.SaveFile(text, path);
 			}
-		}
-
-		private static bool URLExists(string url)
-		{
-			bool result = true;
-			HttpWebResponse response = null;
-
-			try
-			{
-				WebRequest webRequest = WebRequest.Create(url);
-				webRequest.Timeout = 5000; // miliseconds
-				webRequest.Method = "HEAD";
-				response = (HttpWebResponse)webRequest.GetResponse();
-			}
-			catch (Exception exception) when (exception is ArgumentException ||
-				exception is ArgumentNullException ||
-				exception is ArgumentOutOfRangeException ||
-				exception is System.IO.FileNotFoundException ||
-				exception is FormatException ||
-				exception is System.IO.IOException ||
-				exception is JsonSerializationException ||
-				exception is NotImplementedException ||
-				exception is NotSupportedException ||
-				exception is ObjectDisposedException ||
-				exception is System.Security.SecurityException ||
-				exception is UnauthorizedAccessException ||
-				exception is UriFormatException)
-			{
-				result = false;
-			}
-			finally
-			{
-				if (response != null)
-				{
-					response.Close();
-				}
-			}
-
-			return result;
 		}
 
 		private async Task<bool> ValidateFromW3Org(string url)
@@ -560,26 +583,6 @@ namespace WebTools
 			}
 
 			return succesCode;
-		}
-
-		private static void WriteError(string message)
-		{
-			lock (thisLock)
-			{
-				Console.ForegroundColor = ConsoleColor.Red;
-				ClearCurrentConsoleLine();
-				Console.WriteLine(message);
-				Console.ForegroundColor = ConsoleColor.White;
-			}
-		}
-
-		private static void WriteStatus(string message)
-		{
-			lock (thisLock)
-			{
-				ClearCurrentConsoleLine();
-				Console.Write(message);
-			}
 		}
 	}
 }

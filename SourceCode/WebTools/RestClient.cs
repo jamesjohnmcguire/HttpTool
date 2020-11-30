@@ -43,30 +43,6 @@ namespace WebTools
 		private readonly IList<KeyValuePair<string, string>>
 			defaultParameters = new List<KeyValuePair<string, string>>();
 
-		public string AccessToken { get; set; }
-
-		public bool Authenticate { get; set; }
-
-		public string Host { get; set; }
-
-		public bool IncludeSourceInError { get; set; }
-
-		public bool IsError { get; set; }
-
-		public LogMessage Logger { get; set; }
-
-		public string RefreshToken { get; set; }
-
-		public string RefreshTokenEndPoint { get; set; }
-
-		public HttpRequestMessage RequestMessage { get; set; }
-
-		public HttpResponseMessage Response { get; set; }
-
-		public HttpRequestMessage ResponseMessage { get; set; }
-
-		public event PropertyChangedEventHandler PropertyChanged;
-
 		/// <summary>
 		/// Initializes a new instance of the <see cref="RestClient"/> class.
 		/// </summary>
@@ -102,27 +78,29 @@ namespace WebTools
 			this.clientSecret = clientSecret;
 		}
 
-		/// <summary>
-		/// Disposes the object resources.
-		/// </summary>
-		public void Dispose()
-		{
-			Dispose(true);
-			GC.SuppressFinalize(this);
-		}
+		public event PropertyChangedEventHandler PropertyChanged;
 
-		[System.Diagnostics.CodeAnalysis.SuppressMessage(
-			"Style",
-			"IDE1005:Delegate invocation can be simplified.",
-			Justification = "Don't agree with this rule.")]
-		protected void OnPropertyChanged(string name)
-		{
-			PropertyChangedEventHandler handler = PropertyChanged;
-			if (handler != null)
-			{
-				handler(this, new PropertyChangedEventArgs(name));
-			}
-		}
+		public string AccessToken { get; set; }
+
+		public bool Authenticate { get; set; }
+
+		public string Host { get; set; }
+
+		public bool IncludeSourceInError { get; set; }
+
+		public bool IsError { get; set; }
+
+		public LogMessage Logger { get; set; }
+
+		public string RefreshToken { get; set; }
+
+		public string RefreshTokenEndPoint { get; set; }
+
+		public HttpRequestMessage RequestMessage { get; set; }
+
+		public HttpResponseMessage Response { get; set; }
+
+		public HttpRequestMessage ResponseMessage { get; set; }
 
 		/// <summary>
 		/// Add a cookie into the cookie jar.
@@ -133,6 +111,15 @@ namespace WebTools
 		{
 			Cookie cookie = new Cookie(name, value);
 			cookieJar.Add(cookie);
+		}
+
+		/// <summary>
+		/// Disposes the object resources.
+		/// </summary>
+		public void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
 		}
 
 		public IList<KeyValuePair<string, string>> GetClientParameters()
@@ -384,6 +371,25 @@ namespace WebTools
 			return Request(method, query, parameters);
 		}
 
+		public string RequestRefreshToken(string endpoint, string refreshToken)
+		{
+			string[] keys =
+			{
+				"grant_type", "refresh_token", "client_id", "client_secret"
+			};
+
+			string[] values =
+			{
+				"refresh_token", refreshToken, clientId, clientSecret
+			};
+
+			Authenticate = true;
+
+			string response = Request(HttpMethod.Post, endpoint, keys, values);
+
+			return response;
+		}
+
 		/// <summary>
 		/// Disposes of disposable resources.
 		/// </summary>
@@ -398,6 +404,37 @@ namespace WebTools
 			}
 
 			// free native resources
+		}
+
+		[System.Diagnostics.CodeAnalysis.SuppressMessage(
+			"Style",
+			"IDE1005:Delegate invocation can be simplified.",
+			Justification = "Don't agree with this rule.")]
+		protected void OnPropertyChanged(string name)
+		{
+			PropertyChangedEventHandler handler = PropertyChanged;
+			if (handler != null)
+			{
+				handler(this, new PropertyChangedEventArgs(name));
+			}
+		}
+
+		private static bool IsValidJsonError(string test)
+		{
+			bool valid = false;
+
+			try
+			{
+				ErrorResponse response =
+					JsonConvert.DeserializeObject<ErrorResponse>(test);
+
+				valid = true;
+			}
+			catch (Exception exception) when (exception is JsonReaderException)
+			{
+			}
+
+			return valid;
 		}
 
 		private static string SetErrorResponse(
@@ -610,24 +647,6 @@ namespace WebTools
 			return responseContent;
 		}
 
-		private static bool IsValidJsonError(string test)
-		{
-			bool valid = false;
-
-			try
-			{
-				ErrorResponse response =
-					JsonConvert.DeserializeObject<ErrorResponse>(test);
-
-				valid = true;
-			}
-			catch (Exception exception) when (exception is JsonReaderException)
-			{
-			}
-
-			return valid;
-		}
-
 		[System.Diagnostics.CodeAnalysis.SuppressMessage(
 			"Style",
 			"IDE1005:Delegate invocation can be simplified.",
@@ -682,25 +701,6 @@ namespace WebTools
 			}
 
 			return updated;
-		}
-
-		public string RequestRefreshToken(string endpoint, string refreshToken)
-		{
-			string[] keys =
-			{
-				"grant_type", "refresh_token", "client_id", "client_secret"
-			};
-
-			string[] values =
-			{
-				"refresh_token", refreshToken, clientId, clientSecret
-			};
-
-			Authenticate = true;
-
-			string response = Request(HttpMethod.Post, endpoint, keys, values);
-
-			return response;
 		}
 	}
 }
