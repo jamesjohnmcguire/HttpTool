@@ -140,7 +140,8 @@ namespace HttpTool
 						CultureInfo.InstalledUICulture);
 					Console.WriteLine(message, url);
 
-					tester.Test(url);
+					Uri uri = new Uri(url);
+					tester.Test(uri);
 				}
 				else
 				{

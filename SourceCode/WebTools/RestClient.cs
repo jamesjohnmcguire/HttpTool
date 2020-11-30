@@ -145,12 +145,19 @@ namespace WebTools
 			return response;
 		}
 
-		public string RequestGetResponseAsString(string url)
+		public HttpResponseMessage RequestGetResponse(Uri uri)
+		{
+			HttpResponseMessage response = client.GetAsync(uri).Result;
+
+			return response;
+		}
+
+		public string RequestGetResponseAsString(Uri uri)
 		{
 			string response = string.Empty;
 			try
 			{
-				response = client.GetStringAsync(url).Result;
+				response = client.GetStringAsync(uri).Result;
 			}
 			catch (TaskCanceledException exception)
 			{
@@ -169,27 +176,32 @@ namespace WebTools
 			"Style",
 			"IDE1005:Delegate invocation can be simplified.",
 			Justification = "Don't agree with this rule.")]
-		public async Task<string> Request(string requestUrl)
+		public async Task<string> Request(Uri requestUri)
 		{
 			string responseContent = null;
 
 			try
 			{
-				bool isComplete =
-					Uri.IsWellFormedUriString(requestUrl, UriKind.Absolute);
-				if (false == isComplete)
+				if (requestUri != null)
 				{
-					requestUrl = string.Format(
-						CultureInfo.InvariantCulture,
-						@"{0}{1}",
-						Host,
-						requestUrl);
+					string requestUrl = requestUri.AbsoluteUri;
+					bool isComplete = Uri.IsWellFormedUriString(
+						requestUrl, UriKind.Absolute);
+
+					if (false == isComplete)
+					{
+						requestUrl = string.Format(
+							CultureInfo.InvariantCulture,
+							@"{0}{1}",
+							Host,
+							requestUrl);
+					}
+
+					DoAuthentication();
+
+					responseContent =
+						await GetResponse(requestUrl).ConfigureAwait(false);
 				}
-
-				DoAuthentication();
-
-				responseContent =
-					await GetResponse(requestUrl).ConfigureAwait(false);
 			}
 			catch (Exception exception) when (exception is ArgumentException ||
 				exception is ArgumentNullException ||
@@ -220,7 +232,7 @@ namespace WebTools
 			Justification = "Don't agree with this rule.")]
 		public string Request(
 			HttpMethod method,
-			string requestUrl,
+			Uri requestUri,
 			IList<KeyValuePair<string, string>> parameters)
 		{
 #if USE_HTTPWebRequest
@@ -228,34 +240,39 @@ namespace WebTools
 
 			try
 			{
-				FormUrlEncodedContent content =
-					new FormUrlEncodedContent(parameters);
-
-				bool isComplete =
-					Uri.IsWellFormedUriString(requestUrl, UriKind.Absolute);
-				if (false == isComplete)
+				if (requestUri != null)
 				{
-					requestUrl = string.Format(
-					CultureInfo.InvariantCulture,
-					@"{0}{1}",
-					Host,
-					requestUrl);
-				}
+					using FormUrlEncodedContent content =
+						new FormUrlEncodedContent(parameters);
 
-				DoAuthentication();
+					string requestUrl = requestUri.AbsoluteUri;
+					bool isComplete = Uri.IsWellFormedUriString(
+						requestUrl, UriKind.Absolute);
 
-				responseContent = GetResponse(method, requestUrl, content);
-
-				if (true == IsError)
-				{
-					// see if it just a matter of an expired token
-					bool refreshed = RefeshToken(responseContent);
-
-					if (true == refreshed)
+					if (false == isComplete)
 					{
-						// call again with new tokens
-						responseContent =
-							GetResponse(method, requestUrl, content);
+						requestUrl = string.Format(
+						CultureInfo.InvariantCulture,
+						@"{0}{1}",
+						Host,
+						requestUrl);
+					}
+
+					DoAuthentication();
+
+					responseContent = GetResponse(method, requestUrl, content);
+
+					if (true == IsError)
+					{
+						// see if it just a matter of an expired token
+						bool refreshed = RefeshToken(responseContent);
+
+						if (true == refreshed)
+						{
+							// call again with new tokens
+							responseContent =
+								GetResponse(method, requestUrl, content);
+						}
 					}
 				}
 			}
@@ -368,7 +385,8 @@ namespace WebTools
 				parameters.Add(pair);
 			}
 
-			return Request(method, query, parameters);
+			Uri uri = new Uri(query);
+			return Request(method, uri, parameters);
 		}
 
 		public string RequestRefreshToken(string endpoint, string refreshToken)

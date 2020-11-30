@@ -6,7 +6,7 @@
 
 namespace WebTools
 {
-	public class Error : Message
+	public class ErrorMessage : Message
 	{
 		public Errors ErrorType { get; set; }
 	}
