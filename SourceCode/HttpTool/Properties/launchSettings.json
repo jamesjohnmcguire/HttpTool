@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "HttpTool": {
+      "commandName": "Project",
+      "commandLineArgs": "testall https://www.euro-casa.co.jp"
+    }
+  }
+}

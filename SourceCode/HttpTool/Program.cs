@@ -1,24 +1,109 @@
 ﻿/////////////////////////////////////////////////////////////////////////////
 // <copyright file="Program.cs" company="James John McGuire">
-// Copyright © 2016 - 2019 James John McGuire. All Rights Reserved.
+// Copyright © 2016 - 2020 James John McGuire. All Rights Reserved.
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
 
-using CommandLine;
 using System;
+using System.Diagnostics;
+using System.Globalization;
+using System.Linq;
+using System.Reflection;
+using System.Resources;
 using WebTools;
 
 namespace HttpTool
 {
 	internal class Program
 	{
-		private static int Main(string[] args)
+		private static readonly string[] Commands =
+		{
+			"agilitypack", "empty", "enhanced", "help", "images", "redirects",
+			"standard", "testall", "validate"
+		};
+
+		private static readonly ResourceManager StringTable = new
+			ResourceManager(
+				"HttpTool.Resources",
+				Assembly.GetExecutingAssembly());
+
+		private static string GetCommand(string[] arguments)
+		{
+			string command;
+
+			if (arguments.Length < 2)
+			{
+				command = "standard";
+			}
+			else
+			{
+				command = arguments[0];
+			}
+
+			return command;
+		}
+
+		private static DocumentChecks GetTests(string command)
+		{
+			DocumentChecks tests = command switch
+			{
+				"testall" => DocumentChecks.Basic |
+					DocumentChecks.ContentErrors |
+					DocumentChecks.EmptyContent |
+					DocumentChecks.ImagesExist |
+					DocumentChecks.ParseErrors |
+					DocumentChecks.Redirect |
+					DocumentChecks.W3cValidation,
+				"enhanced" => DocumentChecks.Basic |
+					DocumentChecks.ContentErrors |
+					DocumentChecks.EmptyContent |
+					DocumentChecks.ImagesExist |
+					DocumentChecks.ParseErrors |
+					DocumentChecks.Redirect,
+				"agilitypack" => DocumentChecks.Basic |
+					DocumentChecks.ContentErrors |
+					DocumentChecks.ParseErrors,
+				"empty" => DocumentChecks.Basic |
+					DocumentChecks.ContentErrors |
+					DocumentChecks.EmptyContent,
+				"images" => DocumentChecks.Basic |
+					DocumentChecks.ContentErrors |
+					DocumentChecks.EmptyContent |
+					DocumentChecks.ImagesExist,
+				"redirects" => DocumentChecks.Basic |
+					DocumentChecks.ContentErrors |
+					DocumentChecks.Redirect,
+				"validate" => DocumentChecks.Basic |
+					DocumentChecks.ContentErrors |
+					DocumentChecks.EmptyContent |
+					DocumentChecks.W3cValidation,
+				_ => DocumentChecks.Basic | DocumentChecks.ContentErrors,
+			};
+
+			return tests;
+		}
+
+		private static string GetUrl(string[] arguments)
+		{
+			string url;
+
+			if (arguments.Length < 2)
+			{
+				url = arguments[0];
+			}
+			else
+			{
+				url = arguments[1];
+			}
+
+			return url;
+		}
+
+		private static int Main(string[] arguments)
 		{
 			int returnCode = -1;
 
-			Program application = new Program();
-
-			bool resultCode = application.Run(args);
+			bool resultCode = Run(arguments);
 
 			if (true == resultCode)
 			{
@@ -34,146 +119,166 @@ namespace HttpTool
 		/// The main processing function.
 		/// </summary>
 		/////////////////////////////////////////////////////////////////////
-		private bool Run(string[] arguments)
+		private static bool Run(string[] arguments)
 		{
-			bool result = false;
+			bool result;
 
 			try
 			{
-				ParserResult<object> commandLine =
-					Parser.Default.ParseArguments<AgilityPack, Empty, Enhanced,
-					Images, Redirects, Standard, TestAll, Validate>(arguments);
-
-				result = ValidateArguments(commandLine);
+				result = ValidateArguments(arguments);
 
 				if (true == result)
 				{
-					Action<object> action = Parsing;
+					string command = GetCommand(arguments);
+					string url = GetUrl(arguments);
+					DocumentChecks tests = GetTests(command);
 
-					Parsed<object> parsed =
-						(Parsed<object>)commandLine.WithParsed<object>(
-							action);
+					using SiteTest tester = new SiteTest(tests);
 
-					SiteTest tester = new SiteTest();
-
-					tester.Tests = GetTests(parsed);
-
-					Options option = (Options)parsed.Value;
-					string url = option.Url.AbsoluteUri;
-
-					Console.WriteLine("Running tests on: {0}", url);
+					string message = StringTable.GetString(
+						"RUNNING_TESTS",
+						CultureInfo.InstalledUICulture);
+					Console.WriteLine(message, url);
 
 					tester.Test(url);
+				}
+				else
+				{
+					ShowHelp(null);
 				}
 			}
 			catch (Exception exception)
 			{
-				int code = (int)CommandLine.ParserResultType.NotParsed;
 				Console.WriteLine(exception.ToString());
-				Environment.Exit(code);
+
+				throw;
 			}
 
 			return result;
 		}
 
-		private static DocumentChecks GetTests(Parsed<object> parsed)
+		private static void ShowHelp(string additionalMessage)
 		{
-			DocumentChecks tests = DocumentChecks.Basic;
+			Assembly assembly = Assembly.GetExecutingAssembly();
+			string location = assembly.Location;
 
-			switch (parsed.Value)
+			FileVersionInfo versionInfo = FileVersionInfo.GetVersionInfo(location);
+
+			string companyName = versionInfo.CompanyName;
+			string copyright = versionInfo.LegalCopyright;
+
+			AssemblyName assemblyName = assembly.GetName();
+			string name = assemblyName.Name;
+			Version version = assemblyName.Version;
+			string assemblyVersion = version.ToString();
+
+			string header = string.Format(
+				CultureInfo.CurrentCulture,
+				"{0} {1} {2} {3}",
+				name,
+				assemblyVersion,
+				copyright,
+				companyName);
+			Console.WriteLine(header);
+
+			if (!string.IsNullOrWhiteSpace(additionalMessage))
 			{
-				case Standard standard:
-				{
-					tests = DocumentChecks.Basic |
-						DocumentChecks.ContentErrors;
-					break;
-				}
-
-				case TestAll testall:
-				{
-					tests = DocumentChecks.Basic |
-						DocumentChecks.ContentErrors |
-						DocumentChecks.EmptyContent |
-						DocumentChecks.ImagesExist |
-						DocumentChecks.ParseErrors |
-						DocumentChecks.Redirect |
-						DocumentChecks.W3cValidation;
-					break;
-				}
-
-				case Enhanced enhanced:
-				{
-					tests = DocumentChecks.Basic |
-						DocumentChecks.ContentErrors |
-						DocumentChecks.EmptyContent |
-						DocumentChecks.ImagesExist |
-						DocumentChecks.ParseErrors |
-						DocumentChecks.Redirect;
-					break;
-				}
-
-				case AgilityPack agilitypack:
-				{
-					tests = DocumentChecks.Basic |
-						DocumentChecks.ContentErrors |
-						DocumentChecks.ParseErrors;
-					break;
-				}
-
-				case Empty empty:
-				{
-					tests = DocumentChecks.Basic |
-						DocumentChecks.ContentErrors |
-						DocumentChecks.EmptyContent;
-					break;
-				}
-
-				case Images images:
-				{
-					tests = DocumentChecks.Basic |
-						DocumentChecks.ContentErrors |
-						DocumentChecks.EmptyContent |
-						DocumentChecks.ImagesExist;
-					break;
-				}
-
-				case Redirects redirects:
-				{
-					tests = DocumentChecks.Basic |
-						DocumentChecks.ContentErrors |
-						DocumentChecks.Redirect;
-					break;
-				}
-
-				case Validate validate:
-				{
-					tests = DocumentChecks.Basic |
-						DocumentChecks.ContentErrors |
-						DocumentChecks.EmptyContent |
-						DocumentChecks.W3cValidation;
-					break;
-				}
+				Console.WriteLine(additionalMessage);
 			}
 
-			return tests;
-		}
+			string message = StringTable.GetString(
+				"USAGE",
+				CultureInfo.InstalledUICulture);
+			Console.WriteLine(message);
 
-		private static void Parsing(object options)
-		{
+			message = StringTable.GetString(
+				"HTTPTOOL",
+				CultureInfo.InstalledUICulture);
+			Console.WriteLine(message);
+
+			message = StringTable.GetString(
+				"COMMANDS",
+				CultureInfo.InstalledUICulture);
+			Console.WriteLine(message);
+
+			message = StringTable.GetString(
+				"AGILITYPACK",
+				CultureInfo.InstalledUICulture);
+			Console.WriteLine(message);
+
+			message = StringTable.GetString(
+				"EMPTY",
+				CultureInfo.InstalledUICulture);
+			Console.WriteLine(message);
+
+			message = StringTable.GetString(
+				"ENHANCED",
+				CultureInfo.InstalledUICulture);
+			Console.WriteLine(message);
+
+			message = StringTable.GetString(
+				"IMAGES",
+				CultureInfo.InstalledUICulture);
+			Console.WriteLine(message);
+
+			message = StringTable.GetString(
+				"REDIRECTS",
+				CultureInfo.InstalledUICulture);
+			Console.WriteLine(message);
+
+			message = StringTable.GetString(
+				"STANDARD",
+				CultureInfo.InstalledUICulture);
+			Console.WriteLine(message);
+
+			message = StringTable.GetString(
+				"TESTALL",
+				CultureInfo.InstalledUICulture);
+			Console.WriteLine(message);
+
+			message = StringTable.GetString(
+				"VALIDATE",
+				CultureInfo.InstalledUICulture);
+			Console.WriteLine(message);
+
+			message = StringTable.GetString(
+				"HELP",
+				CultureInfo.InstalledUICulture);
+			Console.WriteLine(message);
 		}
 
 		/////////////////////////////////////////////////////////////////////
 		/// <summary>
-		/// Summary for ValidateArguments.
+		/// Validate the command line arguments.
 		/// </summary>
 		/////////////////////////////////////////////////////////////////////
-		private static bool ValidateArguments(ParserResult<object> commandLine)
+		private static bool ValidateArguments(string[] arguments)
 		{
 			bool result = false;
 
-			if (commandLine.Tag == ParserResultType.Parsed)
+			if (arguments.Length > 0)
 			{
-				result = true;
+				string command;
+				string url;
+
+				if (arguments.Length < 2)
+				{
+					command = "standard";
+					url = arguments[0];
+				}
+				else
+				{
+					command = arguments[0];
+					url = arguments[1];
+				}
+
+				if (Commands.Contains(command))
+				{
+					if (Uri.IsWellFormedUriString(url, UriKind.Absolute))
+					{
+						result = true;
+					}
+				}
 			}
 
 			return result;

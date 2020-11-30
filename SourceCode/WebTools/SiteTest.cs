@@ -1,5 +1,11 @@
-﻿using Abot.Crawler;
-using Abot.Poco;
+﻿/////////////////////////////////////////////////////////////////////////////
+// <copyright file="SiteTest.cs" company="James John McGuire">
+// Copyright © 2016 - 2020 James John McGuire. All Rights Reserved.
+// </copyright>
+/////////////////////////////////////////////////////////////////////////////
+
+using Abot2.Crawler;
+using Abot2.Poco;
 using DigitalZenWorks.Common.Utilities;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
@@ -13,25 +19,27 @@ using System.Threading.Tasks;
 
 namespace WebTools
 {
-	public class SiteTest
+	public class SiteTest : IDisposable
 	{
-		private RestClient client = null;
+		private readonly RestClient client = null;
 
-		private static string[] errors = { "A PHP Error was encountered",
+		private static readonly string[] errors =
+		{
+			"A PHP Error was encountered",
 			"A Database Error Occurred", "Parse error",
-			"データベースエラーが発生しました" };
+			"データベースエラーが発生しました"
+		};
 
-		private static string[] ignoreTypes =
+		private static readonly string[] ignoreTypes =
 			{ "GIF", "JPG", "JPEG", "PDF", "PNG" };
 
-		private IList<string> imagesChecked = null;
+		private readonly IList<string> imagesChecked = null;
 		private int pageCount = 0;
-		private IList<string> pagesCrawed = null;
-		private bool showGood = false;
-		private static object thisLock = new object();
+		private readonly IList<string> pagesCrawed = null;
+		private readonly bool showGood = false;
+		private readonly static object thisLock = new object();
 		private Uri baseUri = null;
 
-		public bool LogOn { get; set; }
 		public bool SavePage { get; set; }
 		public DocumentChecks Tests { get; set; }
 
@@ -42,55 +50,56 @@ namespace WebTools
 			client = new RestClient();
 		}
 
+		public SiteTest(DocumentChecks Tests)
+			: this()
+		{
+			this.Tests = Tests;
+		}
+
+		public SiteTest(DocumentChecks Tests, string url)
+			: this(Tests)
+		{
+			baseUri = new Uri(url);
+		}
+
+		/// <summary>
+		/// Disposes the object resources.
+		/// </summary>
+		public void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
+		[System.Diagnostics.CodeAnalysis.SuppressMessage(
+			"Style",
+			"IDE0017:Simplify object initialization",
+			Justification = "Don't agree with this rule.")]
 		public void Test(string url)
 		{
 			pageCount = 0;
-			SiteTestPageRequester pageRequester = null;
 			baseUri = new Uri(url);
 
-			// only login for known sites
-			if (url.Contains("euro"))
-			{
-				LogOn = true;
-			}
+			CrawlConfiguration crawlConfiguration = new CrawlConfiguration();
 
-			if (true == LogOn)
-			{
-				pageRequester = new SiteTestPageRequester(client);
-			}
+			crawlConfiguration.MaxConcurrentThreads = 4;
+			crawlConfiguration.UserAgentString =
+				"Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+				"AppleWebKit/537.36 (KHTML, like Gecko) " +
+				"Chrome/60.0.3112.113 Safari/537.36 bot";
+			crawlConfiguration.MaxPagesToCrawl = 10000;
+			crawlConfiguration.DownloadableContentTypes =
+				"text/html, text/plain, image/jpeg, image/pjpeg, image/png";
+			crawlConfiguration.CrawlTimeoutSeconds = 100;
+			crawlConfiguration.MinCrawlDelayPerDomainMilliSeconds = 1000;
 
-			PoliteWebCrawler crawler = new PoliteWebCrawler(
-				null,
-				null,
-				null,
-				null,
-				pageRequester,
-				null,
-				null,
-				null,
-				null);
+			PoliteWebCrawler crawler =
+				new PoliteWebCrawler(crawlConfiguration);
 
 			crawler.PageCrawlStarting += ProcessPageCrawlStarted;
-			crawler.PageCrawlCompletedAsync += ProcessPageCrawlCompleted;
+			crawler.PageCrawlCompleted += ProcessPageCrawlCompleted;
 
-			crawler.ShouldCrawlPage((pageToCrawl, crawlContext) =>
-			{
-				return CrawlPage(pageToCrawl);
-			});
-
-			if (true == LogOn)
-			{
-				string loginUrl = string.Format(
-					CultureInfo.InvariantCulture,
-					"{0}/mariner/product/27",
-					url);
-				Login(
-					loginUrl,
-					"jamesjohnmcguire@gmail.com",
-					"jamesjohnmcguire@gmail.com");
-			}
-
-			CrawlResult result = crawler.Crawl(baseUri);
+			CrawlResult result = crawler.CrawlAsync(baseUri).Result;
 
 			if (result.ErrorOccurred)
 			{
@@ -142,18 +151,18 @@ namespace WebTools
 							CultureInfo.InvariantCulture, "Error: {0}", url);
 						WriteError(message);
 
-						if (null == crawledPage.HttpWebResponse)
+						if (null == crawledPage.HttpResponseMessage)
 						{
 							message = string.Format(
 								CultureInfo.InvariantCulture,
-								"crawledPage.HttpWebResponse is null: {0}",
+								"crawledPage.HttpResponseMessage is null: {0}",
 								url);
 							WriteError(message);
 						}
 						else
 						{
 							string statusCode =
-							crawledPage.HttpWebResponse.StatusCode.ToString();
+							crawledPage.HttpResponseMessage.StatusCode.ToString();
 							Console.WriteLine("{0}: {1}", statusCode, url);
 						}
 					}
@@ -161,7 +170,7 @@ namespace WebTools
 					{
 						Console.WriteLine(
 							"{0}: {1}",
-							crawledPage.HttpWebResponse.StatusCode.ToString(),
+							crawledPage.HttpResponseMessage.StatusCode.ToString(),
 							url);
 					}
 
@@ -224,6 +233,22 @@ namespace WebTools
 			WriteStatus(message);
 		}
 
+		/// <summary>
+		/// Disposes of disposable resources.
+		/// </summary>
+		/// <param name="disposing">Indicates whether disposing is taking
+		/// place.</param>
+		protected virtual void Dispose(bool disposing)
+		{
+			if (disposing)
+			{
+				// dispose managed resources
+				client.Dispose();
+			}
+
+			// free native resources
+		}
+
 		private bool CheckContentErrors(CrawledPage crawledPage)
 		{
 			bool result = true;
@@ -263,9 +288,8 @@ namespace WebTools
 				{
 					hasContent = false;
 
-					if ((null != crawledPage) && (null != crawledPage.HttpWebResponse) &&
-						(!crawledPage.HttpWebResponse.ContentType.Equals(
-						"application/rss+xml; charset=UTF-8")))
+					if ((null != crawledPage) &&
+						(null != crawledPage.HttpResponseMessage))
 					{
 						string message = string.Format(
 							CultureInfo.InvariantCulture,
@@ -290,17 +314,19 @@ namespace WebTools
 
 			if (Tests.HasFlag(DocumentChecks.ImagesExist))
 			{
-				HtmlDocument htmlAgilityPackDocument =
-				crawledPage.HtmlDocument;
+				HtmlDocument agilityPackHtmlDocument = new HtmlDocument();
+				agilityPackHtmlDocument.LoadHtml(crawledPage.Content.Text);
+
 				HtmlAgilityPack.HtmlNodeCollection nodes =
-					htmlAgilityPackDocument.DocumentNode.SelectNodes(
+					agilityPackHtmlDocument.DocumentNode.SelectNodes(
 					@"//img[@src]");
+
 
 				if (null != nodes)
 				{
-					foreach (HtmlAgilityPack.HtmlNode image in nodes)
+					foreach (var image in nodes)
 					{
-						HtmlAttribute source = image.Attributes["src"];
+						var source = image.Attributes["src"];
 						string contents = source.Value;
 
 						if (!imagesChecked.Contains(contents))
@@ -342,14 +368,11 @@ namespace WebTools
 
 			if (Tests.HasFlag(DocumentChecks.ParseErrors))
 			{
-				HtmlDocument htmlAgilityPackDocument =
-					crawledPage.HtmlDocument;
-				//var angleSharpHtmlDocument =
-				//	crawledPage.AngleSharpHtmlDocument;
+				HtmlDocument agilityPackHtmlDocument = new HtmlDocument();
+				agilityPackHtmlDocument.LoadHtml(crawledPage.Content.Text);
 
-				HtmlNode.ElementsFlags.Remove("option");
 				IEnumerable<HtmlAgilityPack.HtmlParseError> parseErrors =
-					htmlAgilityPackDocument.ParseErrors;
+					agilityPackHtmlDocument.ParseErrors;
 
 				if (null != parseErrors)
 				{
@@ -382,19 +405,21 @@ namespace WebTools
 			if (Tests.HasFlag(DocumentChecks.Redirect))
 			{
 				string requestUri =
-					crawledPage.HttpWebRequest.RequestUri.AbsoluteUri;
+					crawledPage.HttpRequestMessage.RequestUri.AbsoluteUri;
 
-				if (null != crawledPage.HttpWebResponse)
+				if (null != crawledPage.HttpResponseMessage)
 				{
 					string responseUri =
-						crawledPage.HttpWebResponse.ResponseUri.AbsoluteUri;
-					if (!requestUri.Equals(responseUri))
+						crawledPage.Uri.AbsoluteUri;
+
+					if ((!requestUri.Equals(responseUri)) ||
+						(crawledPage.RedirectedFrom != null))
 					{
 						//This is a redirect
 						ClearCurrentConsoleLine();
 						Console.WriteLine("Redirected from:{0} to: {1}",
-							crawledPage.HttpWebRequest.RequestUri.AbsoluteUri,
-							crawledPage.HttpWebResponse.ResponseUri.AbsoluteUri);
+							requestUri,
+							responseUri);
 					}
 				}
 			}
@@ -409,20 +434,6 @@ namespace WebTools
 			Console.SetCursorPosition(0, currentLineCursor);
 		}
 
-		private CrawlDecision CrawlPage(PageToCrawl page)
-		{
-			CrawlDecision doCrawl = new CrawlDecision();
-			doCrawl.Allow = true;
-
-			if (pagesCrawed.Contains(page.Uri.AbsolutePath))
-			{
-				doCrawl.Reason = "Don't want to repeat crawled pages";
-				doCrawl.Allow = false;
-			}
-
-			return doCrawl;
-		}
-
 		private static string GetAbsoluteUrlString(string baseUrl, string url)
 		{
 			var uri = new Uri(url, UriKind.RelativeOrAbsolute);
@@ -435,24 +446,15 @@ namespace WebTools
 		{
 			bool error = false;
 
-			if ((null != crawledPage.WebException) ||
-				((null != crawledPage.HttpWebResponse) &&
-				(crawledPage.HttpWebResponse.StatusCode != HttpStatusCode.OK)))
+			if ((null != crawledPage.HttpRequestException) ||
+				((null != crawledPage.HttpResponseMessage) &&
+				(crawledPage.HttpResponseMessage.StatusCode !=
+					HttpStatusCode.OK)))
 			{
 				error = true;
 			}
 
 			return error;
-		}
-
-		private void Login(string url, string username, string password)
-		{
-			string[] keys = { "mode", "id", "section", "section_id", "email",
-				"email_check", "submit" };
-			string[] values = { "login", "27", "brand", "6", username,
-				password, "送信" };
-
-			client.Request(HttpMethod.Post, url, keys, values);
 		}
 
 		private void SaveDocument(CrawledPage crawledPage)

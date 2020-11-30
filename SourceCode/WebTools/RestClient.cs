@@ -1,4 +1,10 @@
-﻿#define USE_HTTPWebRequest
+﻿/////////////////////////////////////////////////////////////////////////////
+// <copyright file="RestClient.cs" company="James John McGuire">
+// Copyright © 2016 - 2020 James John McGuire. All Rights Reserved.
+// </copyright>
+/////////////////////////////////////////////////////////////////////////////
+
+#define USE_HTTPWebRequest
 
 using Newtonsoft.Json;
 using System;
@@ -17,16 +23,19 @@ namespace WebTools
 {
 	public delegate void LogMessage(string level, string message);
 
-	public class RestClient : INotifyPropertyChanged
+	public class RestClient : IDisposable, INotifyPropertyChanged
 	{
-		private HttpClient client = null;
+		private readonly HttpClient client = null;
 		private readonly string clientId = null;
 		private readonly string clientSecret = null;
-		private CookieContainer cookieJar = null;
+		private readonly CookieContainer cookieJar = null;
 
-		private static string[] errors = { "A PHP Error was encountered",
+		private static readonly string[] errors =
+		{
+			"A PHP Error was encountered",
 			"A Database Error Occurred", "Parse error",
-			"データベースエラーが発生しました" };
+			"データベースエラーが発生しました"
+		};
 
 		public string AccessToken { get; set; }
 		public bool Authenticate { get; set; }
@@ -42,6 +51,10 @@ namespace WebTools
 
 		public event PropertyChangedEventHandler PropertyChanged;
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage(
+			"Style",
+			"IDE0017:Simplify object initialization",
+			Justification = "Don't agree with this rule.")]
 		public RestClient()
 		{
 			Authenticate = false;
@@ -75,6 +88,19 @@ namespace WebTools
 			this.clientSecret = clientSecret;
 		}
 
+		/// <summary>
+		/// Disposes the object resources.
+		/// </summary>
+		public void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
+		[System.Diagnostics.CodeAnalysis.SuppressMessage(
+			"Style",
+			"IDE1005:Delegate invocation can be simplified.",
+			Justification = "Don't agree with this rule.")]
 		protected void OnPropertyChanged(string name)
 		{
 			PropertyChangedEventHandler handler = PropertyChanged;
@@ -84,6 +110,11 @@ namespace WebTools
 			}
 		}
 
+		/// <summary>
+		/// Add a cookie into the cookie jar.
+		/// </summary>
+		/// <param name="name">The name of the cookie.</param>
+		/// <param name="value">The value of the cookie.</param>
 		public void AddCookie(string name, string value)
 		{
 			Cookie cookie = new Cookie(name, value);
@@ -132,6 +163,10 @@ namespace WebTools
 			return response;
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage(
+			"Style",
+			"IDE1005:Delegate invocation can be simplified.",
+			Justification = "Don't agree with this rule.")]
 		public async Task<string> Request(string requestUrl)
 		{
 			string responseContent = null;
@@ -171,15 +206,16 @@ namespace WebTools
 					Logger("error", exception.ToString());
 				}
 
-				responseContent = string.Format(
-					CultureInfo.InvariantCulture,
-					"{ \"error\":\"exception\",\"error_description\":\"{0}\"}",
-					exception.ToString());
+				responseContent = SetExceptionResponse(exception);
 			}
 
 			return responseContent;
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage(
+			"Style",
+			"IDE1005:Delegate invocation can be simplified.",
+			Justification = "Don't agree with this rule.")]
 		public string Request(HttpMethod method, string requestUrl,
 			IList<KeyValuePair<string, string>> parameters)
 		{
@@ -236,10 +272,7 @@ namespace WebTools
 					Logger("error", exception.ToString());
 				}
 
-				responseContent = string.Format(
-					CultureInfo.InvariantCulture,
-					"{ \"error\":\"exception\",\"error_description\":\"{0}\"}",
-					exception.ToString());
+				responseContent = SetExceptionResponse(exception);
 			}
 
 			return responseContent;
@@ -331,6 +364,37 @@ namespace WebTools
 			return Request(method, query, parameters);
 		}
 
+		/// <summary>
+		/// Disposes of disposable resources.
+		/// </summary>
+		/// <param name="disposing">Indicates whether disposing is taking
+		/// place.</param>
+		protected virtual void Dispose(bool disposing)
+		{
+			if (disposing)
+			{
+				// dispose managed resources
+				client.Dispose();
+			}
+
+			// free native resources
+		}
+
+		private static string SetExceptionResponse(Exception exception)
+		{
+
+			string error = "\"error\":\"exception\"";
+			string details = exception.ToString();
+
+			string response = string.Format(
+				CultureInfo.InvariantCulture,
+				"{{ {0},\"error_description\":\"{1}\" }}",
+				error,
+				details);
+
+			return response;
+		}
+
 		private void DoAuthentication()
 		{
 			if (true == Authenticate)
@@ -393,6 +457,14 @@ namespace WebTools
 			return responseContent;
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage(
+			"Style",
+			"IDE0017:Simplify object initialization",
+			Justification = "Don't agree with this rule.")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage(
+			"Style",
+			"IDE1005:Delegate invocation can be simplified.",
+			Justification = "Don't agree with this rule.")]
 		private string GetResponse(HttpMethod method, string requestUrl,
 			FormUrlEncodedContent content)
 		{
@@ -507,11 +579,7 @@ namespace WebTools
 					Logger("error", exception.ToString());
 				}
 
-				responseContent = string.Format(
-					CultureInfo.InvariantCulture,
-					"{ \"error\":\"exception\"," +
-					"\"error_description\":\"{0}\"}",
-					exception.ToString());
+				responseContent = SetExceptionResponse(exception);
 			}
 
 			return responseContent;
@@ -535,14 +603,18 @@ namespace WebTools
 			return valid;
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage(
+			"Style",
+			"IDE1005:Delegate invocation can be simplified.",
+			Justification = "Don't agree with this rule.")]
 		private bool RefeshToken(string response)
 		{
 			bool updated = false;
 
 			try
 			{
-				if (response.IndexOf("error",
-					StringComparison.OrdinalIgnoreCase) >= 0)
+				if (response.Contains(
+					"error", StringComparison.OrdinalIgnoreCase))
 				{
 					string[] refreshErrors =
 					{
@@ -558,8 +630,8 @@ namespace WebTools
 					{
 						string refresh = RequestRefreshToken(
 							RefreshTokenEndPoint, RefreshToken);
-						if (refresh.IndexOf("error",
-							StringComparison.OrdinalIgnoreCase) == -1)
+						if (refresh.Contains("error",
+							StringComparison.OrdinalIgnoreCase))
 						{
 							Token refreshResponse =
 							JsonConvert.DeserializeObject<Token>(response);

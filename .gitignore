@@ -43,3 +43,4 @@ TestResult.xml
 .builds
 *.pidb
 *.svclog
+/SourceCode/HttpTool/Resources.Designer.cs
