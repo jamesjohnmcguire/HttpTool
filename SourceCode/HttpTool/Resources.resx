@@ -120,4 +120,40 @@
   <data name="RUNNING_TESTS" xml:space="preserve">
     <value>Running tests on: {0}</value>
   </data>
+  <data name="USAGE" xml:space="preserve">
+    <value>Usage:</value>
+  </data>
+  <data name="COMMANDS" xml:space="preserve">
+    <value>Commands:</value>
+  </data>
+  <data name="AGILITYPACK" xml:space="preserve">
+    <value>agilitypack    Run agility pack tests</value>
+  </data>
+  <data name="EMPTY" xml:space="preserve">
+    <value>empty          Run empty page tests</value>
+  </data>
+  <data name="ENHANCED" xml:space="preserve">
+    <value>enhanced       Run all enhanced tests</value>
+  </data>
+  <data name="IMAGES" xml:space="preserve">
+    <value>images         Run missing images tests</value>
+  </data>
+  <data name="REDIRECTS" xml:space="preserve">
+    <value>redirects      Run redirect tests</value>
+  </data>
+  <data name="STANDARD" xml:space="preserve">
+    <value>standard       Run standard tests (default)</value>
+  </data>
+  <data name="TESTALL" xml:space="preserve">
+    <value>testall        Run all tests</value>
+  </data>
+  <data name="VALIDATE" xml:space="preserve">
+    <value>validate       Run w3c HTML validation tests</value>
+  </data>
+  <data name="HELP" xml:space="preserve">
+    <value>help           Display this information</value>
+  </data>
+  <data name="HTTPTOOL" xml:space="preserve">
+    <value>HttpTool &lt;command&gt; &lt;url&gt;</value>
+  </data>
 </root>
