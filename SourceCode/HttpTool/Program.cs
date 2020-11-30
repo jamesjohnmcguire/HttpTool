@@ -127,9 +127,9 @@ namespace HttpTool
 						(Parsed<object>)commandLine.WithParsed<object>(
 							action);
 
-					using SiteTest tester = new SiteTest();
+					DocumentChecks tests = GetTests(parsed);
 
-					tester.Tests = GetTests(parsed);
+					using SiteTest tester = new SiteTest(tests);
 
 					Options option = (Options)parsed.Value;
 					string url = option.Url.AbsoluteUri;

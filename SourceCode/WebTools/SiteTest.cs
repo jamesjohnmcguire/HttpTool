@@ -50,6 +50,18 @@ namespace WebTools
 			client = new RestClient();
 		}
 
+		public SiteTest(DocumentChecks Tests)
+			: this()
+		{
+			this.Tests = Tests;
+		}
+
+		public SiteTest(DocumentChecks Tests, string url)
+			: this(Tests)
+		{
+			baseUri = new Uri(url);
+		}
+
 		/// <summary>
 		/// Disposes the object resources.
 		/// </summary>
