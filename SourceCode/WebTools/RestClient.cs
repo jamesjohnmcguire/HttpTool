@@ -4,8 +4,10 @@
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
 
+// #define USE_RestSharp
 #define USE_HTTPWebRequest
 
+// using RestSharp;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -25,32 +27,49 @@ namespace WebTools
 
 	public class RestClient : IDisposable, INotifyPropertyChanged
 	{
-		private readonly HttpClient client = null;
-		private readonly string clientId = null;
-		private readonly string clientSecret = null;
-		private readonly CookieContainer cookieJar = null;
-
-		private static readonly string[] errors =
+		private static readonly string[] ServerErrors =
 		{
 			"A PHP Error was encountered",
-			"A Database Error Occurred", "Parse error",
-			"データベースエラーが発生しました"
+			"A Database Error Occurred",
+			"Parse error",
+			"データベースエラーが発生しました",
 		};
 
+		private readonly HttpClient client;
+		private readonly string clientId;
+		private readonly string clientSecret;
+		private readonly CookieContainer cookieJar;
+
+		private readonly IList<KeyValuePair<string, string>>
+			defaultParameters = new List<KeyValuePair<string, string>>();
+
 		public string AccessToken { get; set; }
+
 		public bool Authenticate { get; set; }
+
 		public string Host { get; set; }
+
 		public bool IncludeSourceInError { get; set; }
+
 		public bool IsError { get; set; }
+
 		public LogMessage Logger { get; set; }
+
 		public string RefreshToken { get; set; }
+
 		public string RefreshTokenEndPoint { get; set; }
+
 		public HttpRequestMessage RequestMessage { get; set; }
+
 		public HttpResponseMessage Response { get; set; }
+
 		public HttpRequestMessage ResponseMessage { get; set; }
 
 		public event PropertyChangedEventHandler PropertyChanged;
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="RestClient"/> class.
+		/// </summary>
 		[System.Diagnostics.CodeAnalysis.SuppressMessage(
 			"Style",
 			"IDE0017:Simplify object initialization",
@@ -65,11 +84,6 @@ namespace WebTools
 			HttpClientHandler clientHandler = new HttpClientHandler();
 			clientHandler.CookieContainer = cookieJar;
 			clientHandler.AllowAutoRedirect = true;
-
-			// actually doesn't seem to work
-			//NetworkCredential credentials =
-			//new NetworkCredential(clientId, clientSecret);
-			//clientHandler.Credentials = credentials;
 
 			string userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
 				"AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 " +
@@ -160,6 +174,7 @@ namespace WebTools
 					System.Diagnostics.Debug.WriteLine("likely a time out");
 				}
 			}
+
 			return response;
 		}
 
@@ -216,10 +231,12 @@ namespace WebTools
 			"Style",
 			"IDE1005:Delegate invocation can be simplified.",
 			Justification = "Don't agree with this rule.")]
-		public string Request(HttpMethod method, string requestUrl,
+		public string Request(
+			HttpMethod method,
+			string requestUrl,
 			IList<KeyValuePair<string, string>> parameters)
 		{
-#if (USE_HTTPWebRequest)
+#if USE_HTTPWebRequest
 			string responseContent = null;
 
 			try
@@ -277,7 +294,7 @@ namespace WebTools
 
 			return responseContent;
 #endif
-#if (USE_RestSharp)
+#if USE_RestSharp
 			RestClient client = new RestClient();
 			client.BaseUrl = new Uri(host);
 			// client.Authenticator = new HttpBasicAuthenticator(username, password);
@@ -345,7 +362,10 @@ namespace WebTools
 #endif
 		}
 
-		public string Request(HttpMethod method, string query, string[] keys,
+		public string Request(
+			HttpMethod method,
+			string query,
+			string[] keys,
 			string[] values)
 		{
 			IList<KeyValuePair<string, string>> parameters =
@@ -380,9 +400,20 @@ namespace WebTools
 			// free native resources
 		}
 
+		private static string SetErrorResponse(
+			string error, string description)
+		{
+			string response = string.Format(
+				CultureInfo.InvariantCulture,
+				"{{ {0},\"error_description\":\"{1}\" }}",
+				error,
+				description);
+
+			return response;
+		}
+
 		private static string SetExceptionResponse(Exception exception)
 		{
-
 			string error = "\"error\":\"exception\"";
 			string details = exception.ToString();
 
@@ -433,7 +464,7 @@ namespace WebTools
 				responseContent = await client.GetStringAsync(uri).
 						ConfigureAwait(false);
 
-				if (errors.Any(responseContent.Contains))
+				if (ServerErrors.Any(responseContent.Contains))
 				{
 					IsError = true;
 				}
@@ -465,7 +496,9 @@ namespace WebTools
 			"Style",
 			"IDE1005:Delegate invocation can be simplified.",
 			Justification = "Don't agree with this rule.")]
-		private string GetResponse(HttpMethod method, string requestUrl,
+		private string GetResponse(
+			HttpMethod method,
+			string requestUrl,
 			FormUrlEncodedContent content)
 		{
 			string responseContent = null;
@@ -510,7 +543,6 @@ namespace WebTools
 					}
 					else if (!Response.IsSuccessStatusCode)
 					{
-						//IsError = true;
 						System.Diagnostics.Debug.WriteLine(
 							"status code not ok");
 					}
@@ -538,26 +570,19 @@ namespace WebTools
 						string error = Response.StatusCode.ToString();
 						if (true == IncludeSourceInError)
 						{
-							responseContent = string.Format(
-								CultureInfo.InvariantCulture,
-								"{{ \"error\":" +
-								"\"{0}\",\"error_description\":\"{1}\"}}",
-								error,
-								responseContent);
+							responseContent =
+								SetErrorResponse(error, responseContent);
 						}
 						else
 						{
-							responseContent = string.Format(
-								CultureInfo.InvariantCulture,
-								"{{ \"error\":" +
-								"\"{0}\",\"error_description\":\"{1}\"}}",
+							responseContent = SetErrorResponse(
 								error,
 								"An unidentified server error occurred");
 						}
 					}
 				}
 
-				if (errors.Any(responseContent.Contains))
+				if (ServerErrors.Any(responseContent.Contains))
 				{
 					IsError = true;
 				}
@@ -630,7 +655,8 @@ namespace WebTools
 					{
 						string refresh = RequestRefreshToken(
 							RefreshTokenEndPoint, RefreshToken);
-						if (refresh.Contains("error",
+						if (refresh.Contains(
+							"error",
 							StringComparison.OrdinalIgnoreCase))
 						{
 							Token refreshResponse =
@@ -658,13 +684,17 @@ namespace WebTools
 			return updated;
 		}
 
-		public string RequestRefreshToken(string endpoint,
-			string refreshToken)
+		public string RequestRefreshToken(string endpoint, string refreshToken)
 		{
-			string[] keys = { "grant_type", "refresh_token", "client_id",
-			"client_secret" };
-			string[] values = { "refresh_token", refreshToken, clientId,
-				clientSecret };
+			string[] keys =
+			{
+				"grant_type", "refresh_token", "client_id", "client_secret"
+			};
+
+			string[] values =
+			{
+				"refresh_token", refreshToken, clientId, clientSecret
+			};
 
 			Authenticate = true;
 

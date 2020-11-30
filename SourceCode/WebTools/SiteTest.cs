@@ -31,16 +31,20 @@ namespace WebTools
 		};
 
 		private static readonly string[] ignoreTypes =
-			{ "GIF", "JPG", "JPEG", "PDF", "PNG" };
+		{
+			"GIF", "JPG", "JPEG", "PDF", "PNG"
+		};
 
-		private readonly IList<string> imagesChecked = null;
-		private int pageCount = 0;
-		private readonly IList<string> pagesCrawed = null;
-		private readonly bool showGood = false;
+		private readonly IList<string> imagesChecked;
+
+		private int pageCount;
+		private readonly IList<string> pagesCrawed;
+		private readonly bool showGood;
 		private readonly static object thisLock = new object();
 		private Uri baseUri = null;
 
 		public bool SavePage { get; set; }
+
 		public DocumentChecks Tests { get; set; }
 
 		public SiteTest()
@@ -50,14 +54,14 @@ namespace WebTools
 			client = new RestClient();
 		}
 
-		public SiteTest(DocumentChecks Tests)
+		public SiteTest(DocumentChecks tests)
 			: this()
 		{
-			this.Tests = Tests;
+			Tests = tests;
 		}
 
-		public SiteTest(DocumentChecks Tests, string url)
-			: this(Tests)
+		public SiteTest(DocumentChecks tests, string url)
+			: this(tests)
 		{
 			baseUri = new Uri(url);
 		}
@@ -103,12 +107,15 @@ namespace WebTools
 
 			if (result.ErrorOccurred)
 			{
-				Console.WriteLine("Crawl of {0} completed with error: {1}",
-					result.RootUri.AbsoluteUri, result.ErrorException.Message);
+				Console.WriteLine(
+					"Crawl of {0} completed with error: {1}",
+					result.RootUri.AbsoluteUri,
+					result.ErrorException.Message);
 			}
 			else
 			{
-				Console.WriteLine("Crawl of {0} completed without error.",
+				Console.WriteLine(
+					"Crawl of {0} completed without error.",
 					result.RootUri.AbsoluteUri);
 			}
 
@@ -221,7 +228,8 @@ namespace WebTools
 			pageCount++;
 		}
 
-		public void ProcessPageCrawlStarted(object sender,
+		public void ProcessPageCrawlStarted(
+			object sender,
 			PageCrawlStartingArgs e)
 		{
 			PageToCrawl page = e.PageToCrawl;
@@ -321,7 +329,6 @@ namespace WebTools
 					agilityPackHtmlDocument.DocumentNode.SelectNodes(
 					@"//img[@src]");
 
-
 				if (null != nodes)
 				{
 					foreach (var image in nodes)
@@ -415,9 +422,10 @@ namespace WebTools
 					if ((!requestUri.Equals(responseUri)) ||
 						(crawledPage.RedirectedFrom != null))
 					{
-						//This is a redirect
+						// This is a redirect
 						ClearCurrentConsoleLine();
-						Console.WriteLine("Redirected from:{0} to: {1}",
+						Console.WriteLine(
+							"Redirected from:{0} to: {1}",
 							requestUri,
 							responseUri);
 					}
@@ -438,7 +446,10 @@ namespace WebTools
 		{
 			var uri = new Uri(url, UriKind.RelativeOrAbsolute);
 			if (!uri.IsAbsoluteUri)
+			{
 				uri = new Uri(new Uri(baseUrl), uri);
+			}
+
 			return uri.ToString();
 		}
 
