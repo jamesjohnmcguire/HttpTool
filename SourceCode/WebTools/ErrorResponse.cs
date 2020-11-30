@@ -4,12 +4,24 @@
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
 
+using Newtonsoft.Json;
+
 namespace WebTools
 {
-	internal class ErrorResponse
+	public class ErrorResponse
 	{
-		public string error { get; set; }
+		/// <summary>
+		/// Gets or sets the error code.
+		/// </summary>
+		/// <value>The error code or brief description.</value>
+		[JsonProperty("error")]
+		public string Error { get; set; }
 
-		public string error_description { get; set; }
+		/// <summary>
+		/// Gets or sets the error description.
+		/// </summary>
+		/// <value>The error description.</value>
+		[JsonProperty("error_description")]
+		public string ErrorDescription { get; set; }
 	}
 }

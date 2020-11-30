@@ -21,29 +21,30 @@ namespace WebTools
 {
 	public class SiteTest : IDisposable
 	{
-		private static readonly string[] errors =
+		private static readonly string[] ServerErrors =
 		{
 			"A PHP Error was encountered",
 			"A Database Error Occurred", "Parse error",
 			"データベースエラーが発生しました"
 		};
 
-		private static readonly string[] ignoreTypes =
+		private static readonly string[] IgnoreTypes =
 		{
 			"GIF", "JPG", "JPEG", "PDF", "PNG"
 		};
 
-		private static readonly object thisLock = new object();
+		private static readonly object ThisLock = new object();
 
-		private readonly RestClient client = null;
+		private readonly RestClient client;
 
 		private readonly IList<string> imagesChecked;
 
 		private readonly IList<string> pagesCrawed;
 
+		private readonly bool showGood;
+
 		private int pageCount;
 
-		private readonly bool showGood;
 		private Uri baseUri;
 
 		public SiteTest()
@@ -197,7 +198,7 @@ namespace WebTools
 
 					// if page has content and
 					// it's not one of types we're ignoring
-					if (!ignoreTypes.Any(url.ToUpperInvariant().EndsWith))
+					if (!IgnoreTypes.Any(url.ToUpperInvariant().EndsWith))
 					{
 						hasContent = CheckForEmptyContent(crawledPage);
 
@@ -295,7 +296,7 @@ namespace WebTools
 			return error;
 		}
 
-		private static bool URLExists(string url)
+		private static bool URLExists(Uri url)
 		{
 			bool result = true;
 			HttpWebResponse response = null;
@@ -336,7 +337,7 @@ namespace WebTools
 
 		private static void WriteError(string message)
 		{
-			lock (thisLock)
+			lock (ThisLock)
 			{
 				Console.ForegroundColor = ConsoleColor.Red;
 				ClearCurrentConsoleLine();
@@ -347,7 +348,7 @@ namespace WebTools
 
 		private static void WriteStatus(string message)
 		{
-			lock (thisLock)
+			lock (ThisLock)
 			{
 				ClearCurrentConsoleLine();
 				Console.Write(message);
@@ -362,11 +363,11 @@ namespace WebTools
 			{
 				string url = crawledPage.Uri.AbsoluteUri;
 
-				if (!ignoreTypes.Any(url.EndsWith))
+				if (!IgnoreTypes.Any(url.EndsWith))
 				{
 					string text = crawledPage.Content.Text;
 
-					if (errors.Any(text.Contains))
+					if (ServerErrors.Any(text.Contains))
 					{
 						result = false;
 
@@ -443,7 +444,8 @@ namespace WebTools
 							string imageUrl =
 								GetAbsoluteUrlString(baseUrl, source.Value);
 
-							bool exists = URLExists(imageUrl);
+							Uri uri = new Uri(imageUrl);
+							bool exists = URLExists(uri);
 
 							if (false == exists)
 							{

@@ -547,12 +547,14 @@ namespace WebTools
 
 				if (method == HttpMethod.Post)
 				{
+					Uri uri = new Uri(requestUrl);
+
 					// save this as clients may want know this
 					RequestMessage = new HttpRequestMessage();
-					RequestMessage.RequestUri = new Uri(requestUrl);
+					RequestMessage.RequestUri = uri;
 					RequestMessage.Method = method;
 
-					Response = client.PostAsync(requestUrl, content).Result;
+					Response = client.PostAsync(uri, content).Result;
 					int statusCode = (int)Response.StatusCode;
 
 					// We want to handle redirects ourselves so that we can
@@ -670,7 +672,7 @@ namespace WebTools
 					Token serverResponse =
 						JsonConvert.DeserializeObject<Token>(response);
 
-					if (refreshErrors.Contains(serverResponse.error))
+					if (refreshErrors.Contains(serverResponse.Error))
 					{
 						string refresh = RequestRefreshToken(
 							RefreshTokenEndPoint, RefreshToken);
@@ -681,8 +683,8 @@ namespace WebTools
 							Token refreshResponse =
 							JsonConvert.DeserializeObject<Token>(response);
 
-							AccessToken = refreshResponse.access_token;
-							RefreshToken = refreshResponse.refresh_token;
+							AccessToken = refreshResponse.AccessToken;
+							RefreshToken = refreshResponse.RefreshToken;
 							OnPropertyChanged("AccessToken");
 							OnPropertyChanged("RefreshToken");
 
