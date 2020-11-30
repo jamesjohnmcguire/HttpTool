@@ -40,7 +40,6 @@ namespace WebTools
 		private readonly static object thisLock = new object();
 		private Uri baseUri = null;
 
-		public bool LogOn { get; set; }
 		public bool SavePage { get; set; }
 		public DocumentChecks Tests { get; set; }
 
@@ -80,6 +79,7 @@ namespace WebTools
 			crawlConfiguration.DownloadableContentTypes =
 				"text/html, text/plain, image/jpeg, image/pjpeg, image/png";
 			crawlConfiguration.CrawlTimeoutSeconds = 100;
+			crawlConfiguration.MinCrawlDelayPerDomainMilliSeconds = 1000;
 
 			PoliteWebCrawler crawler =
 				new PoliteWebCrawler(crawlConfiguration);
@@ -302,15 +302,16 @@ namespace WebTools
 
 			if (Tests.HasFlag(DocumentChecks.ImagesExist))
 			{
+				HtmlDocument agilityPackHtmlDocument = new HtmlDocument();
+				agilityPackHtmlDocument.LoadHtml(crawledPage.Content.Text);
+
 				var htmlAgilityPackDocument =
 				crawledPage.AngleSharpHtmlDocument;
 
-				//HtmlAgilityPack.HtmlNodeCollection nodes =
-				//	htmlAgilityPackDocument.DocumentNode.SelectNodes(
-				//	@"//img[@src]");
-				var nodes =
-					htmlAgilityPackDocument.DocumentElement.QuerySelectorAll(
-						@"//img[@src]");
+				HtmlAgilityPack.HtmlNodeCollection nodes =
+					agilityPackHtmlDocument.DocumentNode.SelectNodes(
+					@"//img[@src]");
+
 
 				if (null != nodes)
 				{
@@ -358,36 +359,33 @@ namespace WebTools
 
 			if (Tests.HasFlag(DocumentChecks.ParseErrors))
 			{
-				//HtmlDocument htmlAgilityPackDocument =
-				//	crawledPage.HtmlDocument;
-				////var angleSharpHtmlDocument =
-				////	crawledPage.AngleSharpHtmlDocument;
+				HtmlDocument agilityPackHtmlDocument = new HtmlDocument();
+				agilityPackHtmlDocument.LoadHtml(crawledPage.Content.Text);
 
-				//HtmlNode.ElementsFlags.Remove("option");
-				//IEnumerable<HtmlAgilityPack.HtmlParseError> parseErrors =
-				//	htmlAgilityPackDocument.ParseErrors;
+				IEnumerable<HtmlAgilityPack.HtmlParseError> parseErrors =
+					agilityPackHtmlDocument.ParseErrors;
 
-				//if (null != parseErrors)
-				//{
-				//	foreach (HtmlAgilityPack.HtmlParseError error in
-				//		parseErrors)
-				//	{
-				//		// Ignoring error "End tag </option> is not required"
-				//		// as it doesn't really seem like a problem
-				//		if (error.Code != HtmlParseErrorCode.TagNotClosed)
-				//		{
-				//			result = false;
+				if (null != parseErrors)
+				{
+					foreach (HtmlAgilityPack.HtmlParseError error in
+						parseErrors)
+					{
+						// Ignoring error "End tag </option> is not required"
+						// as it doesn't really seem like a problem
+						if (error.Code != HtmlParseErrorCode.TagNotClosed)
+						{
+							result = false;
 
-				//			string message = string.Format(
-				//				CultureInfo.InvariantCulture,
-				//				"HtmlAgilityPack: {0} in {1} at line: {2}",
-				//				error.Reason,
-				//				crawledPage.Uri.AbsoluteUri,
-				//				error.Line);
-				//			WriteError(message);
-				//		}
-				//	}
-				//}
+							string message = string.Format(
+								CultureInfo.InvariantCulture,
+								"HtmlAgilityPack: {0} in {1} at line: {2}",
+								error.Reason,
+								crawledPage.Uri.AbsoluteUri,
+								error.Line);
+							WriteError(message);
+						}
+					}
+				}
 			}
 
 			return result;
@@ -402,16 +400,18 @@ namespace WebTools
 
 				if (null != crawledPage.HttpResponseMessage)
 				{
-					//string responseUri =
-					//	crawledPage.HttpResponseMessage.ResponseUri.AbsoluteUri;
-					//if (!requestUri.Equals(responseUri))
-					//{
-					//	//This is a redirect
-					//	ClearCurrentConsoleLine();
-					//	Console.WriteLine("Redirected from:{0} to: {1}",
-					//		crawledPage.HttpWebRequest.RequestUri.AbsoluteUri,
-					//		crawledPage.HttpWebResponse.ResponseUri.AbsoluteUri);
-					//}
+					string responseUri =
+						crawledPage.Uri.AbsoluteUri;
+
+					if ((!requestUri.Equals(responseUri)) ||
+						(crawledPage.RedirectedFrom != null))
+					{
+						//This is a redirect
+						ClearCurrentConsoleLine();
+						Console.WriteLine("Redirected from:{0} to: {1}",
+							requestUri,
+							responseUri);
+					}
 				}
 			}
 		}
