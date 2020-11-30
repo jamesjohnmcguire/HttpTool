@@ -4,6 +4,7 @@
 		<AssemblyTitle>HttpTool</AssemblyTitle>
 		<CodeAnalysisRuleSet>$(SolutionDir)\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
 		<Copyright>Copyright © 2020</Copyright>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<NoWarn>1701;1702;NU1605</NoWarn>
 		<OutputPath>$(SolutionDir)\Bin\$(Configuration)\$(Platform)</OutputPath>
 		<OutputType>Exe</OutputType>
@@ -11,7 +12,6 @@
 		<TargetFramework>net5.0</TargetFramework>
 	</PropertyGroup>
   <ItemGroup>
-	<PackageReference Include="CommandLineParser" Version="2.7.82" />
 	<PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8">
 	  <PrivateAssets>all</PrivateAssets>
 	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

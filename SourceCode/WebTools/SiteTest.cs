@@ -317,9 +317,6 @@ namespace WebTools
 				HtmlDocument agilityPackHtmlDocument = new HtmlDocument();
 				agilityPackHtmlDocument.LoadHtml(crawledPage.Content.Text);
 
-				var htmlAgilityPackDocument =
-				crawledPage.AngleSharpHtmlDocument;
-
 				HtmlAgilityPack.HtmlNodeCollection nodes =
 					agilityPackHtmlDocument.DocumentNode.SelectNodes(
 					@"//img[@src]");
