@@ -4,8 +4,11 @@
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
 
+// #define USE_RestSharp
 #define USE_HTTPWebRequest
 
+// using RestSharp;
+using Common.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -21,36 +24,30 @@ using System.Threading.Tasks;
 
 namespace WebTools
 {
-	public delegate void LogMessage(string level, string message);
-
+	/// <summary>
+	/// Represents a rest client for communicating with the server.
+	/// </summary>
 	public class RestClient : IDisposable, INotifyPropertyChanged
 	{
-		private readonly HttpClient client = null;
-		private readonly string clientId = null;
-		private readonly string clientSecret = null;
-		private readonly CookieContainer cookieJar = null;
+		private static readonly ILog Log = LogManager.GetLogger(
+			System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-		private static readonly string[] errors =
+		private static readonly string[] ServerErrors =
 		{
 			"A PHP Error was encountered",
-			"A Database Error Occurred", "Parse error",
-			"データベースエラーが発生しました"
+			"A Database Error Occurred",
+			"Parse error",
+			"データベースエラーが発生しました",
 		};
 
-		public string AccessToken { get; set; }
-		public bool Authenticate { get; set; }
-		public string Host { get; set; }
-		public bool IncludeSourceInError { get; set; }
-		public bool IsError { get; set; }
-		public LogMessage Logger { get; set; }
-		public string RefreshToken { get; set; }
-		public string RefreshTokenEndPoint { get; set; }
-		public HttpRequestMessage RequestMessage { get; set; }
-		public HttpResponseMessage Response { get; set; }
-		public HttpRequestMessage ResponseMessage { get; set; }
+		private readonly HttpClient client;
+		private readonly string clientId;
+		private readonly string clientSecret;
+		private readonly CookieContainer cookieJar;
 
-		public event PropertyChangedEventHandler PropertyChanged;
-
+		/// <summary>
+		/// Initializes a new instance of the <see cref="RestClient"/> class.
+		/// </summary>
 		[System.Diagnostics.CodeAnalysis.SuppressMessage(
 			"Style",
 			"IDE0017:Simplify object initialization",
@@ -62,14 +59,11 @@ namespace WebTools
 			IsError = false;
 
 			cookieJar = new CookieContainer();
+#pragma warning disable CA2000 // Dispose objects before losing scope
 			HttpClientHandler clientHandler = new HttpClientHandler();
+#pragma warning restore CA2000 // Dispose objects before losing scope
 			clientHandler.CookieContainer = cookieJar;
 			clientHandler.AllowAutoRedirect = true;
-
-			// actually doesn't seem to work
-			//NetworkCredential credentials =
-			//new NetworkCredential(clientId, clientSecret);
-			//clientHandler.Credentials = credentials;
 
 			string userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
 				"AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 " +
@@ -89,26 +83,39 @@ namespace WebTools
 		}
 
 		/// <summary>
-		/// Disposes the object resources.
+		/// An event that gets triggered when the property changes
 		/// </summary>
-		public void Dispose()
-		{
-			Dispose(true);
-			GC.SuppressFinalize(this);
-		}
+		public event PropertyChangedEventHandler PropertyChanged;
 
-		[System.Diagnostics.CodeAnalysis.SuppressMessage(
-			"Style",
-			"IDE1005:Delegate invocation can be simplified.",
-			Justification = "Don't agree with this rule.")]
-		protected void OnPropertyChanged(string name)
-		{
-			PropertyChangedEventHandler handler = PropertyChanged;
-			if (handler != null)
-			{
-				handler(this, new PropertyChangedEventArgs(name));
-			}
-		}
+		public string AccessToken { get; set; }
+
+		public bool Authenticate { get; set; }
+
+		public string Host { get; set; }
+
+		/// <summary>
+		/// Gets or sets a value indicating whether to include the server body
+		/// content in an error message.
+		/// </summary>
+		/// <value>Whether to include the server source in an error.</value>
+		public bool IncludeSourceInError { get; set; }
+
+		/// <summary>
+		/// Gets or sets a value indicating whether the server is in
+		/// an error state.
+		/// </summary>
+		/// <value>Whether the server is in an error state.</value>
+		public bool IsError { get; set; }
+
+		public string RefreshToken { get; set; }
+
+		public string RefreshTokenEndPoint { get; set; }
+
+		public HttpRequestMessage RequestMessage { get; set; }
+
+		public HttpResponseMessage Response { get; set; }
+
+		public HttpRequestMessage ResponseMessage { get; set; }
 
 		/// <summary>
 		/// Add a cookie into the cookie jar.
@@ -121,6 +128,19 @@ namespace WebTools
 			cookieJar.Add(cookie);
 		}
 
+		/// <summary>
+		/// Disposes the object resources.
+		/// </summary>
+		public void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
+		/// <summary>
+		/// Gets the basic client authentication parameters.
+		/// </summary>
+		/// <returns>A KeyValuePair list of the pairs.</returns>
 		public IList<KeyValuePair<string, string>> GetClientParameters()
 		{
 			IList<KeyValuePair<string, string>> parameters =
@@ -137,74 +157,80 @@ namespace WebTools
 			return parameters;
 		}
 
-		public HttpResponseMessage RequestGetResponse(string url)
+		public HttpResponseMessage RequestGetResponse(Uri uri)
 		{
-			HttpResponseMessage response = client.GetAsync(url).Result;
+			HttpResponseMessage response = client.GetAsync(uri).Result;
 
 			return response;
 		}
 
-		public string RequestGetResponseAsString(string url)
+		public string RequestGetResponseAsString(Uri uri)
 		{
 			string response = string.Empty;
 			try
 			{
-				response = client.GetStringAsync(url).Result;
+				response = client.GetStringAsync(uri).Result;
 			}
 			catch (TaskCanceledException exception)
 			{
-				System.Diagnostics.Debug.WriteLine(exception.ToString());
+				Log.Error(CultureInfo.InvariantCulture, m => m(
+					exception.ToString()));
+
 				if (false ==
 					exception.CancellationToken.IsCancellationRequested)
 				{
-					System.Diagnostics.Debug.WriteLine("likely a time out");
+					Log.Error(CultureInfo.InvariantCulture, m => m(
+						"likely a time out"));
 				}
 			}
+
 			return response;
 		}
 
-		[System.Diagnostics.CodeAnalysis.SuppressMessage(
-			"Style",
-			"IDE1005:Delegate invocation can be simplified.",
-			Justification = "Don't agree with this rule.")]
-		public async Task<string> Request(string requestUrl)
+		public async Task<string> Request(Uri requestUri)
 		{
 			string responseContent = null;
 
 			try
 			{
-				bool isComplete =
-					Uri.IsWellFormedUriString(requestUrl, UriKind.Absolute);
-				if (false == isComplete)
+				if (requestUri != null)
 				{
-					requestUrl = string.Format(
-						CultureInfo.InvariantCulture,
-						@"{0}{1}",
-						Host,
-						requestUrl);
+					string requestUrl = requestUri.AbsoluteUri;
+					bool isComplete = Uri.IsWellFormedUriString(
+						requestUrl, UriKind.Absolute);
+
+					if (false == isComplete)
+					{
+						requestUrl = string.Format(
+							CultureInfo.InvariantCulture,
+							@"{0}{1}",
+							Host,
+							requestUrl);
+					}
+
+					DoAuthentication();
+
+					responseContent =
+						await GetResponse(requestUrl).ConfigureAwait(false);
 				}
-
-				DoAuthentication();
-
-				responseContent =
-					await GetResponse(requestUrl).ConfigureAwait(false);
 			}
-			catch (Exception exception) when (exception is ArgumentException ||
+			catch (Exception exception) when
+				(exception is ArgumentException ||
 				exception is ArgumentNullException ||
 				exception is ArgumentOutOfRangeException ||
 				exception is FileNotFoundException ||
 				exception is IOException ||
-				exception is JsonSerializationException ||
+				exception is JsonException ||
 				exception is NotSupportedException ||
 				exception is ObjectDisposedException ||
 				exception is System.FormatException ||
+				exception is TaskCanceledException ||
 				exception is UnauthorizedAccessException)
 			{
 				IsError = true;
-				if (null != Logger)
-				{
-					Logger("error", exception.ToString());
-				}
+
+				Log.Error(CultureInfo.InvariantCulture, m => m(
+					exception.ToString()));
 
 				responseContent = SetExceptionResponse(exception);
 			}
@@ -212,46 +238,49 @@ namespace WebTools
 			return responseContent;
 		}
 
-		[System.Diagnostics.CodeAnalysis.SuppressMessage(
-			"Style",
-			"IDE1005:Delegate invocation can be simplified.",
-			Justification = "Don't agree with this rule.")]
-		public string Request(HttpMethod method, string requestUrl,
+		public string Request(
+			HttpMethod method,
+			Uri requestUri,
 			IList<KeyValuePair<string, string>> parameters)
 		{
-#if (USE_HTTPWebRequest)
+#if USE_HTTPWebRequest
 			string responseContent = null;
 
 			try
 			{
-				FormUrlEncodedContent content =
-					new FormUrlEncodedContent(parameters);
-
-				bool isComplete =
-					Uri.IsWellFormedUriString(requestUrl, UriKind.Absolute);
-				if (false == isComplete)
+				if (requestUri != null)
 				{
-					requestUrl = string.Format(
-					CultureInfo.InvariantCulture,
-					@"{0}{1}",
-					Host,
-					requestUrl);
-				}
+					using FormUrlEncodedContent content =
+						new FormUrlEncodedContent(parameters);
 
-				DoAuthentication();
+					string requestUrl = requestUri.AbsoluteUri;
+					bool isComplete = Uri.IsWellFormedUriString(
+						requestUrl, UriKind.Absolute);
 
-				responseContent = GetResponse(method, requestUrl, content);
-
-				if (true == IsError)
-				{
-					// see if it just a matter of an expired token
-					bool refreshed = RefeshToken(responseContent);
-
-					if (true == refreshed)
+					if (false == isComplete)
 					{
-						// call again with new tokens
-						responseContent =
-							GetResponse(method, requestUrl, content);
+						requestUrl = string.Format(
+						CultureInfo.InvariantCulture,
+						@"{0}{1}",
+						Host,
+						requestUrl);
+					}
+
+					DoAuthentication();
+
+					responseContent = GetResponse(method, requestUrl, content);
+
+					if (true == IsError)
+					{
+						// see if it just a matter of an expired token
+						bool refreshed = RefeshToken(responseContent);
+
+						if (true == refreshed)
+						{
+							// call again with new tokens
+							responseContent =
+								GetResponse(method, requestUrl, content);
+						}
 					}
 				}
 			}
@@ -267,17 +296,16 @@ namespace WebTools
 				exception is UnauthorizedAccessException)
 			{
 				IsError = true;
-				if (null != Logger)
-				{
-					Logger("error", exception.ToString());
-				}
+
+				Log.Error(CultureInfo.InvariantCulture, m => m(
+					exception.ToString()));
 
 				responseContent = SetExceptionResponse(exception);
 			}
 
 			return responseContent;
 #endif
-#if (USE_RestSharp)
+#if USE_RestSharp
 			RestClient client = new RestClient();
 			client.BaseUrl = new Uri(host);
 			// client.Authenticator = new HttpBasicAuthenticator(username, password);
@@ -345,7 +373,10 @@ namespace WebTools
 #endif
 		}
 
-		public string Request(HttpMethod method, string query, string[] keys,
+		public string Request(
+			HttpMethod method,
+			string query,
+			string[] keys,
 			string[] values)
 		{
 			IList<KeyValuePair<string, string>> parameters =
@@ -361,7 +392,27 @@ namespace WebTools
 				parameters.Add(pair);
 			}
 
-			return Request(method, query, parameters);
+			Uri uri = new Uri(query);
+			return Request(method, uri, parameters);
+		}
+
+		public string RequestRefreshToken(string endpoint, string refreshToken)
+		{
+			string[] keys =
+			{
+				"grant_type", "refresh_token", "client_id", "client_secret"
+			};
+
+			string[] values =
+			{
+				"refresh_token", refreshToken, clientId, clientSecret
+			};
+
+			Authenticate = true;
+
+			string response = Request(HttpMethod.Post, endpoint, keys, values);
+
+			return response;
 		}
 
 		/// <summary>
@@ -380,9 +431,53 @@ namespace WebTools
 			// free native resources
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage(
+			"Style",
+			"IDE1005:Delegate invocation can be simplified.",
+			Justification = "Don't agree with this rule.")]
+		protected void OnPropertyChanged(string name)
+		{
+			PropertyChangedEventHandler handler = PropertyChanged;
+			if (handler != null)
+			{
+				handler(this, new PropertyChangedEventArgs(name));
+			}
+		}
+
+		private static bool IsValidJsonError(string test)
+		{
+			bool valid = false;
+
+			try
+			{
+				ErrorResponse response =
+					JsonConvert.DeserializeObject<ErrorResponse>(test);
+
+				valid = true;
+			}
+			catch (Exception exception) when (exception is JsonReaderException)
+			{
+				Log.Error(CultureInfo.InvariantCulture, m => m(
+					exception.ToString()));
+			}
+
+			return valid;
+		}
+
+		private static string SetErrorResponse(
+			string error, string description)
+		{
+			string response = string.Format(
+				CultureInfo.InvariantCulture,
+				"{{ {0},\"error_description\":\"{1}\" }}",
+				error,
+				description);
+
+			return response;
+		}
+
 		private static string SetExceptionResponse(Exception exception)
 		{
-
 			string error = "\"error\":\"exception\"";
 			string details = exception.ToString();
 
@@ -433,7 +528,7 @@ namespace WebTools
 				responseContent = await client.GetStringAsync(uri).
 						ConfigureAwait(false);
 
-				if (errors.Any(responseContent.Contains))
+				if (ServerErrors.Any(responseContent.Contains))
 				{
 					IsError = true;
 				}
@@ -452,6 +547,9 @@ namespace WebTools
 				exception is UnauthorizedAccessException)
 			{
 				IsError = true;
+
+				Log.Error(CultureInfo.InvariantCulture, m => m(
+					exception.ToString()));
 			}
 
 			return responseContent;
@@ -461,11 +559,9 @@ namespace WebTools
 			"Style",
 			"IDE0017:Simplify object initialization",
 			Justification = "Don't agree with this rule.")]
-		[System.Diagnostics.CodeAnalysis.SuppressMessage(
-			"Style",
-			"IDE1005:Delegate invocation can be simplified.",
-			Justification = "Don't agree with this rule.")]
-		private string GetResponse(HttpMethod method, string requestUrl,
+		private string GetResponse(
+			HttpMethod method,
+			string requestUrl,
 			FormUrlEncodedContent content)
 		{
 			string responseContent = null;
@@ -477,12 +573,14 @@ namespace WebTools
 
 				if (method == HttpMethod.Post)
 				{
+					Uri uri = new Uri(requestUrl);
+
 					// save this as clients may want know this
 					RequestMessage = new HttpRequestMessage();
-					RequestMessage.RequestUri = new Uri(requestUrl);
+					RequestMessage.RequestUri = uri;
 					RequestMessage.Method = method;
 
-					Response = client.PostAsync(requestUrl, content).Result;
+					Response = client.PostAsync(uri, content).Result;
 					int statusCode = (int)Response.StatusCode;
 
 					// We want to handle redirects ourselves so that we can
@@ -504,15 +602,16 @@ namespace WebTools
 							redirectUri);
 
 						System.Diagnostics.Debug.WriteLine(message);
+						Log.Info(CultureInfo.InvariantCulture, m => m(
+							message));
 
 						responseContent =
 							GetResponse(method, requestUrl, content);
 					}
 					else if (!Response.IsSuccessStatusCode)
 					{
-						//IsError = true;
-						System.Diagnostics.Debug.WriteLine(
-							"status code not ok");
+						Log.Error(CultureInfo.InvariantCulture, m => m(
+							"status code not ok"));
 					}
 					else
 					{
@@ -528,36 +627,29 @@ namespace WebTools
 				{
 					IsError = true;
 
-					if (null != Logger)
-					{
-						Logger("error", Response.ReasonPhrase);
-					}
+					Log.ErrorFormat(
+						CultureInfo.InvariantCulture,
+						"error: {0}",
+						Response.ReasonPhrase);
 
 					if (!IsValidJsonError(responseContent))
 					{
 						string error = Response.StatusCode.ToString();
 						if (true == IncludeSourceInError)
 						{
-							responseContent = string.Format(
-								CultureInfo.InvariantCulture,
-								"{{ \"error\":" +
-								"\"{0}\",\"error_description\":\"{1}\"}}",
-								error,
-								responseContent);
+							responseContent =
+								SetErrorResponse(error, responseContent);
 						}
 						else
 						{
-							responseContent = string.Format(
-								CultureInfo.InvariantCulture,
-								"{{ \"error\":" +
-								"\"{0}\",\"error_description\":\"{1}\"}}",
+							responseContent = SetErrorResponse(
 								error,
 								"An unidentified server error occurred");
 						}
 					}
 				}
 
-				if (errors.Any(responseContent.Contains))
+				if (ServerErrors.Any(responseContent.Contains))
 				{
 					IsError = true;
 				}
@@ -574,10 +666,9 @@ namespace WebTools
 				exception is UnauthorizedAccessException)
 			{
 				IsError = true;
-				if (null != Logger)
-				{
-					Logger("error", exception.ToString());
-				}
+
+				Log.Error(CultureInfo.InvariantCulture, m => m(
+					exception.ToString()));
 
 				responseContent = SetExceptionResponse(exception);
 			}
@@ -585,28 +676,6 @@ namespace WebTools
 			return responseContent;
 		}
 
-		private static bool IsValidJsonError(string test)
-		{
-			bool valid = false;
-
-			try
-			{
-				ErrorResponse response =
-					JsonConvert.DeserializeObject<ErrorResponse>(test);
-
-				valid = true;
-			}
-			catch (Exception exception) when (exception is JsonReaderException)
-			{
-			}
-
-			return valid;
-		}
-
-		[System.Diagnostics.CodeAnalysis.SuppressMessage(
-			"Style",
-			"IDE1005:Delegate invocation can be simplified.",
-			Justification = "Don't agree with this rule.")]
 		private bool RefeshToken(string response)
 		{
 			bool updated = false;
@@ -626,18 +695,19 @@ namespace WebTools
 					Token serverResponse =
 						JsonConvert.DeserializeObject<Token>(response);
 
-					if (refreshErrors.Contains(serverResponse.error))
+					if (refreshErrors.Contains(serverResponse.Error))
 					{
 						string refresh = RequestRefreshToken(
 							RefreshTokenEndPoint, RefreshToken);
-						if (refresh.Contains("error",
+						if (refresh.Contains(
+							"error",
 							StringComparison.OrdinalIgnoreCase))
 						{
 							Token refreshResponse =
 							JsonConvert.DeserializeObject<Token>(response);
 
-							AccessToken = refreshResponse.access_token;
-							RefreshToken = refreshResponse.refresh_token;
+							AccessToken = refreshResponse.AccessToken;
+							RefreshToken = refreshResponse.RefreshToken;
 							OnPropertyChanged("AccessToken");
 							OnPropertyChanged("RefreshToken");
 
@@ -649,28 +719,12 @@ namespace WebTools
 			catch (Exception exception) when (exception is JsonReaderException)
 			{
 				IsError = true;
-				if (null != Logger)
-				{
-					Logger("error", exception.ToString());
-				}
+
+				Log.Error(CultureInfo.InvariantCulture, m => m(
+					exception.ToString()));
 			}
 
 			return updated;
-		}
-
-		public string RequestRefreshToken(string endpoint,
-			string refreshToken)
-		{
-			string[] keys = { "grant_type", "refresh_token", "client_id",
-			"client_secret" };
-			string[] values = { "refresh_token", refreshToken, clientId,
-				clientSecret };
-
-			Authenticate = true;
-
-			string response = Request(HttpMethod.Post, endpoint, keys, values);
-
-			return response;
 		}
 	}
 }
