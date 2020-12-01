@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -268,7 +269,17 @@ namespace WebTools
 					}
 				}
 			}
-			catch (Exception exception)
+			catch (Exception exception) when
+				(exception is ArgumentException ||
+				exception is ArgumentNullException ||
+				exception is ArgumentOutOfRangeException ||
+				exception is FileNotFoundException ||
+				exception is IOException ||
+				exception is NotSupportedException ||
+				exception is ObjectDisposedException ||
+				exception is System.FormatException ||
+				exception is TaskCanceledException ||
+				exception is UnauthorizedAccessException)
 			{
 				WriteError(exception.ToString());
 			}

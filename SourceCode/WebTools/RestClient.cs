@@ -25,6 +25,9 @@ namespace WebTools
 {
 	public delegate void LogMessage(string level, string message);
 
+	/// <summary>
+	/// Represents a rest client for communicating with the server.
+	/// </summary>
 	public class RestClient : IDisposable, INotifyPropertyChanged
 	{
 		private static readonly string[] ServerErrors =
@@ -57,7 +60,9 @@ namespace WebTools
 			IsError = false;
 
 			cookieJar = new CookieContainer();
+#pragma warning disable CA2000 // Dispose objects before losing scope
 			HttpClientHandler clientHandler = new HttpClientHandler();
+#pragma warning restore CA2000 // Dispose objects before losing scope
 			clientHandler.CookieContainer = cookieJar;
 			clientHandler.AllowAutoRedirect = true;
 
@@ -78,6 +83,9 @@ namespace WebTools
 			this.clientSecret = clientSecret;
 		}
 
+		/// <summary>
+		/// An event that gets triggered when the property changes
+		/// </summary>
 		public event PropertyChangedEventHandler PropertyChanged;
 
 		public string AccessToken { get; set; }
@@ -86,8 +94,18 @@ namespace WebTools
 
 		public string Host { get; set; }
 
+		/// <summary>
+		/// Gets or sets a value indicating whether to include the server body
+		/// content in an error message.
+		/// </summary>
+		/// <value>Whether to include the server source in an error.</value>
 		public bool IncludeSourceInError { get; set; }
 
+		/// <summary>
+		/// Gets or sets a value indicating whether the server is in
+		/// an error state.
+		/// </summary>
+		/// <value>Whether the server is in an error state.</value>
 		public bool IsError { get; set; }
 
 		public LogMessage Logger { get; set; }
@@ -122,6 +140,10 @@ namespace WebTools
 			GC.SuppressFinalize(this);
 		}
 
+		/// <summary>
+		/// Gets the basic client authentication parameters.
+		/// </summary>
+		/// <returns>A KeyValuePair list of the pairs.</returns>
 		public IList<KeyValuePair<string, string>> GetClientParameters()
 		{
 			IList<KeyValuePair<string, string>> parameters =
@@ -203,15 +225,17 @@ namespace WebTools
 						await GetResponse(requestUrl).ConfigureAwait(false);
 				}
 			}
-			catch (Exception exception) when (exception is ArgumentException ||
+			catch (Exception exception) when
+				(exception is ArgumentException ||
 				exception is ArgumentNullException ||
 				exception is ArgumentOutOfRangeException ||
 				exception is FileNotFoundException ||
 				exception is IOException ||
-				exception is JsonSerializationException ||
+				exception is JsonException ||
 				exception is NotSupportedException ||
 				exception is ObjectDisposedException ||
 				exception is System.FormatException ||
+				exception is TaskCanceledException ||
 				exception is UnauthorizedAccessException)
 			{
 				IsError = true;

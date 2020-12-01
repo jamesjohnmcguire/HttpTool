@@ -16,6 +16,6 @@ namespace WebTools
 	{
 		public Uri Uri { get; set; }
 
-		public IList<ValidationResult> Messages { get; set; }
+		public IList<ValidationResult> Messages { get; }
 	}
 }
