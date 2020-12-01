@@ -6,6 +6,7 @@
 
 using Abot2.Crawler;
 using Abot2.Poco;
+using Common.Logging;
 using DigitalZenWorks.Common.Utilities;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
@@ -24,6 +25,9 @@ namespace WebTools
 {
 	public class SiteTest : IDisposable
 	{
+		private static readonly ILog Log = LogManager.GetLogger(
+			System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
 		private static readonly string[] ServerErrors =
 		{
 			"A PHP Error was encountered",
@@ -41,15 +45,11 @@ namespace WebTools
 				"WebTools.Resources",
 				Assembly.GetExecutingAssembly());
 
-		private static readonly object ThisLock = new object();
-
 		private readonly RestClient client;
 
 		private readonly IList<string> imagesChecked;
 
 		private readonly IList<string> pagesCrawed;
-
-		private readonly bool showGood;
 
 		private int pageCount;
 
@@ -133,7 +133,8 @@ namespace WebTools
 					"CRAWL_COMPLETE_ERROR",
 					CultureInfo.InstalledUICulture);
 
-				Console.WriteLine(
+				Log.InfoFormat(
+					CultureInfo.InvariantCulture,
 					message,
 					result.RootUri.AbsoluteUri,
 					result.ErrorException.Message);
@@ -144,14 +145,19 @@ namespace WebTools
 					"CRAWL_COMPLETE_NO_ERROR",
 					CultureInfo.InstalledUICulture);
 
-				Console.WriteLine(message, result.RootUri.AbsoluteUri);
+				Log.InfoFormat(
+					CultureInfo.InvariantCulture,
+					message,
+					result.RootUri.AbsoluteUri);
 			}
 
 			message = StringTable.GetString(
 				"TOTAL_PAGES",
 				CultureInfo.InstalledUICulture);
-			Console.WriteLine(
-				message, pageCount.ToString(CultureInfo.InvariantCulture));
+			Log.InfoFormat(
+				CultureInfo.InvariantCulture,
+				message,
+				pageCount.ToString(CultureInfo.InvariantCulture));
 		}
 
 		public async void ProcessPageCrawlCompleted(
@@ -179,7 +185,8 @@ namespace WebTools
 							CultureInfo.InvariantCulture,
 							"Warning: Switching hosts from {0}",
 							parentUrl);
-						WriteError(message);
+						Log.Error(CultureInfo.InvariantCulture, m => m(
+							message));
 					}
 					else
 					{
@@ -193,7 +200,8 @@ namespace WebTools
 								CultureInfo.InvariantCulture,
 								"Error: {0}",
 								url);
-							WriteError(message);
+							Log.Error(CultureInfo.InvariantCulture, m => m(
+								message));
 
 							if (null == crawledPage.HttpResponseMessage)
 							{
@@ -201,7 +209,8 @@ namespace WebTools
 									CultureInfo.InvariantCulture,
 									"HttpResponseMessage is null: {0}",
 									url);
-								WriteError(message);
+								Log.Error(CultureInfo.InvariantCulture, m => m(
+									message));
 							}
 							else
 							{
@@ -213,20 +222,12 @@ namespace WebTools
 								message = StringTable.GetString(
 									"KEY_PAIR",
 									CultureInfo.InstalledUICulture);
-								Console.WriteLine(message, statusCode, url);
+								Log.InfoFormat(
+									CultureInfo.InvariantCulture,
+									message,
+									statusCode,
+									url);
 							}
-						}
-						else if (true == showGood)
-						{
-							HttpResponseMessage response =
-								crawledPage.HttpResponseMessage;
-							string statusCode =
-								response.StatusCode.ToString();
-
-							message = StringTable.GetString(
-								"KEY_PAIR",
-								CultureInfo.InstalledUICulture);
-							Console.WriteLine(message, statusCode, url);
 						}
 
 						CheckRedirects(crawledPage);
@@ -264,7 +265,8 @@ namespace WebTools
 								"Problems found on: {0} (from: {1})",
 								url,
 								crawledPage.ParentUri.AbsolutePath);
-							WriteError(message);
+							Log.Error(CultureInfo.InvariantCulture, m => m(
+								message));
 						}
 					}
 				}
@@ -276,12 +278,14 @@ namespace WebTools
 				exception is FileNotFoundException ||
 				exception is IOException ||
 				exception is NotSupportedException ||
+				exception is NullReferenceException ||
 				exception is ObjectDisposedException ||
 				exception is System.FormatException ||
 				exception is TaskCanceledException ||
 				exception is UnauthorizedAccessException)
 			{
-				WriteError(exception.ToString());
+				Log.Error(CultureInfo.InvariantCulture, m => m(
+					exception.ToString()));
 			}
 
 			pageCount++;
@@ -298,7 +302,8 @@ namespace WebTools
 					CultureInfo.InvariantCulture,
 					"Checking: {0}",
 					page.Uri.AbsolutePath);
-				WriteStatus(message);
+				Log.Info(CultureInfo.InvariantCulture, m => m(
+					message));
 			}
 		}
 
@@ -356,7 +361,8 @@ namespace WebTools
 				webRequest.Method = "HEAD";
 				response = (HttpWebResponse)webRequest.GetResponse();
 			}
-			catch (Exception exception) when (exception is ArgumentException ||
+			catch (Exception exception) when
+				(exception is ArgumentException ||
 				exception is ArgumentNullException ||
 				exception is ArgumentOutOfRangeException ||
 				exception is System.IO.FileNotFoundException ||
@@ -371,6 +377,8 @@ namespace WebTools
 				exception is UriFormatException)
 			{
 				result = false;
+				Log.Error(CultureInfo.InvariantCulture, m => m(
+					exception.ToString()));
 			}
 			finally
 			{
@@ -381,26 +389,6 @@ namespace WebTools
 			}
 
 			return result;
-		}
-
-		private static void WriteError(string message)
-		{
-			lock (ThisLock)
-			{
-				Console.ForegroundColor = ConsoleColor.Red;
-				ClearCurrentConsoleLine();
-				Console.WriteLine(message);
-				Console.ForegroundColor = ConsoleColor.White;
-			}
-		}
-
-		private static void WriteStatus(string message)
-		{
-			lock (ThisLock)
-			{
-				ClearCurrentConsoleLine();
-				Console.Write(message);
-			}
 		}
 
 		private bool CheckContentErrors(CrawledPage crawledPage)
@@ -423,7 +411,8 @@ namespace WebTools
 							CultureInfo.InvariantCulture,
 							"Page contains error messages: {0}",
 							crawledPage.Uri.AbsoluteUri);
-						WriteError(message);
+						Log.Error(CultureInfo.InvariantCulture, m => m(
+							message));
 					}
 				}
 			}
@@ -449,12 +438,14 @@ namespace WebTools
 							CultureInfo.InvariantCulture,
 							"Page had no content {0}",
 							crawledPage.Uri.AbsoluteUri);
-						WriteError(message);
+						Log.Error(CultureInfo.InvariantCulture, m => m(
+							message));
 						message = string.Format(
 							CultureInfo.InvariantCulture,
 							"Parent: {0}",
 							crawledPage.ParentUri.AbsoluteUri);
-						WriteError(message);
+						Log.Error(CultureInfo.InvariantCulture, m => m(
+							message));
 					}
 				}
 			}
@@ -504,7 +495,8 @@ namespace WebTools
 									"image missing: {0} in {1}",
 									imageUrl,
 									crawledPage.Uri.AbsoluteUri);
-								WriteError(message);
+								Log.Error(CultureInfo.InvariantCulture, m => m(
+									message));
 							}
 
 							imagesChecked.Add(source.Value);
@@ -545,7 +537,8 @@ namespace WebTools
 								error.Reason,
 								crawledPage.Uri.AbsoluteUri,
 								error.Line);
-							WriteError(message);
+							Log.Error(CultureInfo.InvariantCulture, m => m(
+								message));
 						}
 					}
 				}
@@ -570,12 +563,14 @@ namespace WebTools
 						(crawledPage.RedirectedFrom != null))
 					{
 						// This is a redirect
-						ClearCurrentConsoleLine();
-
 						string message = StringTable.GetString(
 							"REDIRECTED",
 							CultureInfo.InstalledUICulture);
-						Console.WriteLine(message, requestUri, responseUri);
+						Log.InfoFormat(
+							CultureInfo.InvariantCulture,
+							message,
+							requestUri,
+							responseUri);
 					}
 				}
 			}
@@ -616,20 +611,24 @@ namespace WebTools
 							response);
 					IList<ValidationResult> results = pageResults.Messages;
 
-					foreach (ValidationResult result in results)
+					if (results != null)
 					{
-						succesCode = false;
+						foreach (ValidationResult result in results)
+						{
+							succesCode = false;
 
-						string message = string.Format(
-							CultureInfo.InvariantCulture,
-							"{0} {1} Result: {2}:{3} line: {4} - {5}",
-							"W3 Validation for page ",
-							url,
-							result.Type,
-							result.SubType,
-							result.LastLine,
-							result.Message);
-						WriteError(message);
+							string message = string.Format(
+								CultureInfo.InvariantCulture,
+								"{0} {1} Result: {2}:{3} line: {4} - {5}",
+								"W3 Validation for page ",
+								url,
+								result.Type,
+								result.SubType,
+								result.LastLine,
+								result.Message);
+							Log.Error(CultureInfo.InvariantCulture, m => m(
+								message));
+						}
 					}
 				}
 			}

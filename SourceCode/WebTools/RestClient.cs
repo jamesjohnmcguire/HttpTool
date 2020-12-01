@@ -8,6 +8,7 @@
 #define USE_HTTPWebRequest
 
 // using RestSharp;
+using Common.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -23,13 +24,14 @@ using System.Threading.Tasks;
 
 namespace WebTools
 {
-	public delegate void LogMessage(string level, string message);
-
 	/// <summary>
 	/// Represents a rest client for communicating with the server.
 	/// </summary>
 	public class RestClient : IDisposable, INotifyPropertyChanged
 	{
+		private static readonly ILog Log = LogManager.GetLogger(
+			System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
 		private static readonly string[] ServerErrors =
 		{
 			"A PHP Error was encountered",
@@ -42,9 +44,6 @@ namespace WebTools
 		private readonly string clientId;
 		private readonly string clientSecret;
 		private readonly CookieContainer cookieJar;
-
-		private readonly IList<KeyValuePair<string, string>>
-			defaultParameters = new List<KeyValuePair<string, string>>();
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="RestClient"/> class.
@@ -108,8 +107,6 @@ namespace WebTools
 		/// <value>Whether the server is in an error state.</value>
 		public bool IsError { get; set; }
 
-		public LogMessage Logger { get; set; }
-
 		public string RefreshToken { get; set; }
 
 		public string RefreshTokenEndPoint { get; set; }
@@ -160,13 +157,6 @@ namespace WebTools
 			return parameters;
 		}
 
-		public HttpResponseMessage RequestGetResponse(string url)
-		{
-			HttpResponseMessage response = client.GetAsync(url).Result;
-
-			return response;
-		}
-
 		public HttpResponseMessage RequestGetResponse(Uri uri)
 		{
 			HttpResponseMessage response = client.GetAsync(uri).Result;
@@ -183,21 +173,20 @@ namespace WebTools
 			}
 			catch (TaskCanceledException exception)
 			{
-				System.Diagnostics.Debug.WriteLine(exception.ToString());
+				Log.Error(CultureInfo.InvariantCulture, m => m(
+					exception.ToString()));
+
 				if (false ==
 					exception.CancellationToken.IsCancellationRequested)
 				{
-					System.Diagnostics.Debug.WriteLine("likely a time out");
+					Log.Error(CultureInfo.InvariantCulture, m => m(
+						"likely a time out"));
 				}
 			}
 
 			return response;
 		}
 
-		[System.Diagnostics.CodeAnalysis.SuppressMessage(
-			"Style",
-			"IDE1005:Delegate invocation can be simplified.",
-			Justification = "Don't agree with this rule.")]
 		public async Task<string> Request(Uri requestUri)
 		{
 			string responseContent = null;
@@ -239,10 +228,9 @@ namespace WebTools
 				exception is UnauthorizedAccessException)
 			{
 				IsError = true;
-				if (null != Logger)
-				{
-					Logger("error", exception.ToString());
-				}
+
+				Log.Error(CultureInfo.InvariantCulture, m => m(
+					exception.ToString()));
 
 				responseContent = SetExceptionResponse(exception);
 			}
@@ -250,10 +238,6 @@ namespace WebTools
 			return responseContent;
 		}
 
-		[System.Diagnostics.CodeAnalysis.SuppressMessage(
-			"Style",
-			"IDE1005:Delegate invocation can be simplified.",
-			Justification = "Don't agree with this rule.")]
 		public string Request(
 			HttpMethod method,
 			Uri requestUri,
@@ -312,10 +296,9 @@ namespace WebTools
 				exception is UnauthorizedAccessException)
 			{
 				IsError = true;
-				if (null != Logger)
-				{
-					Logger("error", exception.ToString());
-				}
+
+				Log.Error(CultureInfo.InvariantCulture, m => m(
+					exception.ToString()));
 
 				responseContent = SetExceptionResponse(exception);
 			}
@@ -474,6 +457,8 @@ namespace WebTools
 			}
 			catch (Exception exception) when (exception is JsonReaderException)
 			{
+				Log.Error(CultureInfo.InvariantCulture, m => m(
+					exception.ToString()));
 			}
 
 			return valid;
@@ -562,6 +547,9 @@ namespace WebTools
 				exception is UnauthorizedAccessException)
 			{
 				IsError = true;
+
+				Log.Error(CultureInfo.InvariantCulture, m => m(
+					exception.ToString()));
 			}
 
 			return responseContent;
@@ -570,10 +558,6 @@ namespace WebTools
 		[System.Diagnostics.CodeAnalysis.SuppressMessage(
 			"Style",
 			"IDE0017:Simplify object initialization",
-			Justification = "Don't agree with this rule.")]
-		[System.Diagnostics.CodeAnalysis.SuppressMessage(
-			"Style",
-			"IDE1005:Delegate invocation can be simplified.",
 			Justification = "Don't agree with this rule.")]
 		private string GetResponse(
 			HttpMethod method,
@@ -618,14 +602,16 @@ namespace WebTools
 							redirectUri);
 
 						System.Diagnostics.Debug.WriteLine(message);
+						Log.Info(CultureInfo.InvariantCulture, m => m(
+							message));
 
 						responseContent =
 							GetResponse(method, requestUrl, content);
 					}
 					else if (!Response.IsSuccessStatusCode)
 					{
-						System.Diagnostics.Debug.WriteLine(
-							"status code not ok");
+						Log.Error(CultureInfo.InvariantCulture, m => m(
+							"status code not ok"));
 					}
 					else
 					{
@@ -641,10 +627,10 @@ namespace WebTools
 				{
 					IsError = true;
 
-					if (null != Logger)
-					{
-						Logger("error", Response.ReasonPhrase);
-					}
+					Log.ErrorFormat(
+						CultureInfo.InvariantCulture,
+						"error: {0}",
+						Response.ReasonPhrase);
 
 					if (!IsValidJsonError(responseContent))
 					{
@@ -680,10 +666,9 @@ namespace WebTools
 				exception is UnauthorizedAccessException)
 			{
 				IsError = true;
-				if (null != Logger)
-				{
-					Logger("error", exception.ToString());
-				}
+
+				Log.Error(CultureInfo.InvariantCulture, m => m(
+					exception.ToString()));
 
 				responseContent = SetExceptionResponse(exception);
 			}
@@ -691,10 +676,6 @@ namespace WebTools
 			return responseContent;
 		}
 
-		[System.Diagnostics.CodeAnalysis.SuppressMessage(
-			"Style",
-			"IDE1005:Delegate invocation can be simplified.",
-			Justification = "Don't agree with this rule.")]
 		private bool RefeshToken(string response)
 		{
 			bool updated = false;
@@ -738,10 +719,9 @@ namespace WebTools
 			catch (Exception exception) when (exception is JsonReaderException)
 			{
 				IsError = true;
-				if (null != Logger)
-				{
-					Logger("error", exception.ToString());
-				}
+
+				Log.Error(CultureInfo.InvariantCulture, m => m(
+					exception.ToString()));
 			}
 
 			return updated;
