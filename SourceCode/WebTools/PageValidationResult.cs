@@ -14,8 +14,8 @@ namespace WebTools
 {
 	public class PageValidationResult
 	{
-		public Uri Uri { get; set; }
+		public Uri Url { get; set; }
 
-		public IList<ValidationResult> Messages { get; }
+		public IList<ValidationResult> Messages { get; set; }
 	}
 }
