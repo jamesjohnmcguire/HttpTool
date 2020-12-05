@@ -23,6 +23,8 @@ jobs:
       working-directory: SourceCode
       run: dotnet restore
     - name: Build
+      working-directory: SourceCode
       run: dotnet build --configuration Release --no-restore
     - name: Test
+      working-directory: SourceCode
       run: dotnet test --no-restore --verbosity normal
