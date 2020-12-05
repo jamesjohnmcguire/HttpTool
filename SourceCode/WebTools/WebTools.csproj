@@ -28,7 +28,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\UtilitiesNET\UtilitiesNET.csproj" />
+		<ProjectReference Include="$(SolutionDir)\UtilitiesNET\UtilitiesNET.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
