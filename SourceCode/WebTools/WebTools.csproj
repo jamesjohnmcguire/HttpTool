@@ -5,10 +5,10 @@
 		<CodeAnalysisRuleSet>$(SolutionDir)\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
 		<NoWarn>1701;1702;NU1605</NoWarn>
 		<OutputPath>$(SolutionDir)\Bin\$(Configuration)\$(Platform)</OutputPath>
+		<NeutralLanguage>en</NeutralLanguage>
 		<Platforms>AnyCPU;x64;x86</Platforms>
 		<RestoreProjectStyle>PackageReference</RestoreProjectStyle>
 		<TargetFramework>net5.0</TargetFramework>
-		<NeutralLanguage>en</NeutralLanguage>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -28,7 +28,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="$(SolutionDir)\UtilitiesNET\UtilitiesNET.csproj" />
+		<ProjectReference Include="$(SolutionDir)\UtilitiesNet\UtilitiesNET.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
