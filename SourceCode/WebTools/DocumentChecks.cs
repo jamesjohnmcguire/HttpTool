@@ -19,30 +19,37 @@ namespace WebTools
 		/// No document checks
 		/// </summary>
 		None = 0,
+
 		/// <summary>
 		/// Basic document checks
 		/// </summary>
 		Basic = 1,
+
 		/// <summary>
 		/// Redirect checks
 		/// </summary>
 		Redirect = 2,
+
 		/// <summary>
 		/// Empty content checks
 		/// </summary>
 		EmptyContent = 4,
+
 		/// <summary>
 		/// Content error checks
 		/// </summary>
 		ContentErrors = 8,
+
 		/// <summary>
 		/// Parse error checks
 		/// </summary>
 		ParseErrors = 16,
+
 		/// <summary>
 		/// Image exists checks
 		/// </summary>
 		ImagesExist = 32,
+
 		/// <summary>
 		/// W3c validation checks
 		/// </summary>
