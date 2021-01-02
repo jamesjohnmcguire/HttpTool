@@ -3,7 +3,7 @@
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<AssemblyTitle>HttpTool</AssemblyTitle>
 		<CodeAnalysisRuleSet>$(SolutionDir)\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
-		<Copyright>Copyright © 2020</Copyright>
+		<Copyright>Copyright © 2016 - 2021</Copyright>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<NeutralLanguage>en</NeutralLanguage>
 		<NoWarn>1701;1702;NU1605</NoWarn>
@@ -46,4 +46,6 @@
 			<LastGenOutput>Resources.Designer.cs</LastGenOutput>
 		</EmbeddedResource>
 	</ItemGroup>
+
+	<ProjectExtensions><VisualStudio><UserProperties stylecop_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>
 </Project>
