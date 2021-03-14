@@ -1,0 +1,44 @@
+Development Notes
+	Change DLL names to match the following pattern: <Company>.<Component>.dll
+	fix CheckRedirects
+		private bool CheckImages(CrawledPage crawledPage)
+		private bool CheckParseErrors(CrawledPage crawledPage)
+	Tasks
+		Fix new warnings
+		Switch to serilog
+		Add reason text if invalid url to show in help
+		Fix to show copyright and company name in help
+		for login, use config file
+			Package updates
+			CopyToCommands
+			CS0246: The type or namespace name 'AssemblyVersionAttribute' could not be found (are you missing a using directive or an assembly reference?)
+			Fix command line empty classes
+			Abot2.Core.HyperLinkParser.GetUris
+			Clean repo
+			git tag
+	Resources
+		https://stackoverflow.com/questions/32860666/httpclient-scrape-data-from-website-with-login-c-sharp
+
+		private readonly CookieContainer cookieJar = null;
+			clientHandler.CookieContainer = cookieJar;
+
+		/// <summary>
+		/// Add a cookie into the cookie jar.
+		/// </summary>
+		/// <param name="name">The name of the cookie.</param>
+		/// <param name="value">The value of the cookie.</param>
+		public void AddCookie(string name, string value)
+		{
+			Cookie cookie = new Cookie(name, value);
+			cookieJar.Add(cookie);
+		}
+	HttpTool	Add README
+	HttpTool	Add binaries
+	HttpTool	There was a mismatch between the processor architecture of the project being built "MSIL" and the processor architecture of the reference, "AMD64". This mismatch may cause runtime failures. Please consider changing the targeted processor architecture of your project through the Configuration Manager so as to align the processor architectures between your project and references, or take a dependency on references with a processor architecture that matches the targeted processor architecture of your project. net5
+	HttpTool	https://github.com/jamesjohnmcguire/HttpTool/runs/1503734735?check_suite_focus=true
+	HttpTool	There was a mismatch between the processor architecture of the project being built "MSIL" and the processor architecture of the reference "HttpTool\SourceCode\Bin\Debug\AnyCPU\DigitalZenWorks.Common.Utilities.dll", "AMD64". This mismatch may cause runtime failures. Please consider changing the targeted processor architecture of your project through the Configuration Manager so as to align the processor architectures between your project and references, or take a dependency on references with a processor architecture that matches the targeted processor architecture of your project.
+	UtilitiesNet\act\actions-setup-dotnet@v1\__tests__\sample-csproj\Program.cs(1,17)	error CS0234: The type or namespace name 'VisualStudio' does not exist in the namespace 'Microsoft' (are you missing an assembly reference?)	UtilitiesNET.csproj]
+	HttpTool\SourceCode\UtilitiesNet\act\actions-setup-dotnet@v1\__tests__\sample-csproj\Program.cs(6,6)	error CS0246: The type or namespace name 'TestClassAttribute' could not be found (are you missing a using directive or an assembly reference?)	UtilitiesNET.csproj]
+	error CS0246: The type or namespace name 'TestClass' could not be found (are you missing a using directive or an assembly reference?)
+	error CS0246: The type or namespace name 'TestMethodAttribute' could not be found (are you missing a using directive or an assembly reference?)
+	error CS0246: The type or namespace name 'TestMethod' could not be found (are you missing a using directive or an assembly reference?)
