@@ -40,10 +40,8 @@ namespace WebTools
 			"GIF", "JPG", "JPEG", "PDF", "PNG"
 		};
 
-		private static readonly ResourceManager StringTable = new
-			ResourceManager(
-				"WebTools.Resources",
-				Assembly.GetExecutingAssembly());
+		private static readonly ResourceManager StringTable = new (
+			"WebTools.Resources", Assembly.GetExecutingAssembly());
 
 		private readonly WebClient client;
 
@@ -96,17 +94,13 @@ namespace WebTools
 			GC.SuppressFinalize(this);
 		}
 
-		[System.Diagnostics.CodeAnalysis.SuppressMessage(
-			"Style",
-			"IDE0017:Simplify object initialization",
-			Justification = "Don't agree with this rule.")]
 		public void Test(Uri uri)
 		{
 			pageCount = 0;
 			baseUri = uri;
 			string message;
 
-			CrawlConfiguration crawlConfiguration = new CrawlConfiguration();
+			CrawlConfiguration crawlConfiguration = new ();
 
 			crawlConfiguration.MaxConcurrentThreads = 4;
 			crawlConfiguration.UserAgentString =
@@ -119,8 +113,7 @@ namespace WebTools
 			crawlConfiguration.CrawlTimeoutSeconds = 100;
 			crawlConfiguration.MinCrawlDelayPerDomainMilliSeconds = 1000;
 
-			using PoliteWebCrawler crawler =
-				new PoliteWebCrawler(crawlConfiguration);
+			using PoliteWebCrawler crawler = new (crawlConfiguration);
 
 			crawler.PageCrawlStarting += ProcessPageCrawlStarted;
 			crawler.PageCrawlCompleted += ProcessPageCrawlCompleted;
@@ -459,7 +452,7 @@ namespace WebTools
 
 			if (Tests.HasFlag(DocumentChecks.ImagesExist))
 			{
-				HtmlDocument agilityPackHtmlDocument = new HtmlDocument();
+				HtmlDocument agilityPackHtmlDocument = new ();
 				agilityPackHtmlDocument.LoadHtml(crawledPage.Content.Text);
 
 				HtmlAgilityPack.HtmlNodeCollection nodes =
@@ -483,7 +476,7 @@ namespace WebTools
 							string imageUrl =
 								GetAbsoluteUrlString(baseUrl, source.Value);
 
-							Uri uri = new Uri(imageUrl);
+							Uri uri = new (imageUrl);
 							bool exists = URLExists(uri);
 
 							if (false == exists)
@@ -514,7 +507,7 @@ namespace WebTools
 
 			if (Tests.HasFlag(DocumentChecks.ParseErrors))
 			{
-				HtmlDocument agilityPackHtmlDocument = new HtmlDocument();
+				HtmlDocument agilityPackHtmlDocument = new ();
 				agilityPackHtmlDocument.LoadHtml(crawledPage.Content.Text);
 
 				IEnumerable<HtmlAgilityPack.HtmlParseError> parseErrors =
@@ -600,7 +593,7 @@ namespace WebTools
 					CultureInfo.InvariantCulture,
 					"http://validator.w3.org/nu/?doc={0}&out=json",
 					url);
-				Uri uri = new Uri(validator);
+				Uri uri = new (validator);
 				string response =
 					await client.Request(uri).ConfigureAwait(false);
 

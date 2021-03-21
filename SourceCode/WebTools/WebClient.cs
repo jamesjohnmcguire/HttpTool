@@ -1,5 +1,5 @@
 ﻿/////////////////////////////////////////////////////////////////////////////
-// <copyright file="RestClient.cs" company="James John McGuire">
+// <copyright file="WebClient.cs" company="James John McGuire">
 // Copyright © 2016 - 2021 James John McGuire. All Rights Reserved.
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
@@ -40,7 +40,7 @@ namespace WebTools
 		private readonly CookieContainer cookieJar;
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="RestClient"/> class.
+		/// Initializes a new instance of the <see cref="WebClient"/> class.
 		/// </summary>
 		public WebClient()
 		{
@@ -48,7 +48,7 @@ namespace WebTools
 			IsError = false;
 
 			cookieJar = new CookieContainer();
-			HttpClientHandler clientHandler = new HttpClientHandler();
+			HttpClientHandler clientHandler = new ();
 			clientHandler.CookieContainer = cookieJar;
 			clientHandler.AllowAutoRedirect = true;
 
@@ -101,7 +101,7 @@ namespace WebTools
 		/// <param name="value">The value of the cookie.</param>
 		public void AddCookie(string name, string value)
 		{
-			Cookie cookie = new Cookie(name, value);
+			Cookie cookie = new (name, value);
 			cookieJar.Add(cookie);
 		}
 
@@ -116,7 +116,7 @@ namespace WebTools
 
 		public async Task<string> GetWebPage(string url)
 		{
-			Uri uri = new Uri(url);
+			Uri uri = new (url);
 
 			string response = await Request(uri).ConfigureAwait(false);
 
@@ -142,28 +142,27 @@ namespace WebTools
 
 				HttpContent fileStreamContent = new StreamContent(stream);
 
-				using (var formData = new MultipartFormDataContent())
+				using var formData = new MultipartFormDataContent();
+
+				formData.Add(fileStreamContent, fieldName, filePath);
+				HttpResponseMessage responseMessage =
+					await client.PostAsync(endPoint, formData);
+
+				if (!responseMessage.IsSuccessStatusCode)
 				{
-					formData.Add(fileStreamContent, fieldName, filePath);
-					HttpResponseMessage responseMessage =
-						await client.PostAsync(endPoint, formData);
-
-					if (!responseMessage.IsSuccessStatusCode)
-					{
-						Log.Error("PostFile failed");
-					}
-
-					response = await responseMessage.Content.ReadAsStringAsync().
-						ConfigureAwait(false);
-
-					string fileName = Path.GetFileName(filePath);
-					string message = string.Format(
-						"{0} - Server response: {1}",
-						fileName,
-						response);
-
-					Log.Info(message);
+					Log.Error("PostFile failed");
 				}
+
+				response = await responseMessage.Content.ReadAsStringAsync().
+					ConfigureAwait(false);
+
+				string fileName = Path.GetFileName(filePath);
+				string message = string.Format(
+					"{0} - Server response: {1}",
+					fileName,
+					response);
+
+				Log.Info(message);
 			}
 
 			return response;
@@ -260,8 +259,7 @@ namespace WebTools
 			{
 				if (requestUri != null)
 				{
-					using FormUrlEncodedContent content =
-						new FormUrlEncodedContent(parameters);
+					using FormUrlEncodedContent content = new (parameters);
 
 					string requestUrl = requestUri.AbsoluteUri;
 					bool isComplete = Uri.IsWellFormedUriString(
@@ -315,12 +313,11 @@ namespace WebTools
 
 			foreach (var item in items)
 			{
-				KeyValuePair<string, string> pair =
-					new KeyValuePair<string, string>(item.Key, item.Value);
+				KeyValuePair<string, string> pair = new (item.Key, item.Value);
 				parameters.Add(pair);
 			}
 
-			Uri uri = new Uri(query);
+			Uri uri = new (query);
 			return Request(method, uri, parameters);
 		}
 
@@ -382,7 +379,7 @@ namespace WebTools
 
 			try
 			{
-				Uri uri = new Uri(requestUrl);
+				Uri uri = new (requestUrl);
 
 				responseContent = await client.GetStringAsync(uri).
 						ConfigureAwait(false);
@@ -428,7 +425,7 @@ namespace WebTools
 
 				if (method == HttpMethod.Post)
 				{
-					Uri uri = new Uri(requestUrl);
+					Uri uri = new (requestUrl);
 
 					// save this as clients may want know this
 					RequestMessage = new HttpRequestMessage();
