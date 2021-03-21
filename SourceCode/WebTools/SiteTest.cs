@@ -45,7 +45,7 @@ namespace WebTools
 				"WebTools.Resources",
 				Assembly.GetExecutingAssembly());
 
-		private readonly RestClient client;
+		private readonly WebClient client;
 
 		private readonly IList<string> imagesChecked;
 
@@ -59,7 +59,7 @@ namespace WebTools
 		{
 			pagesCrawed = new List<string>();
 			imagesChecked = new List<string>();
-			client = new RestClient();
+			client = new WebClient();
 		}
 
 		public SiteTest(DocumentChecks tests)

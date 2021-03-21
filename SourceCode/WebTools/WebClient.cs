@@ -4,10 +4,6 @@
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
 
-// #define USE_RestSharp
-#define USE_HTTPWebRequest
-
-// using RestSharp;
 using Common.Logging;
 using Newtonsoft.Json;
 using System;
@@ -25,9 +21,9 @@ using System.Threading.Tasks;
 namespace WebTools
 {
 	/// <summary>
-	/// Represents a rest client for communicating with the server.
+	/// Represents a web client for communicating with web servers.
 	/// </summary>
-	public class RestClient : IDisposable, INotifyPropertyChanged
+	public class WebClient : IDisposable, INotifyPropertyChanged
 	{
 		private static readonly ILog Log = LogManager.GetLogger(
 			System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
@@ -41,27 +37,18 @@ namespace WebTools
 		};
 
 		private readonly HttpClient client;
-		private readonly string clientId;
-		private readonly string clientSecret;
 		private readonly CookieContainer cookieJar;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="RestClient"/> class.
 		/// </summary>
-		[System.Diagnostics.CodeAnalysis.SuppressMessage(
-			"Style",
-			"IDE0017:Simplify object initialization",
-			Justification = "Don't agree with this rule.")]
-		public RestClient()
+		public WebClient()
 		{
-			Authenticate = false;
 			IncludeSourceInError = true;
 			IsError = false;
 
 			cookieJar = new CookieContainer();
-#pragma warning disable CA2000 // Dispose objects before losing scope
 			HttpClientHandler clientHandler = new HttpClientHandler();
-#pragma warning restore CA2000 // Dispose objects before losing scope
 			clientHandler.CookieContainer = cookieJar;
 			clientHandler.AllowAutoRedirect = true;
 
@@ -71,25 +58,19 @@ namespace WebTools
 
 			client = new HttpClient(clientHandler);
 			client.DefaultRequestHeaders.Add("User-Agent", userAgent);
-			client.Timeout = TimeSpan.FromMinutes(1);
+			client.Timeout = TimeSpan.FromMinutes(2);
 		}
 
-		public RestClient(string host, string clientId, string clientSecret)
+		public WebClient(string host)
 			: this()
 		{
 			Host = host;
-			this.clientId = clientId;
-			this.clientSecret = clientSecret;
 		}
 
 		/// <summary>
 		/// An event that gets triggered when the property changes
 		/// </summary>
 		public event PropertyChangedEventHandler PropertyChanged;
-
-		public string AccessToken { get; set; }
-
-		public bool Authenticate { get; set; }
 
 		public string Host { get; set; }
 
@@ -106,10 +87,6 @@ namespace WebTools
 		/// </summary>
 		/// <value>Whether the server is in an error state.</value>
 		public bool IsError { get; set; }
-
-		public string RefreshToken { get; set; }
-
-		public string RefreshTokenEndPoint { get; set; }
 
 		public HttpRequestMessage RequestMessage { get; set; }
 
@@ -137,24 +114,59 @@ namespace WebTools
 			GC.SuppressFinalize(this);
 		}
 
-		/// <summary>
-		/// Gets the basic client authentication parameters.
-		/// </summary>
-		/// <returns>A KeyValuePair list of the pairs.</returns>
-		public IList<KeyValuePair<string, string>> GetClientParameters()
+		public async Task<string> GetWebPage(string url)
 		{
-			IList<KeyValuePair<string, string>> parameters =
-				new List<KeyValuePair<string, string>>();
+			Uri uri = new Uri(url);
 
-			KeyValuePair<string, string> pair =
-				new KeyValuePair<string, string>("client_id", clientId);
-			parameters.Add(pair);
+			string response = await Request(uri).ConfigureAwait(false);
 
-			pair =
-				new KeyValuePair<string, string>("client_secret", clientSecret);
-			parameters.Add(pair);
+			return response;
+		}
 
-			return parameters;
+		public async Task<string> PostFile(
+			string endPoint, string fieldName, string filePath)
+		{
+			string response = null;
+
+			if (!File.Exists(filePath))
+			{
+				Log.Error("PostFile File doesn't exist!: " + filePath);
+			}
+			else
+			{
+				Log.Info("PostFile Sending data: " + filePath);
+
+				client.DefaultRequestHeaders.ConnectionClose = true;
+
+				var stream = File.OpenRead(filePath);
+
+				HttpContent fileStreamContent = new StreamContent(stream);
+
+				using (var formData = new MultipartFormDataContent())
+				{
+					formData.Add(fileStreamContent, fieldName, filePath);
+					HttpResponseMessage responseMessage =
+						await client.PostAsync(endPoint, formData);
+
+					if (!responseMessage.IsSuccessStatusCode)
+					{
+						Log.Error("PostFile failed");
+					}
+
+					response = await responseMessage.Content.ReadAsStringAsync().
+						ConfigureAwait(false);
+
+					string fileName = Path.GetFileName(filePath);
+					string message = string.Format(
+						"{0} - Server response: {1}",
+						fileName,
+						response);
+
+					Log.Info(message);
+				}
+			}
+
+			return response;
 		}
 
 		public HttpResponseMessage RequestGetResponse(Uri uri)
@@ -208,8 +220,6 @@ namespace WebTools
 							requestUrl);
 					}
 
-					DoAuthentication();
-
 					responseContent =
 						await GetResponse(requestUrl).ConfigureAwait(false);
 				}
@@ -219,11 +229,12 @@ namespace WebTools
 				exception is ArgumentNullException ||
 				exception is ArgumentOutOfRangeException ||
 				exception is FileNotFoundException ||
+				exception is FormatException ||
+				exception is HttpRequestException ||
 				exception is IOException ||
 				exception is JsonException ||
 				exception is NotSupportedException ||
 				exception is ObjectDisposedException ||
-				exception is System.FormatException ||
 				exception is TaskCanceledException ||
 				exception is UnauthorizedAccessException)
 			{
@@ -243,7 +254,6 @@ namespace WebTools
 			Uri requestUri,
 			IList<KeyValuePair<string, string>> parameters)
 		{
-#if USE_HTTPWebRequest
 			string responseContent = null;
 
 			try
@@ -266,22 +276,7 @@ namespace WebTools
 						requestUrl);
 					}
 
-					DoAuthentication();
-
 					responseContent = GetResponse(method, requestUrl, content);
-
-					if (true == IsError)
-					{
-						// see if it just a matter of an expired token
-						bool refreshed = RefeshToken(responseContent);
-
-						if (true == refreshed)
-						{
-							// call again with new tokens
-							responseContent =
-								GetResponse(method, requestUrl, content);
-						}
-					}
 				}
 			}
 			catch (Exception exception) when (exception is ArgumentException ||
@@ -304,73 +299,6 @@ namespace WebTools
 			}
 
 			return responseContent;
-#endif
-#if USE_RestSharp
-			RestClient client = new RestClient();
-			client.BaseUrl = new Uri(host);
-			// client.Authenticator = new HttpBasicAuthenticator(username, password);
-
-			var request = new RestRequest("resource/{id}", Method.POST);
-
-			// adds to POST or URL querystring based on Method
-			foreach(RequestParameter parameter in parameters)
-			{
-				if (method == method.Post)
-				{
-					request.AddParameter(parameter.Variable, parameter.Value);
-				}
-				else
-				{
-					// replaces matching token in request.Resource
-					request.AddUrlSegment(parameter.Variable, parameter.Value);
-				}
-			}
-
-			// easily add HTTP Headers
-			//request.AddHeader("header", "value");
-
-			// add files to upload (works with compatible verbs)
-			//request.AddFile(path);
-
-			// execute the request
-			IRestResponse response = client.Execute(request);
-			string content = response.Content; // raw content as string
-
-			// or automatically deserialize result
-			// return content type is sniffed but can be explicitly set via RestClient.AddHandler();
-			//RestResponse<Person> response2 = client.Execute<Person>(request);
-			//var name = response2.Data.Name;
-
-			// easy async support
-			//client.ExecuteAsync(request, response => {
-			//	Console.WriteLine(response.Content);
-			//});
-
-			// async with deserialization
-			//var asyncHandle = client.ExecuteAsync<Person>(request, response => {
-			//	Console.WriteLine(response.Data.Name);
-			//});
-
-			// abort the request on demand
-			//asyncHandle.Abort();
-		}
-
-		public T Execute<T>(RestRequest request) where T : new()
-		{
-			var client = new RestClient();
-			client.BaseUrl = new System.Uri(BaseUrl);
-			client.Authenticator = new HttpBasicAuthenticator(_accountSid, _secretKey);
-			request.AddParameter("AccountSid", _accountSid, ParameterType.UrlSegment); // used on every request
-			var response = client.Execute<T>(request);
-
-			if (response.ErrorException != null)
-			{
-				const string message = "Error retrieving response.  Check inner details for more info.";
-				var twilioException = new ApplicationException(message, response.ErrorException);
-				throw twilioException;
-			}
-			return response.Data;
-#endif
 		}
 
 		public string Request(
@@ -380,7 +308,7 @@ namespace WebTools
 			string[] values)
 		{
 			IList<KeyValuePair<string, string>> parameters =
-				GetClientParameters();
+				new List<KeyValuePair<string, string>>();
 
 			var items = keys.Zip(values, (key, value) =>
 				new { Key = key, Value = value });
@@ -394,25 +322,6 @@ namespace WebTools
 
 			Uri uri = new Uri(query);
 			return Request(method, uri, parameters);
-		}
-
-		public string RequestRefreshToken(string endpoint, string refreshToken)
-		{
-			string[] keys =
-			{
-				"grant_type", "refresh_token", "client_id", "client_secret"
-			};
-
-			string[] values =
-			{
-				"refresh_token", refreshToken, clientId, clientSecret
-			};
-
-			Authenticate = true;
-
-			string response = Request(HttpMethod.Post, endpoint, keys, values);
-
-			return response;
 		}
 
 		/// <summary>
@@ -431,10 +340,6 @@ namespace WebTools
 			// free native resources
 		}
 
-		[System.Diagnostics.CodeAnalysis.SuppressMessage(
-			"Style",
-			"IDE1005:Delegate invocation can be simplified.",
-			Justification = "Don't agree with this rule.")]
 		protected void OnPropertyChanged(string name)
 		{
 			PropertyChangedEventHandler handler = PropertyChanged;
@@ -442,26 +347,6 @@ namespace WebTools
 			{
 				handler(this, new PropertyChangedEventArgs(name));
 			}
-		}
-
-		private static bool IsValidJsonError(string test)
-		{
-			bool valid = false;
-
-			try
-			{
-				ErrorResponse response =
-					JsonConvert.DeserializeObject<ErrorResponse>(test);
-
-				valid = true;
-			}
-			catch (Exception exception) when (exception is JsonReaderException)
-			{
-				Log.Error(CultureInfo.InvariantCulture, m => m(
-					exception.ToString()));
-			}
-
-			return valid;
 		}
 
 		private static string SetErrorResponse(
@@ -488,32 +373,6 @@ namespace WebTools
 				details);
 
 			return response;
-		}
-
-		private void DoAuthentication()
-		{
-			if (true == Authenticate)
-			{
-				string clientAuthorization =
-					string.Format(
-						CultureInfo.InvariantCulture,
-						"{0}:{1}",
-						clientId,
-						clientSecret);
-
-				// this works
-				byte[] bytes = new UTF8Encoding().GetBytes(clientAuthorization);
-				client.DefaultRequestHeaders.Authorization =
-					new AuthenticationHeaderValue(
-						"Basic",
-						Convert.ToBase64String(bytes));
-
-				Authenticate = false;
-			}
-			else
-			{
-				client.DefaultRequestHeaders.Authorization = null;
-			}
 		}
 
 		private async Task<string> GetResponse(string requestUrl)
@@ -555,16 +414,12 @@ namespace WebTools
 			return responseContent;
 		}
 
-		[System.Diagnostics.CodeAnalysis.SuppressMessage(
-			"Style",
-			"IDE0017:Simplify object initialization",
-			Justification = "Don't agree with this rule.")]
 		private string GetResponse(
 			HttpMethod method,
 			string requestUrl,
 			FormUrlEncodedContent content)
 		{
-			string responseContent = null;
+			string responseContent;
 
 			try
 			{
@@ -601,7 +456,6 @@ namespace WebTools
 							"Redirecting to {0}",
 							redirectUri);
 
-						System.Diagnostics.Debug.WriteLine(message);
 						Log.Info(CultureInfo.InvariantCulture, m => m(
 							message));
 
@@ -631,22 +485,6 @@ namespace WebTools
 						CultureInfo.InvariantCulture,
 						"error: {0}",
 						Response.ReasonPhrase);
-
-					if (!IsValidJsonError(responseContent))
-					{
-						string error = Response.StatusCode.ToString();
-						if (true == IncludeSourceInError)
-						{
-							responseContent =
-								SetErrorResponse(error, responseContent);
-						}
-						else
-						{
-							responseContent = SetErrorResponse(
-								error,
-								"An unidentified server error occurred");
-						}
-					}
 				}
 
 				if (ServerErrors.Any(responseContent.Contains))
@@ -674,57 +512,6 @@ namespace WebTools
 			}
 
 			return responseContent;
-		}
-
-		private bool RefeshToken(string response)
-		{
-			bool updated = false;
-
-			try
-			{
-				if (response.Contains(
-					"error", StringComparison.OrdinalIgnoreCase))
-				{
-					string[] refreshErrors =
-					{
-						"expired_token",
-						"Malformed auth header",
-						"invalid_token"
-					};
-
-					Token serverResponse =
-						JsonConvert.DeserializeObject<Token>(response);
-
-					if (refreshErrors.Contains(serverResponse.Error))
-					{
-						string refresh = RequestRefreshToken(
-							RefreshTokenEndPoint, RefreshToken);
-						if (refresh.Contains(
-							"error",
-							StringComparison.OrdinalIgnoreCase))
-						{
-							Token refreshResponse =
-							JsonConvert.DeserializeObject<Token>(response);
-
-							AccessToken = refreshResponse.AccessToken;
-							RefreshToken = refreshResponse.RefreshToken;
-							OnPropertyChanged("AccessToken");
-							OnPropertyChanged("RefreshToken");
-
-							updated = true;
-						}
-					}
-				}
-			}
-			catch (Exception exception) when (exception is JsonReaderException)
-			{
-				IsError = true;
-
-				Log.Error(CultureInfo.InvariantCulture, m => m(
-					exception.ToString()));
-			}
-
-			return updated;
 		}
 	}
 }
