@@ -42,3 +42,16 @@ Development Notes
 	error CS0246: The type or namespace name 'TestClass' could not be found (are you missing a using directive or an assembly reference?)
 	error CS0246: The type or namespace name 'TestMethodAttribute' could not be found (are you missing a using directive or an assembly reference?)
 	error CS0246: The type or namespace name 'TestMethod' could not be found (are you missing a using directive or an assembly reference?)
+
+WebClient.cs
+	Merge problems	Header copyright
+	Merge problems	Common.logging / just Serilog
+	Merge problems	namespace
+	Merge problems	Custom serverErrors
+	Merge problems				client.DefaultRequestHeaders.ConnectionClose = true;
+HttpClient
+	Cookie Handling
+		https://stackoverflow.com/questions/12373738/how-do-i-set-a-cookie-on-httpclients-httprequestmessage
+		https://stackoverflow.com/questions/18998354/httpwebrequest-headers-addcookie-value-vs-httpwebrequest-cookiecontainer
+		https://snipplr.com/view/4427
+		https://d-fens.ch/2016/12/27/howto-set-cookie-header-on-defaultrequestheaders-of-httpclient/
