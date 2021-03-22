@@ -1,5 +1,12 @@
-﻿using System;
+﻿/////////////////////////////////////////////////////////////////////////////
+// <copyright file="CookieStore.cs" company="James John McGuire">
+// Copyright © 2016 - 2021 James John McGuire. All Rights Reserved.
+// </copyright>
+/////////////////////////////////////////////////////////////////////////////
+
+using System;
 using System.Collections;
+using System.Globalization;
 using System.Net;
 
 namespace WebTools
@@ -7,113 +14,141 @@ namespace WebTools
 	/// <summary>
 	/// Scalvaged from the internet:
 	/// https://stackoverflow.com/questions/18998354/httpwebrequest-headers-addcookie-value-vs-httpwebrequest-cookiecontainer
-	/// https://snipplr.com/view/4427
+	/// https://snipplr.com/view/4427.
 	/// </summary>
-	class CookieStore
+	public class CookieStore
 	{
-		public static CookieCollection GetAllCookiesFromHeader(string strHeader, string strHost)
+		public static CookieCollection GetAllCookiesFromHeader(
+			string header, string host)
 		{
-			ArrayList al = new ArrayList();
-			CookieCollection cc = new CookieCollection();
-			if (strHeader != string.Empty)
+			ArrayList cookieList;
+			CookieCollection cookieCollection = new ();
+
+			if (header != string.Empty)
 			{
-				al = ConvertCookieHeaderToArrayList(strHeader);
-				cc = ConvertCookieArraysToCookieCollection(al, strHost);
+				cookieList = ConvertCookieHeaderToArrayList(header);
+				cookieCollection =
+					ConvertCookieArraysToCookieCollection(cookieList, host);
 			}
-			return cc;
+
+			return cookieCollection;
 		}
 
-		private static ArrayList ConvertCookieHeaderToArrayList(string strCookHeader)
+		private static ArrayList ConvertCookieHeaderToArrayList(
+			string cookHeader)
 		{
-			strCookHeader = strCookHeader.Replace("\r", "");
-			strCookHeader = strCookHeader.Replace("\n", "");
-			string[] strCookTemp = strCookHeader.Split(',');
-			ArrayList al = new ArrayList();
-			int i = 0;
-			int n = strCookTemp.Length;
-			while (i < n)
+			cookHeader = cookHeader.Replace("\r", string.Empty);
+			cookHeader = cookHeader.Replace("\n", string.Empty);
+
+			string[] cookieParts = cookHeader.Split(',');
+
+			ArrayList cookieList = new ();
+			int index = 0;
+
+			while (index < cookieParts.Length)
 			{
-				if (strCookTemp[i].IndexOf("expires=", StringComparison.OrdinalIgnoreCase) > 0)
+				string subCookie = cookieParts[index];
+				string subCookieNext = cookieParts[index + 1];
+				int subIndex = subCookie.IndexOf(
+					"expires=", StringComparison.OrdinalIgnoreCase);
+
+				if (subIndex > 0)
 				{
-					al.Add(strCookTemp[i] + "," + strCookTemp[i + 1]);
-					i = i + 1;
+					string newCookie = string.Format(
+						CultureInfo.InvariantCulture,
+						"{0},{1}",
+						subCookie,
+						subCookieNext);
+
+					cookieList.Add(newCookie);
+					index++;
 				}
 				else
 				{
-					al.Add(strCookTemp[i]);
+					cookieList.Add(subCookie);
 				}
-				i = i + 1;
+
+				index++;
 			}
-			return al;
+
+			return cookieList;
 		}
 
-		private static CookieCollection ConvertCookieArraysToCookieCollection(ArrayList al, string strHost)
+		private static CookieCollection ConvertCookieArraysToCookieCollection(
+			ArrayList cookieList, string host)
 		{
-			CookieCollection cc = new CookieCollection();
+			CookieCollection cc = new ();
 
-			int alcount = al.Count;
-			string strEachCook;
-			string[] strEachCookParts;
-			for (int i = 0; i < alcount; i++)
+			string[] cookieParts;
+
+			for (int index = 0; index < cookieList.Count; index++)
 			{
-				strEachCook = al[i].ToString();
-				strEachCookParts = strEachCook.Split(';');
-				int intEachCookPartsCount = strEachCookParts.Length;
-				string strCNameAndCValue = string.Empty;
-				string strPNameAndPValue = string.Empty;
-				string strDNameAndDValue = string.Empty;
-				string[] NameValuePairTemp;
-				Cookie cookTemp = new Cookie();
+				object cookie = cookieList[index];
+				string cookieText = cookie.ToString();
 
-				for (int j = 0; j < intEachCookPartsCount; j++)
+				cookieParts = cookieText.Split(';');
+
+				string strCNameAndCValue;
+				string strPNameAndPValue;
+				string[] nameValuePairTemp;
+				Cookie cookTemp = new ();
+
+				for (int subIndex = 0; subIndex < cookieParts.Length;
+					subIndex++)
 				{
-					if (j == 0)
+					if (subIndex == 0)
 					{
-						strCNameAndCValue = strEachCookParts[j];
+						strCNameAndCValue = cookieParts[subIndex];
 						if (strCNameAndCValue != string.Empty)
 						{
 							int firstEqual = strCNameAndCValue.IndexOf("=");
-							string firstName = strCNameAndCValue.Substring(0, firstEqual);
-							string allValue = strCNameAndCValue.Substring(firstEqual + 1, strCNameAndCValue.Length - (firstEqual + 1));
+							string firstName =
+								strCNameAndCValue.Substring(0, firstEqual);
+							string allValue = strCNameAndCValue.Substring(
+								firstEqual + 1, strCNameAndCValue.Length - (firstEqual + 1));
 							cookTemp.Name = firstName;
 							cookTemp.Value = allValue;
 						}
+
 						continue;
 					}
-					if (strEachCookParts[j].IndexOf("path", StringComparison.OrdinalIgnoreCase) >= 0)
+
+					if (cookieParts[subIndex].Contains("path", StringComparison.OrdinalIgnoreCase))
 					{
-						strPNameAndPValue = strEachCookParts[j];
+						strPNameAndPValue = cookieParts[subIndex];
 						if (strPNameAndPValue != string.Empty)
 						{
-							NameValuePairTemp = strPNameAndPValue.Split('=');
-							if (NameValuePairTemp[1] != string.Empty)
+							nameValuePairTemp = strPNameAndPValue.Split('=');
+							if (nameValuePairTemp[1] != string.Empty)
 							{
-								cookTemp.Path = NameValuePairTemp[1];
+								cookTemp.Path = nameValuePairTemp[1];
 							}
 							else
 							{
 								cookTemp.Path = "/";
 							}
 						}
+
 						continue;
 					}
 
-					if (strEachCookParts[j].IndexOf("domain", StringComparison.OrdinalIgnoreCase) >= 0)
+					if (cookieParts[subIndex].Contains("domain", StringComparison.OrdinalIgnoreCase))
 					{
-						strPNameAndPValue = strEachCookParts[j];
+						strPNameAndPValue = cookieParts[subIndex];
 						if (strPNameAndPValue != string.Empty)
 						{
-							NameValuePairTemp = strPNameAndPValue.Split('=');
+							nameValuePairTemp = strPNameAndPValue.Split('=');
 
-							if (NameValuePairTemp[1] != string.Empty)
+							if (nameValuePairTemp[1] != string.Empty)
 							{
-								cookTemp.Domain = NameValuePairTemp[1];
+								cookTemp.Domain = nameValuePairTemp[1];
 							}
 							else
 							{
-								cookTemp.Domain = strHost;
+								cookTemp.Domain = host;
 							}
 						}
+
 						continue;
 					}
 				}
@@ -122,12 +157,15 @@ namespace WebTools
 				{
 					cookTemp.Path = "/";
 				}
+
 				if (cookTemp.Domain == string.Empty)
 				{
-					cookTemp.Domain = strHost;
+					cookTemp.Domain = host;
 				}
+
 				cc.Add(cookTemp);
 			}
+
 			return cc;
 		}
 	}
