@@ -1,5 +1,5 @@
 CD %~dp0
-CD ..
+CD ..\SourceCode
 
 IF EXIST Bin\Release\x64\NUL DEL /Q Bin\Release\x64\*.*
 
