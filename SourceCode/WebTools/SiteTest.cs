@@ -273,9 +273,10 @@ namespace WebTools
 				exception is NotSupportedException ||
 				exception is NullReferenceException ||
 				exception is ObjectDisposedException ||
-				exception is System.FormatException ||
+				exception is FormatException ||
 				exception is TaskCanceledException ||
-				exception is UnauthorizedAccessException)
+				exception is UnauthorizedAccessException ||
+				exception is WebException)
 			{
 				Log.Error(CultureInfo.InvariantCulture, m => m(
 					exception.ToString()));
