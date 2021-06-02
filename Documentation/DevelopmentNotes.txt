@@ -49,9 +49,17 @@ WebClient.cs
 	Merge problems	namespace
 	Merge problems	Custom serverErrors
 	Merge problems				client.DefaultRequestHeaders.ConnectionClose = true;
-HttpClient
-	Cookie Handling
-		https://stackoverflow.com/questions/12373738/how-do-i-set-a-cookie-on-httpclients-httprequestmessage
-		https://stackoverflow.com/questions/18998354/httpwebrequest-headers-addcookie-value-vs-httpwebrequest-cookiecontainer
-		https://snipplr.com/view/4427
-		https://d-fens.ch/2016/12/27/howto-set-cookie-header-on-defaultrequestheaders-of-httpclient/
+Cookie Handling
+	https://stackoverflow.com/questions/12373738/how-do-i-set-a-cookie-on-httpclients-httprequestmessage
+	https://stackoverflow.com/questions/18998354/httpwebrequest-headers-addcookie-value-vs-httpwebrequest-cookiecontainer
+	https://snipplr.com/view/4427
+	https://d-fens.ch/2016/12/27/howto-set-cookie-header-on-defaultrequestheaders-of-httpclient/
+Unhandled exception. System.Net.WebException: The remote server returned an error: (404) Not Found.
+	at System.Net.HttpWebRequest.GetResponse()
+	at WebTools.SiteTest.URLExists(Uri url) in C:\Users\JamesMc\Data\Clients\DigitalZenWorks\HttpTool\SourceCode\WebTools\SiteTest.cs:line 362
+	at WebTools.SiteTest.CheckImages(CrawledPage crawledPage) in C:\Users\JamesMc\Data\Clients\DigitalZenWorks\HttpTool\SourceCode\WebTools\SiteTest.cs:line 487
+	at WebTools.SiteTest.ProcessPageCrawlCompleted(Object sender, PageCrawlCompletedArgs arguments) in C:\Users\JamesMc\Data\Clients\DigitalZenWorks\HttpTool\SourceCode\WebTools\SiteTest.cs:line 245
+	at System.Threading.Tasks.Task.<>c.<ThrowAsync>b__140_1(Object state)
+	at System.Threading.QueueUserWorkItemCallbackDefaultContext.Execute()
+	at System.Threading.ThreadPoolWorkQueue.Dispatch()
+Page had no content http://news.localhost/account/english/
