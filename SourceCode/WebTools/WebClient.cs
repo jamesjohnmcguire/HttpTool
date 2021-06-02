@@ -38,6 +38,10 @@ namespace WebTools
 
 		private readonly HttpClient client;
 		private readonly CookieContainer cookieJar;
+		private readonly IList<KeyValuePair<string, string>>
+			defaultParameters = new List<KeyValuePair<string, string>>();
+
+		private bool trySecondChance;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="WebClient"/> class.
@@ -51,6 +55,7 @@ namespace WebTools
 			HttpClientHandler clientHandler = new ();
 			clientHandler.CookieContainer = cookieJar;
 			clientHandler.AllowAutoRedirect = true;
+			clientHandler.CheckCertificateRevocationList = true;
 
 			string userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
 				"AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 " +
@@ -68,10 +73,58 @@ namespace WebTools
 		}
 
 		/// <summary>
+		/// Initializes a new instance of the <see cref="RestClient"/> class
+		/// with explicitly setting the host, client id and client secret key.
+		/// </summary>
+		/// <param name="headers">The additional headers to add.</param>
+		/// <param name="buildNumber">The build number of the
+		/// application.</param>
+		/// <param name="logger">The logging object.</param>
+		public WebClient(
+			IList<MediaTypeWithQualityHeaderValue> headers)
+			: this()
+		{
+			if (headers != null)
+			{
+				foreach (MediaTypeWithQualityHeaderValue header in headers)
+				{
+					client.DefaultRequestHeaders.Accept.Add(header);
+				}
+			}
+		}
+
+		/// <summary>
 		/// An event that gets triggered when the property changes
 		/// </summary>
 		public event PropertyChangedEventHandler PropertyChanged;
 
+		/// <summary>
+		/// Gets the HttpClient.
+		/// </summary>
+		/// <value>The HttpClient.</value>
+		public HttpClient Client
+		{
+			get { return client; }
+		}
+
+		/// <summary>
+		/// Gets the list of default parameters for the client.
+		/// </summary>
+		/// <value>
+		/// The list of default parameters for the client.
+		/// </value>
+		public IList<KeyValuePair<string, string>> DefaultParameters
+		{
+			get
+			{
+				return defaultParameters;
+			}
+		}
+
+		/// <summary>
+		/// Gets or sets the host server.
+		/// </summary>
+		/// <value>The host server.</value>
 		public string Host { get; set; }
 
 		/// <summary>
@@ -103,6 +156,17 @@ namespace WebTools
 		{
 			Cookie cookie = new (name, value);
 			cookieJar.Add(cookie);
+		}
+
+		/// <summary>
+		/// Add a cookie into the cookie jar.
+		/// </summary>
+		/// <param name="name">The name of the cookie.</param>
+		/// <param name="value">The value of the cookie.</param>
+		public void AddCookie(Uri domain, string name, string value)
+		{
+			Cookie cookie = new (name, value);
+			cookieJar.Add(domain, cookie);
 		}
 
 		/// <summary>
