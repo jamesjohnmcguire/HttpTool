@@ -41,8 +41,6 @@ namespace WebTools
 		private readonly IList<KeyValuePair<string, string>>
 			defaultParameters = new List<KeyValuePair<string, string>>();
 
-		private bool trySecondChance;
-
 		/// <summary>
 		/// Initializes a new instance of the <see cref="WebClient"/> class.
 		/// </summary>
@@ -73,7 +71,7 @@ namespace WebTools
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="RestClient"/> class
+		/// Initializes a new instance of the <see cref="WebClient"/> class
 		/// with explicitly setting the host, client id and client secret key.
 		/// </summary>
 		/// <param name="headers">The additional headers to add.</param>
@@ -161,6 +159,7 @@ namespace WebTools
 		/// <summary>
 		/// Add a cookie into the cookie jar.
 		/// </summary>
+		/// <param name="domain">The domain of the cookie.</param>
 		/// <param name="name">The name of the cookie.</param>
 		/// <param name="value">The value of the cookie.</param>
 		public void AddCookie(Uri domain, string name, string value)
