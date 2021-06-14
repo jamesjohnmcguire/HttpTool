@@ -1,5 +1,5 @@
 ﻿/////////////////////////////////////////////////////////////////////////////
-// <copyright file="WebClient.cs" company="James John McGuire">
+// <copyright file="HttpClientExtended.cs" company="James John McGuire">
 // Copyright © 2016 - 2021 James John McGuire. All Rights Reserved.
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
@@ -22,7 +22,7 @@ namespace WebTools
 	/// <summary>
 	/// Represents a web client for communicating with web servers.
 	/// </summary>
-	public class WebClient : IDisposable, INotifyPropertyChanged
+	public class HttpClientExtended : IDisposable, INotifyPropertyChanged
 	{
 		private static readonly ILog Log = LogManager.GetLogger(
 			System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
@@ -33,9 +33,9 @@ namespace WebTools
 			defaultParameters = new List<KeyValuePair<string, string>>();
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="WebClient"/> class.
+		/// Initializes a new instance of the <see cref="HttpClientExtended"/> class.
 		/// </summary>
-		public WebClient()
+		public HttpClientExtended()
 		{
 			IsError = false;
 
@@ -54,21 +54,21 @@ namespace WebTools
 			client.Timeout = TimeSpan.FromMinutes(2);
 		}
 
-		public WebClient(string host)
+		public HttpClientExtended(string host)
 			: this()
 		{
 			Host = host;
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="WebClient"/> class
+		/// Initializes a new instance of the <see cref="HttpClientExtended"/> class
 		/// with explicitly setting the host, client id and client secret key.
 		/// </summary>
 		/// <param name="headers">The additional headers to add.</param>
 		/// <param name="buildNumber">The build number of the
 		/// application.</param>
 		/// <param name="logger">The logging object.</param>
-		public WebClient(
+		public HttpClientExtended(
 			IList<MediaTypeWithQualityHeaderValue> headers)
 			: this()
 		{

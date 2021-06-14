@@ -41,7 +41,7 @@ namespace WebTools
 		private static readonly ResourceManager StringTable = new (
 			"WebTools.Resources", Assembly.GetExecutingAssembly());
 
-		private readonly WebClient client;
+		private readonly HttpClientExtended client;
 
 		private readonly IList<string> imagesChecked;
 
@@ -55,7 +55,7 @@ namespace WebTools
 		{
 			pagesCrawed = new List<string>();
 			imagesChecked = new List<string>();
-			client = new WebClient();
+			client = new HttpClientExtended();
 		}
 
 		public SiteTest(DocumentChecks tests)
