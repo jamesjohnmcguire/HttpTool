@@ -7,7 +7,6 @@
 using Abot2.Crawler;
 using Abot2.Poco;
 using Common.Logging;
-using DigitalZenWorks.Common.Utilities;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
 using System;
@@ -30,9 +29,8 @@ namespace WebTools
 
 		private static readonly string[] ServerErrors =
 		{
-			"A PHP Error was encountered",
-			"A Database Error Occurred", "Parse error",
-			"データベースエラーが発生しました"
+			"A PHP Error was encountered", "A Database Error Occurred",
+			"Parse error", "データベースエラーが発生しました"
 		};
 
 		private static readonly string[] IgnoreTypes =
@@ -580,7 +578,7 @@ namespace WebTools
 				string path = parts.Last() + crawledPage.Uri.Query;
 				path = path.Replace("?", "__");
 				path = path.Replace('\\', '-');
-				FileUtils.SaveFile(text, path);
+				File.WriteAllText(path, text);
 			}
 		}
 
