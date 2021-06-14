@@ -15,7 +15,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace WebTools
@@ -28,14 +27,6 @@ namespace WebTools
 		private static readonly ILog Log = LogManager.GetLogger(
 			System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-		private static readonly string[] ServerErrors =
-		{
-			"A PHP Error was encountered",
-			"A Database Error Occurred",
-			"Parse error",
-			"データベースエラーが発生しました",
-		};
-
 		private readonly HttpClient client;
 		private readonly CookieContainer cookieJar;
 		private readonly IList<KeyValuePair<string, string>>
@@ -46,7 +37,6 @@ namespace WebTools
 		/// </summary>
 		public WebClient()
 		{
-			IncludeSourceInError = true;
 			IsError = false;
 
 			cookieJar = new CookieContainer();
@@ -124,13 +114,6 @@ namespace WebTools
 		/// </summary>
 		/// <value>The host server.</value>
 		public string Host { get; set; }
-
-		/// <summary>
-		/// Gets or sets a value indicating whether to include the server body
-		/// content in an error message.
-		/// </summary>
-		/// <value>Whether to include the server source in an error.</value>
-		public bool IncludeSourceInError { get; set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating whether the server is in
@@ -446,11 +429,6 @@ namespace WebTools
 
 				responseContent = await client.GetStringAsync(uri).
 						ConfigureAwait(false);
-
-				if (ServerErrors.Any(responseContent.Contains))
-				{
-					IsError = true;
-				}
 			}
 			catch (Exception exception) when (exception is ArgumentException ||
 				exception is ArgumentNullException ||
@@ -545,11 +523,6 @@ namespace WebTools
 						CultureInfo.InvariantCulture,
 						"error: {0}",
 						Response.ReasonPhrase);
-				}
-
-				if (ServerErrors.Any(responseContent.Contains))
-				{
-					IsError = true;
 				}
 			}
 			catch (Exception exception) when (exception is ArgumentException ||
