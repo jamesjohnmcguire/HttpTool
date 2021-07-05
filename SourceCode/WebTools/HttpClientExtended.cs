@@ -20,7 +20,7 @@ using System.Threading.Tasks;
 namespace WebTools
 {
 	/// <summary>
-	/// Represents a web client for communicating with web servers.
+	/// Represents an extended HTTP client for communicating with web servers.
 	/// </summary>
 	public class HttpClientExtended : IDisposable, INotifyPropertyChanged
 	{
@@ -33,25 +33,30 @@ namespace WebTools
 			defaultParameters = new List<KeyValuePair<string, string>>();
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="HttpClientExtended"/> class.
+		/// Initializes a new instance of the
+		/// <see cref="HttpClientExtended"/> class.
 		/// </summary>
 		public HttpClientExtended()
 		{
-			IsError = false;
-
-			cookieJar = new CookieContainer();
+#pragma warning disable CA2000 // Dispose objects before losing scope
 			HttpClientHandler clientHandler = new ();
-			clientHandler.CookieContainer = cookieJar;
+#pragma warning restore CA2000 // Dispose objects before losing scope
+
 			clientHandler.AllowAutoRedirect = true;
 			clientHandler.CheckCertificateRevocationList = true;
 
+			cookieJar = new CookieContainer();
+			clientHandler.CookieContainer = cookieJar;
+
+			client = new HttpClient(clientHandler);
+
+			client.Timeout = TimeSpan.FromMinutes(2);
 			string userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
 				"AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 " +
 				"Safari/537.36";
-
-			client = new HttpClient(clientHandler);
 			client.DefaultRequestHeaders.Add("User-Agent", userAgent);
-			client.Timeout = TimeSpan.FromMinutes(2);
+
+			IsError = false;
 		}
 
 		public HttpClientExtended(string host)
@@ -61,15 +66,15 @@ namespace WebTools
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="HttpClientExtended"/> class
-		/// with explicitly setting the host, client id and client secret key.
+		/// Initializes a new instance of the <see cref="HttpClientExtended"/>
+		/// class with with headers and default parameters.
 		/// </summary>
 		/// <param name="headers">The additional headers to add.</param>
-		/// <param name="buildNumber">The build number of the
-		/// application.</param>
-		/// <param name="logger">The logging object.</param>
+		/// <param name="defaultParameters">A list of default parameters for
+		/// the client to use on each call to the server.</param>
 		public HttpClientExtended(
-			IList<MediaTypeWithQualityHeaderValue> headers)
+			IList<MediaTypeWithQualityHeaderValue> headers,
+			IList<KeyValuePair<string, string>> defaultParameters)
 			: this()
 		{
 			if (headers != null)
@@ -79,6 +84,8 @@ namespace WebTools
 					client.DefaultRequestHeaders.Accept.Add(header);
 				}
 			}
+
+			this.defaultParameters = defaultParameters;
 		}
 
 		/// <summary>
@@ -122,10 +129,18 @@ namespace WebTools
 		/// <value>Whether the server is in an error state.</value>
 		public bool IsError { get; set; }
 
+		/// <summary>
+		/// Gets or sets the request message.
+		/// </summary>
+		/// <value>The request message.</value>
 		public HttpRequestMessage RequestMessage { get; set; }
 
 		public HttpResponseMessage Response { get; set; }
 
+		/// <summary>
+		/// Gets or sets the response message.
+		/// </summary>
+		/// <value>The response message.</value>
 		public HttpRequestMessage ResponseMessage { get; set; }
 
 		/// <summary>
