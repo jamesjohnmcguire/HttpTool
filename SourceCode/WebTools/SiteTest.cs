@@ -543,11 +543,11 @@ namespace WebTools
 		{
 			if (Tests.HasFlag(DocumentChecks.Redirect))
 			{
-				string requestUri =
-					crawledPage.HttpRequestMessage.RequestUri.AbsoluteUri;
-
 				if (null != crawledPage.HttpResponseMessage)
 				{
+					string requestUri =
+						crawledPage.HttpRequestMessage.RequestUri.AbsoluteUri;
+
 					string responseUri =
 						crawledPage.Uri.AbsoluteUri;
 
