@@ -44,3 +44,5 @@ TestResult.xml
 *.pidb
 *.svclog
 Resources.Designer.cs
+
+act/
