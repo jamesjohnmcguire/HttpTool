@@ -59,6 +59,11 @@ namespace WebTools
 			IsError = false;
 		}
 
+		/// <summary>
+		/// Initializes a new instance of the
+		/// <see cref="HttpClientExtended"/> class.
+		/// </summary>
+		/// <param name="host">The default host URI.</param>
 		public HttpClientExtended(string host)
 			: this()
 		{
@@ -135,13 +140,11 @@ namespace WebTools
 		/// <value>The request message.</value>
 		public HttpRequestMessage RequestMessage { get; set; }
 
-		public HttpResponseMessage Response { get; set; }
-
 		/// <summary>
 		/// Gets or sets the response message.
 		/// </summary>
 		/// <value>The response message.</value>
-		public HttpRequestMessage ResponseMessage { get; set; }
+		public HttpResponseMessage ResponseMessage { get; set; }
 
 		/// <summary>
 		/// Add a cookie into the cookie jar.
@@ -477,7 +480,7 @@ namespace WebTools
 			try
 			{
 				IsError = false;
-				Response = null;
+				ResponseMessage = null;
 
 				if (method == HttpMethod.Post)
 				{
@@ -488,14 +491,14 @@ namespace WebTools
 					RequestMessage.RequestUri = uri;
 					RequestMessage.Method = method;
 
-					Response = client.PostAsync(uri, content).Result;
-					int statusCode = (int)Response.StatusCode;
+					ResponseMessage = client.PostAsync(uri, content).Result;
+					int statusCode = (int)ResponseMessage.StatusCode;
 
 					// We want to handle redirects ourselves so that we can
 					// determine the final redirect Location (via header)
 					if (statusCode >= 300 && statusCode <= 399)
 					{
-						var redirectUri = Response.Headers.Location;
+						var redirectUri = ResponseMessage.Headers.Location;
 						if (!redirectUri.IsAbsoluteUri)
 						{
 							string authority =
@@ -515,29 +518,23 @@ namespace WebTools
 						responseContent =
 							GetResponse(method, requestUrl, content);
 					}
-					else if (!Response.IsSuccessStatusCode)
+					else if (!ResponseMessage.IsSuccessStatusCode)
 					{
 						Log.Error(CultureInfo.InvariantCulture, m => m(
 							"status code not ok"));
 					}
-					else
-					{
-						ResponseMessage = new HttpRequestMessage();
-						ResponseMessage.RequestUri = new Uri(requestUrl);
-						ResponseMessage.Method = method;
-					}
 				}
 
-				responseContent = Response.Content.ReadAsStringAsync().Result;
+				responseContent = ResponseMessage.Content.ReadAsStringAsync().Result;
 
-				if (false == Response.IsSuccessStatusCode)
+				if (false == ResponseMessage.IsSuccessStatusCode)
 				{
 					IsError = true;
 
 					Log.ErrorFormat(
 						CultureInfo.InvariantCulture,
 						"error: {0}",
-						Response.ReasonPhrase);
+						ResponseMessage.ReasonPhrase);
 				}
 			}
 			catch (Exception exception) when (exception is ArgumentException ||
