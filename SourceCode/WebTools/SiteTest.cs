@@ -169,96 +169,49 @@ namespace WebTools
 					CrawledPage crawledPage = arguments.CrawledPage;
 					string url = crawledPage.Uri.AbsoluteUri;
 
-					if (!crawledPage.Uri.Host.Equals(baseUri.Host))
+					CheckHostsDifferent(crawledPage);
+
+					pagesCrawed.Add(url);
+
+					problemsFound = IsCrawlError(crawledPage);
+
+					CheckRedirects(crawledPage);
+
+					// if page has content and
+					// it's not one of types we're ignoring
+					if (!IgnoreTypes.Any(url.ToUpperInvariant().EndsWith))
 					{
-						string parentUrl = crawledPage.ParentUri.AbsoluteUri;
+						hasContent = CheckForEmptyContent(crawledPage);
+
+						if (true == hasContent)
+						{
+							contentErrors = !CheckContentErrors(crawledPage);
+							parseErrors = !CheckParseErrors(crawledPage);
+							imagesCheck = CheckImages(crawledPage);
+
+							if ((!IsCrawlError(crawledPage)) &&
+								(!url.Contains("localhost")))
+							{
+								w3validation = await ValidateFromW3Org(
+									crawledPage.Uri.ToString()).
+									ConfigureAwait(false);
+							}
+						}
+
+						SaveDocument(crawledPage);
+					}
+
+					if ((problemsFound == true) || (hasContent == false) ||
+						(contentErrors == true) || (parseErrors == true) ||
+						(imagesCheck == false) || (w3validation == false))
+					{
 						message = string.Format(
 							CultureInfo.InvariantCulture,
-							"Warning: Switching hosts from {0}",
-							parentUrl);
+							"Problems found on: {0} (from: {1})",
+							url,
+							crawledPage.ParentUri.AbsolutePath);
 						Log.Error(CultureInfo.InvariantCulture, m => m(
 							message));
-					}
-					else
-					{
-						pagesCrawed.Add(url);
-
-						if (IsHttpError(crawledPage))
-						{
-							problemsFound = true;
-
-							message = string.Format(
-								CultureInfo.InvariantCulture,
-								"Error: {0}",
-								url);
-							Log.Error(CultureInfo.InvariantCulture, m => m(
-								message));
-
-							if (null == crawledPage.HttpResponseMessage)
-							{
-								message = string.Format(
-									CultureInfo.InvariantCulture,
-									"HttpResponseMessage is null: {0}",
-									url);
-								Log.Error(CultureInfo.InvariantCulture, m => m(
-									message));
-							}
-							else
-							{
-								HttpResponseMessage response =
-									crawledPage.HttpResponseMessage;
-								string statusCode =
-									response.StatusCode.ToString();
-
-								message = StringTable.GetString(
-									"KEY_PAIR",
-									CultureInfo.InstalledUICulture);
-								Log.InfoFormat(
-									CultureInfo.InvariantCulture,
-									message,
-									statusCode,
-									url);
-							}
-						}
-
-						CheckRedirects(crawledPage);
-
-						// if page has content and
-						// it's not one of types we're ignoring
-						if (!IgnoreTypes.Any(url.ToUpperInvariant().EndsWith))
-						{
-							hasContent = CheckForEmptyContent(crawledPage);
-
-							if (true == hasContent)
-							{
-								contentErrors = !CheckContentErrors(crawledPage);
-								parseErrors = !CheckParseErrors(crawledPage);
-								imagesCheck = CheckImages(crawledPage);
-
-								if ((!IsHttpError(crawledPage)) &&
-									(!url.Contains("localhost")))
-								{
-									w3validation = await ValidateFromW3Org(
-										crawledPage.Uri.ToString()).
-										ConfigureAwait(false);
-								}
-							}
-
-							SaveDocument(crawledPage);
-						}
-
-						if ((problemsFound == true) || (hasContent == false) ||
-							(contentErrors == true) || (parseErrors == true) ||
-							(imagesCheck == false) || (w3validation == false))
-						{
-							message = string.Format(
-								CultureInfo.InvariantCulture,
-								"Problems found on: {0} (from: {1})",
-								url,
-								crawledPage.ParentUri.AbsolutePath);
-							Log.Error(CultureInfo.InvariantCulture, m => m(
-								message));
-						}
 					}
 				}
 			}
@@ -326,16 +279,64 @@ namespace WebTools
 			return uri.ToString();
 		}
 
-		private static bool IsHttpError(CrawledPage crawledPage)
+		private static bool IsCrawlError(CrawledPage crawledPage)
 		{
 			bool error = false;
 
+			string message = string.Empty;
+			string url = crawledPage.Uri.AbsoluteUri;
+
+			if (null == crawledPage.HttpResponseMessage)
+			{
+				message = string.Format(
+					CultureInfo.InvariantCulture,
+					"HttpResponseMessage is null: {0}",
+					url);
+				Log.Error(CultureInfo.InvariantCulture, m => m(
+					message));
+			}
+
+			if (null != crawledPage.HttpRequestException)
+			{
+				message = string.Format(
+					CultureInfo.InvariantCulture,
+					"HttpRequestException: {0}",
+					crawledPage.HttpRequestException.ToString());
+				Log.Error(CultureInfo.InvariantCulture, m => m(
+					message));
+			}
+
+			if (crawledPage.HttpResponseMessage.StatusCode !=
+					HttpStatusCode.OK)
+			{
+				HttpResponseMessage response =
+					crawledPage.HttpResponseMessage;
+				string statusCode =
+					response.StatusCode.ToString();
+
+				message = StringTable.GetString(
+					"KEY_PAIR",
+					CultureInfo.InstalledUICulture);
+				Log.InfoFormat(
+					CultureInfo.InvariantCulture,
+					message,
+					statusCode,
+					url);
+			}
+
 			if ((null != crawledPage.HttpRequestException) ||
-				((null != crawledPage.HttpResponseMessage) &&
+				(null == crawledPage.HttpResponseMessage) ||
 				(crawledPage.HttpResponseMessage.StatusCode !=
-					HttpStatusCode.OK)))
+					HttpStatusCode.OK))
 			{
 				error = true;
+
+				message = string.Format(
+					CultureInfo.InvariantCulture,
+					"Error: {0}",
+					url);
+				Log.Error(CultureInfo.InvariantCulture, m => m(
+					message));
 			}
 
 			return error;
@@ -537,6 +538,20 @@ namespace WebTools
 			}
 
 			return result;
+		}
+
+		private void CheckHostsDifferent(CrawledPage crawledPage)
+		{
+			if (!crawledPage.Uri.Host.Equals(baseUri.Host))
+			{
+				string parentUrl = crawledPage.ParentUri.AbsoluteUri;
+				string message = string.Format(
+					CultureInfo.InvariantCulture,
+					"Warning: Switching hosts from {0}",
+					parentUrl);
+				Log.Error(CultureInfo.InvariantCulture, m => m(
+					message));
+			}
 		}
 
 		private void CheckRedirects(CrawledPage crawledPage)
