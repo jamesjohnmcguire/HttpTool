@@ -178,10 +178,14 @@ namespace WebTools
 			GC.SuppressFinalize(this);
 		}
 
-		public async Task<string> GetWebPage(string url)
+		/// <summary>
+		/// Gets the response body content of the given uri.
+		/// </summary>
+		/// <param name="uri">The uri of web page.</param>
+		/// <returns>A <see cref="Task{TResult}"/> representing the result
+		/// of the asynchronous operation.</returns>
+		public async Task<string> GetWebPage(Uri uri)
 		{
-			Uri uri = new (url);
-
 			string response = await Request(uri).ConfigureAwait(false);
 
 			return response;
@@ -262,29 +266,24 @@ namespace WebTools
 			return response;
 		}
 
-		public async Task<string> Request(Uri requestUri)
+
+		/// <summary>
+		/// Requests the body of the given url.
+		/// </summary>
+		/// <param name="uri">The uri of web page.</param>
+		/// <returns>The response message of the request.</returns>
+		public async Task<string> Request(Uri uri)
 		{
 			string responseContent = null;
 
 			try
 			{
-				if (requestUri != null)
+				uri = GetCompleteUri(uri);
+
+				if (uri != null)
 				{
-					string requestUrl = requestUri.AbsoluteUri;
-					bool isComplete = Uri.IsWellFormedUriString(
-						requestUrl, UriKind.Absolute);
-
-					if (false == isComplete)
-					{
-						requestUrl = string.Format(
-							CultureInfo.InvariantCulture,
-							@"{0}{1}",
-							Host,
-							requestUrl);
-					}
-
-					responseContent =
-						await GetResponse(requestUrl).ConfigureAwait(false);
+					responseContent = await client.GetStringAsync(uri).
+						ConfigureAwait(false);
 				}
 			}
 			catch (Exception exception) when
@@ -434,6 +433,29 @@ namespace WebTools
 				details);
 
 			return response;
+		}
+
+		private Uri GetCompleteUri(Uri uri)
+		{
+			if (uri != null)
+			{
+				string requestUrl = uri.AbsoluteUri;
+				bool isComplete = Uri.IsWellFormedUriString(
+					requestUrl, UriKind.Absolute);
+
+				if (false == isComplete)
+				{
+					requestUrl = string.Format(
+						CultureInfo.InvariantCulture,
+						@"{0}{1}",
+						Host,
+						requestUrl);
+
+					uri = new (requestUrl);
+				}
+			}
+
+			return uri;
 		}
 
 		private async Task<string> GetResponse(string requestUrl)
