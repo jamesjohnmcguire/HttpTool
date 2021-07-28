@@ -109,6 +109,7 @@ namespace WebTools
 			crawlConfiguration.DownloadableContentTypes =
 				"text/html, text/plain, image/jpeg, image/pjpeg, image/png";
 			crawlConfiguration.CrawlTimeoutSeconds = 100;
+			crawlConfiguration.HttpRequestTimeoutInSeconds = 100;
 			crawlConfiguration.MinCrawlDelayPerDomainMilliSeconds = 1000;
 
 			using PoliteWebCrawler crawler = new (crawlConfiguration);
@@ -189,8 +190,8 @@ namespace WebTools
 							parseErrors = !CheckParseErrors(crawledPage);
 							imagesCheck = CheckImages(crawledPage);
 
-							if ((!IsCrawlError(crawledPage)) &&
-								(!url.Contains("localhost")))
+							if (problemsFound == false
+								&& !url.Contains("localhost"))
 							{
 								w3validation = await ValidateFromW3Org(
 									crawledPage.Uri.ToString()).
@@ -306,7 +307,8 @@ namespace WebTools
 					message));
 			}
 
-			if (crawledPage.HttpResponseMessage.StatusCode !=
+			if (crawledPage.HttpResponseMessage != null &&
+				crawledPage.HttpResponseMessage.StatusCode !=
 					HttpStatusCode.OK)
 			{
 				HttpResponseMessage response =
