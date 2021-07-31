@@ -38,9 +38,7 @@ namespace WebTools
 		/// </summary>
 		public HttpClientExtended()
 		{
-#pragma warning disable CA2000 // Dispose objects before losing scope
 			HttpClientHandler clientHandler = new ();
-#pragma warning restore CA2000 // Dispose objects before losing scope
 
 			clientHandler.AllowAutoRedirect = true;
 			clientHandler.CheckCertificateRevocationList = true;
@@ -265,7 +263,6 @@ namespace WebTools
 
 			return response;
 		}
-
 
 		/// <summary>
 		/// Requests the body of the given url.
