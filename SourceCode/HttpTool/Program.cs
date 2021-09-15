@@ -34,10 +34,8 @@ namespace HttpTool
 		private static readonly ILog Log = LogManager.GetLogger(
 			System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-		private static readonly ResourceManager StringTable = new
-			ResourceManager(
-				"HttpTool.Resources",
-				Assembly.GetExecutingAssembly());
+		private static readonly ResourceManager StringTable =
+			new ("HttpTool.Resources", Assembly.GetExecutingAssembly());
 
 		private static string GetCommand(string[] arguments)
 		{
@@ -147,14 +145,14 @@ namespace HttpTool
 					string url = GetUrl(arguments);
 					DocumentChecks tests = GetTests(command);
 
-					using SiteTest tester = new SiteTest(tests);
+					using SiteTest tester = new (tests);
 
 					string message = StringTable.GetString(
 						"RUNNING_TESTS",
 						CultureInfo.InstalledUICulture);
 					Log.InfoFormat(CultureInfo.CurrentCulture, message, url);
 
-					Uri uri = new Uri(url);
+					Uri uri = new (url);
 					tester.Test(uri);
 				}
 				else
@@ -265,7 +263,7 @@ namespace HttpTool
 
 		private static void StartUp()
 		{
-			LoggerConfiguration configuration = new LoggerConfiguration();
+			LoggerConfiguration configuration = new ();
 			LoggerSinkConfiguration sinkConfiguration = configuration.WriteTo;
 			sinkConfiguration.Console(LogEventLevel.Verbose, OutputTemplate);
 			sinkConfiguration.File(
