@@ -3,7 +3,7 @@
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<AssemblyTitle>HttpTool</AssemblyTitle>
 		<CodeAnalysisRuleSet>$(SolutionDir)\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
-		<Copyright>Copyright © 2016 - 2021</Copyright>
+		<Copyright>Copyright © 2016 - 2022</Copyright>
 		<EnableNETAnalyzers>true</EnableNETAnalyzers>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<NeutralLanguage>en</NeutralLanguage>
