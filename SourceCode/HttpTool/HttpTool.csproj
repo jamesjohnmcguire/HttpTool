@@ -10,7 +10,6 @@
 		<NoWarn>1701;1702;NU1605</NoWarn>
 		<OutputPath>$(SolutionDir)\Bin\$(Configuration)\$(Platform)</OutputPath>
 		<OutputType>Exe</OutputType>
-		<Platforms>AnyCPU;x64;x86</Platforms>
 		<Product>HttpTool</Product>
 		<TargetFramework>net5.0</TargetFramework>
 	</PropertyGroup>

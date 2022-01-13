@@ -7,7 +7,6 @@
 		<NoWarn>1701;1702;NU1605</NoWarn>
 		<OutputPath>$(SolutionDir)\Bin\$(Configuration)\$(Platform)</OutputPath>
 		<NeutralLanguage>en</NeutralLanguage>
-		<Platforms>AnyCPU;x64;x86</Platforms>
 		<RestoreProjectStyle>PackageReference</RestoreProjectStyle>
 		<TargetFramework>net5.0</TargetFramework>
 	</PropertyGroup>
