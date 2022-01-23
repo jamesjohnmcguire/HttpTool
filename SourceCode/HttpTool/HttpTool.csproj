@@ -6,6 +6,7 @@
 		<Copyright>Copyright © 2016 - 2022</Copyright>
 		<EnableNETAnalyzers>true</EnableNETAnalyzers>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<NeutralLanguage>en</NeutralLanguage>
 		<NoWarn>1701;1702;NU1605</NoWarn>
 		<OutputPath>$(SolutionDir)\Bin\$(Configuration)\$(Platform)</OutputPath>
