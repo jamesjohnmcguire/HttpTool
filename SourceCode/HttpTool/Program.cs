@@ -176,24 +176,35 @@ namespace HttpTool
 			Assembly assembly = Assembly.GetExecutingAssembly();
 			string location = assembly.Location;
 
-			FileVersionInfo versionInfo = FileVersionInfo.GetVersionInfo(location);
+			if (string.IsNullOrWhiteSpace(location))
+			{
+				// Single file apps have no assemblies.
+				Process process = Process.GetCurrentProcess();
+				location = process.MainModule.FileName;
+			}
 
-			string companyName = versionInfo.CompanyName;
-			string copyright = versionInfo.LegalCopyright;
+			if (!string.IsNullOrWhiteSpace(location))
+			{
+				FileVersionInfo versionInfo =
+					FileVersionInfo.GetVersionInfo(location);
 
-			AssemblyName assemblyName = assembly.GetName();
-			string name = assemblyName.Name;
-			Version version = assemblyName.Version;
-			string assemblyVersion = version.ToString();
+				string companyName = versionInfo.CompanyName;
+				string copyright = versionInfo.LegalCopyright;
 
-			string header = string.Format(
-				CultureInfo.CurrentCulture,
-				"{0} {1} {2} {3}",
-				name,
-				assemblyVersion,
-				copyright,
-				companyName);
-			Console.WriteLine(header);
+				AssemblyName assemblyName = assembly.GetName();
+				string name = assemblyName.Name;
+				Version version = assemblyName.Version;
+				string assemblyVersion = version.ToString();
+
+				string header = string.Format(
+								CultureInfo.CurrentCulture,
+								"{0} {1} {2} {3}",
+								name,
+								assemblyVersion,
+								copyright,
+								companyName);
+				Console.WriteLine(header);
+			}
 
 			if (!string.IsNullOrWhiteSpace(additionalMessage))
 			{
