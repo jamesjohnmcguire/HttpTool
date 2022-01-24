@@ -6,10 +6,21 @@
 
 namespace WebTools
 {
+	/// <summary>
+	/// Represents a message.
+	/// </summary>
 	public class Message
 	{
+		/// <summary>
+		/// Gets or sets the name of message.
+		/// </summary>
+		/// <value>The name of message.</value>
 		public string Name { get; set; }
 
+		/// <summary>
+		/// Gets or sets the message description.
+		/// </summary>
+		/// <value>The message description.</value>
 		public string Description { get; set; }
 	}
 }

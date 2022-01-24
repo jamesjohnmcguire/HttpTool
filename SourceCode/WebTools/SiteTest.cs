@@ -22,6 +22,9 @@ using System.Threading.Tasks;
 
 namespace WebTools
 {
+	/// <summary>
+	/// Provides support for web site testing.
+	/// </summary>
 	public class SiteTest : IDisposable
 	{
 		private static readonly ILog Log = LogManager.GetLogger(
@@ -51,6 +54,9 @@ namespace WebTools
 
 		private Uri baseUri;
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="SiteTest"/> class.
+		/// </summary>
 		public SiteTest()
 		{
 			pagesCrawed = new List<string>();
@@ -58,22 +64,42 @@ namespace WebTools
 			client = new HttpClientExtended();
 		}
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="SiteTest"/> class.
+		/// </summary>
+		/// <param name="tests">The document checks to use.</param>
 		public SiteTest(DocumentChecks tests)
 			: this()
 		{
 			Tests = tests;
 		}
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="SiteTest"/> class.
+		/// </summary>
+		/// <param name="tests">The document checks to use.</param>
+		/// <param name="uri">The URI to check.</param>
 		public SiteTest(DocumentChecks tests, Uri uri)
 			: this(tests)
 		{
 			baseUri = uri;
 		}
 
+		/// <summary>
+		/// Gets or sets a value indicating whether to save the page or not.
+		/// </summary>
+		/// <value>Indicates whether to save the page or not.</value>
 		public bool SavePage { get; set; }
 
+		/// <summary>
+		/// Gets or sets the document checks being used.
+		/// </summary>
+		/// <value>The document checks being used.</value>
 		public DocumentChecks Tests { get; set; }
 
+		/// <summary>
+		/// Clear the current console line.
+		/// </summary>
 		public static void ClearCurrentConsoleLine()
 		{
 			int currentLineCursor = Console.CursorTop;
@@ -92,6 +118,10 @@ namespace WebTools
 			GC.SuppressFinalize(this);
 		}
 
+		/// <summary>
+		/// Test the given URI.
+		/// </summary>
+		/// <param name="uri">The URI to test.</param>
 		public void Test(Uri uri)
 		{
 			pageCount = 0;
@@ -152,6 +182,11 @@ namespace WebTools
 				pageCount.ToString(CultureInfo.InvariantCulture));
 		}
 
+		/// <summary>
+		/// The process page crawl completed event handler.
+		/// </summary>
+		/// <param name="sender">The event sender.</param>
+		/// <param name="arguments">The event arguments.</param>
 		public async void ProcessPageCrawlCompleted(
 			object sender, PageCrawlCompletedArgs arguments)
 		{
@@ -237,6 +272,11 @@ namespace WebTools
 			pageCount++;
 		}
 
+		/// <summary>
+		/// The process page crawl started event handler.
+		/// </summary>
+		/// <param name="sender">The event sender.</param>
+		/// <param name="arguments">The event arguments.</param>
 		public void ProcessPageCrawlStarted(
 			object sender, PageCrawlStartingArgs arguments)
 		{

@@ -12,6 +12,9 @@ using System.Threading.Tasks;
 
 namespace WebTools
 {
+	/// <summary>
+	/// Provides an enumeration for types of checks.
+	/// </summary>
 	[Flags]
 	public enum DocumentChecks
 	{

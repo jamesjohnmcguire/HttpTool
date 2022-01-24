@@ -12,12 +12,21 @@ using System.Net;
 namespace WebTools
 {
 	/// <summary>
+	/// Provides support for cookie storage.
+	/// </summary>
+	/// <remarks>
 	/// Scalvaged from the internet:
 	/// https://stackoverflow.com/questions/18998354/httpwebrequest-headers-addcookie-value-vs-httpwebrequest-cookiecontainer
 	/// https://snipplr.com/view/4427.
-	/// </summary>
+	/// </remarks>
 	public class CookieStore
 	{
+		/// <summary>
+		/// Get all cookies from header.
+		/// </summary>
+		/// <param name="header">The header to check.</param>
+		/// <param name="host">The host to use.</param>
+		/// <returns>A cookie collection.</returns>
 		public static CookieCollection GetAllCookiesFromHeader(
 			string header, string host)
 		{
@@ -103,9 +112,9 @@ namespace WebTools
 						{
 							int firstEqual = strCNameAndCValue.IndexOf("=");
 							string firstName =
-								strCNameAndCValue.Substring(0, firstEqual);
-							string allValue = strCNameAndCValue.Substring(
-								firstEqual + 1, strCNameAndCValue.Length - (firstEqual + 1));
+								strCNameAndCValue[..firstEqual];
+							string allValue =
+								strCNameAndCValue[(firstEqual + 1) ..];
 							cookTemp.Name = firstName;
 							cookTemp.Value = allValue;
 						}

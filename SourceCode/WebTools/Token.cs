@@ -8,6 +8,9 @@ using Newtonsoft.Json;
 
 namespace WebTools
 {
+	/// <summary>
+	/// Represents a server response token.
+	/// </summary>
 	public class Token : ServerResponse
 	{
 		/// <summary>

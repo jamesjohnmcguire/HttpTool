@@ -8,6 +8,9 @@ using System;
 
 namespace WebTools
 {
+	/// <summary>
+	/// Represents an enumeration of types of errors.
+	/// </summary>
 	[Flags]
 	public enum Errors
 	{
