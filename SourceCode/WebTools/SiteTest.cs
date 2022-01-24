@@ -1,13 +1,12 @@
 ﻿/////////////////////////////////////////////////////////////////////////////
 // <copyright file="SiteTest.cs" company="James John McGuire">
-// Copyright © 2016 - 2020 James John McGuire. All Rights Reserved.
+// Copyright © 2016 - 2022 James John McGuire. All Rights Reserved.
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
 
 using Abot2.Crawler;
 using Abot2.Poco;
 using Common.Logging;
-using DigitalZenWorks.Common.Utilities;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
 using System;
@@ -30,9 +29,8 @@ namespace WebTools
 
 		private static readonly string[] ServerErrors =
 		{
-			"A PHP Error was encountered",
-			"A Database Error Occurred", "Parse error",
-			"データベースエラーが発生しました"
+			"A PHP Error was encountered", "A Database Error Occurred",
+			"Parse error", "データベースエラーが発生しました"
 		};
 
 		private static readonly string[] IgnoreTypes =
@@ -40,12 +38,10 @@ namespace WebTools
 			"GIF", "JPG", "JPEG", "PDF", "PNG"
 		};
 
-		private static readonly ResourceManager StringTable = new
-			ResourceManager(
-				"WebTools.Resources",
-				Assembly.GetExecutingAssembly());
+		private static readonly ResourceManager StringTable = new (
+			"WebTools.Resources", Assembly.GetExecutingAssembly());
 
-		private readonly RestClient client;
+		private readonly HttpClientExtended client;
 
 		private readonly IList<string> imagesChecked;
 
@@ -59,7 +55,7 @@ namespace WebTools
 		{
 			pagesCrawed = new List<string>();
 			imagesChecked = new List<string>();
-			client = new RestClient();
+			client = new HttpClientExtended();
 		}
 
 		public SiteTest(DocumentChecks tests)
@@ -96,17 +92,13 @@ namespace WebTools
 			GC.SuppressFinalize(this);
 		}
 
-		[System.Diagnostics.CodeAnalysis.SuppressMessage(
-			"Style",
-			"IDE0017:Simplify object initialization",
-			Justification = "Don't agree with this rule.")]
 		public void Test(Uri uri)
 		{
 			pageCount = 0;
 			baseUri = uri;
 			string message;
 
-			CrawlConfiguration crawlConfiguration = new CrawlConfiguration();
+			CrawlConfiguration crawlConfiguration = new ();
 
 			crawlConfiguration.MaxConcurrentThreads = 4;
 			crawlConfiguration.UserAgentString =
@@ -117,10 +109,10 @@ namespace WebTools
 			crawlConfiguration.DownloadableContentTypes =
 				"text/html, text/plain, image/jpeg, image/pjpeg, image/png";
 			crawlConfiguration.CrawlTimeoutSeconds = 100;
+			crawlConfiguration.HttpRequestTimeoutInSeconds = 100;
 			crawlConfiguration.MinCrawlDelayPerDomainMilliSeconds = 1000;
 
-			using PoliteWebCrawler crawler =
-				new PoliteWebCrawler(crawlConfiguration);
+			using PoliteWebCrawler crawler = new (crawlConfiguration);
 
 			crawler.PageCrawlStarting += ProcessPageCrawlStarted;
 			crawler.PageCrawlCompleted += ProcessPageCrawlCompleted;
@@ -178,96 +170,49 @@ namespace WebTools
 					CrawledPage crawledPage = arguments.CrawledPage;
 					string url = crawledPage.Uri.AbsoluteUri;
 
-					if (!crawledPage.Uri.Host.Equals(baseUri.Host))
+					CheckHostsDifferent(crawledPage);
+
+					pagesCrawed.Add(url);
+
+					problemsFound = IsCrawlError(crawledPage);
+
+					CheckRedirects(crawledPage);
+
+					// if page has content and
+					// it's not one of types we're ignoring
+					if (!IgnoreTypes.Any(url.ToUpperInvariant().EndsWith))
 					{
-						string parentUrl = crawledPage.ParentUri.AbsoluteUri;
+						hasContent = CheckForEmptyContent(crawledPage);
+
+						if (true == hasContent)
+						{
+							contentErrors = !CheckContentErrors(crawledPage);
+							parseErrors = !CheckParseErrors(crawledPage);
+							imagesCheck = CheckImages(crawledPage);
+
+							if (problemsFound == false
+								&& !url.Contains("localhost"))
+							{
+								w3validation = await ValidateFromW3Org(
+									crawledPage.Uri.ToString()).
+									ConfigureAwait(false);
+							}
+						}
+
+						SaveDocument(crawledPage);
+					}
+
+					if ((problemsFound == true) || (hasContent == false) ||
+						(contentErrors == true) || (parseErrors == true) ||
+						(imagesCheck == false) || (w3validation == false))
+					{
 						message = string.Format(
 							CultureInfo.InvariantCulture,
-							"Warning: Switching hosts from {0}",
-							parentUrl);
+							"Problems found on: {0} (from: {1})",
+							url,
+							crawledPage.ParentUri.AbsolutePath);
 						Log.Error(CultureInfo.InvariantCulture, m => m(
 							message));
-					}
-					else
-					{
-						pagesCrawed.Add(url);
-
-						if (IsHttpError(crawledPage))
-						{
-							problemsFound = true;
-
-							message = string.Format(
-								CultureInfo.InvariantCulture,
-								"Error: {0}",
-								url);
-							Log.Error(CultureInfo.InvariantCulture, m => m(
-								message));
-
-							if (null == crawledPage.HttpResponseMessage)
-							{
-								message = string.Format(
-									CultureInfo.InvariantCulture,
-									"HttpResponseMessage is null: {0}",
-									url);
-								Log.Error(CultureInfo.InvariantCulture, m => m(
-									message));
-							}
-							else
-							{
-								HttpResponseMessage response =
-									crawledPage.HttpResponseMessage;
-								string statusCode =
-									response.StatusCode.ToString();
-
-								message = StringTable.GetString(
-									"KEY_PAIR",
-									CultureInfo.InstalledUICulture);
-								Log.InfoFormat(
-									CultureInfo.InvariantCulture,
-									message,
-									statusCode,
-									url);
-							}
-						}
-
-						CheckRedirects(crawledPage);
-
-						// if page has content and
-						// it's not one of types we're ignoring
-						if (!IgnoreTypes.Any(url.ToUpperInvariant().EndsWith))
-						{
-							hasContent = CheckForEmptyContent(crawledPage);
-
-							if (true == hasContent)
-							{
-								contentErrors = !CheckContentErrors(crawledPage);
-								parseErrors = !CheckParseErrors(crawledPage);
-								imagesCheck = CheckImages(crawledPage);
-
-								if ((!IsHttpError(crawledPage)) &&
-									(!url.Contains("localhost")))
-								{
-									w3validation = await ValidateFromW3Org(
-										crawledPage.Uri.ToString()).
-										ConfigureAwait(false);
-								}
-							}
-
-							SaveDocument(crawledPage);
-						}
-
-						if ((problemsFound == true) || (hasContent == false) ||
-							(contentErrors == true) || (parseErrors == true) ||
-							(imagesCheck == false) || (w3validation == false))
-						{
-							message = string.Format(
-								CultureInfo.InvariantCulture,
-								"Problems found on: {0} (from: {1})",
-								url,
-								crawledPage.ParentUri.AbsolutePath);
-							Log.Error(CultureInfo.InvariantCulture, m => m(
-								message));
-						}
 					}
 				}
 			}
@@ -280,9 +225,10 @@ namespace WebTools
 				exception is NotSupportedException ||
 				exception is NullReferenceException ||
 				exception is ObjectDisposedException ||
-				exception is System.FormatException ||
+				exception is FormatException ||
 				exception is TaskCanceledException ||
-				exception is UnauthorizedAccessException)
+				exception is UnauthorizedAccessException ||
+				exception is WebException)
 			{
 				Log.Error(CultureInfo.InvariantCulture, m => m(
 					exception.ToString()));
@@ -334,16 +280,65 @@ namespace WebTools
 			return uri.ToString();
 		}
 
-		private static bool IsHttpError(CrawledPage crawledPage)
+		private static bool IsCrawlError(CrawledPage crawledPage)
 		{
 			bool error = false;
 
+			string message = string.Empty;
+			string url = crawledPage.Uri.AbsoluteUri;
+
+			if (null == crawledPage.HttpResponseMessage)
+			{
+				message = string.Format(
+					CultureInfo.InvariantCulture,
+					"HttpResponseMessage is null: {0}",
+					url);
+				Log.Error(CultureInfo.InvariantCulture, m => m(
+					message));
+			}
+
+			if (null != crawledPage.HttpRequestException)
+			{
+				message = string.Format(
+					CultureInfo.InvariantCulture,
+					"HttpRequestException: {0}",
+					crawledPage.HttpRequestException.ToString());
+				Log.Error(CultureInfo.InvariantCulture, m => m(
+					message));
+			}
+
+			if (crawledPage.HttpResponseMessage != null &&
+				crawledPage.HttpResponseMessage.StatusCode !=
+					HttpStatusCode.OK)
+			{
+				HttpResponseMessage response =
+					crawledPage.HttpResponseMessage;
+				string statusCode =
+					response.StatusCode.ToString();
+
+				message = StringTable.GetString(
+					"KEY_PAIR",
+					CultureInfo.InstalledUICulture);
+				Log.InfoFormat(
+					CultureInfo.InvariantCulture,
+					message,
+					statusCode,
+					url);
+			}
+
 			if ((null != crawledPage.HttpRequestException) ||
-				((null != crawledPage.HttpResponseMessage) &&
+				(null == crawledPage.HttpResponseMessage) ||
 				(crawledPage.HttpResponseMessage.StatusCode !=
-					HttpStatusCode.OK)))
+					HttpStatusCode.OK))
 			{
 				error = true;
+
+				message = string.Format(
+					CultureInfo.InvariantCulture,
+					"Error: {0}",
+					url);
+				Log.Error(CultureInfo.InvariantCulture, m => m(
+					message));
 			}
 
 			return error;
@@ -459,7 +454,7 @@ namespace WebTools
 
 			if (Tests.HasFlag(DocumentChecks.ImagesExist))
 			{
-				HtmlDocument agilityPackHtmlDocument = new HtmlDocument();
+				HtmlDocument agilityPackHtmlDocument = new ();
 				agilityPackHtmlDocument.LoadHtml(crawledPage.Content.Text);
 
 				HtmlAgilityPack.HtmlNodeCollection nodes =
@@ -483,7 +478,7 @@ namespace WebTools
 							string imageUrl =
 								GetAbsoluteUrlString(baseUrl, source.Value);
 
-							Uri uri = new Uri(imageUrl);
+							Uri uri = new (imageUrl);
 							bool exists = URLExists(uri);
 
 							if (false == exists)
@@ -514,7 +509,7 @@ namespace WebTools
 
 			if (Tests.HasFlag(DocumentChecks.ParseErrors))
 			{
-				HtmlDocument agilityPackHtmlDocument = new HtmlDocument();
+				HtmlDocument agilityPackHtmlDocument = new ();
 				agilityPackHtmlDocument.LoadHtml(crawledPage.Content.Text);
 
 				IEnumerable<HtmlAgilityPack.HtmlParseError> parseErrors =
@@ -547,15 +542,29 @@ namespace WebTools
 			return result;
 		}
 
+		private void CheckHostsDifferent(CrawledPage crawledPage)
+		{
+			if (!crawledPage.Uri.Host.Equals(baseUri.Host))
+			{
+				string parentUrl = crawledPage.ParentUri.AbsoluteUri;
+				string message = string.Format(
+					CultureInfo.InvariantCulture,
+					"Warning: Switching hosts from {0}",
+					parentUrl);
+				Log.Error(CultureInfo.InvariantCulture, m => m(
+					message));
+			}
+		}
+
 		private void CheckRedirects(CrawledPage crawledPage)
 		{
 			if (Tests.HasFlag(DocumentChecks.Redirect))
 			{
-				string requestUri =
-					crawledPage.HttpRequestMessage.RequestUri.AbsoluteUri;
-
 				if (null != crawledPage.HttpResponseMessage)
 				{
+					string requestUri =
+						crawledPage.HttpRequestMessage.RequestUri.AbsoluteUri;
+
 					string responseUri =
 						crawledPage.Uri.AbsoluteUri;
 
@@ -586,7 +595,7 @@ namespace WebTools
 				string path = parts.Last() + crawledPage.Uri.Query;
 				path = path.Replace("?", "__");
 				path = path.Replace('\\', '-');
-				FileUtils.SaveFile(text, path);
+				File.WriteAllText(path, text);
 			}
 		}
 
@@ -600,7 +609,7 @@ namespace WebTools
 					CultureInfo.InvariantCulture,
 					"http://validator.w3.org/nu/?doc={0}&out=json",
 					url);
-				Uri uri = new Uri(validator);
+				Uri uri = new (validator);
 				string response =
 					await client.Request(uri).ConfigureAwait(false);
 

@@ -1,6 +1,6 @@
 ﻿/////////////////////////////////////////////////////////////////////////////
 // <copyright file="Program.cs" company="James John McGuire">
-// Copyright © 2016 - 2020 James John McGuire. All Rights Reserved.
+// Copyright © 2016 - 2022 James John McGuire. All Rights Reserved.
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
 
@@ -34,10 +34,8 @@ namespace HttpTool
 		private static readonly ILog Log = LogManager.GetLogger(
 			System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-		private static readonly ResourceManager StringTable = new
-			ResourceManager(
-				"HttpTool.Resources",
-				Assembly.GetExecutingAssembly());
+		private static readonly ResourceManager StringTable =
+			new ("HttpTool.Resources", Assembly.GetExecutingAssembly());
 
 		private static string GetCommand(string[] arguments)
 		{
@@ -147,14 +145,14 @@ namespace HttpTool
 					string url = GetUrl(arguments);
 					DocumentChecks tests = GetTests(command);
 
-					using SiteTest tester = new SiteTest(tests);
+					using SiteTest tester = new (tests);
 
 					string message = StringTable.GetString(
 						"RUNNING_TESTS",
 						CultureInfo.InstalledUICulture);
 					Log.InfoFormat(CultureInfo.CurrentCulture, message, url);
 
-					Uri uri = new Uri(url);
+					Uri uri = new (url);
 					tester.Test(uri);
 				}
 				else
@@ -178,24 +176,35 @@ namespace HttpTool
 			Assembly assembly = Assembly.GetExecutingAssembly();
 			string location = assembly.Location;
 
-			FileVersionInfo versionInfo = FileVersionInfo.GetVersionInfo(location);
+			if (string.IsNullOrWhiteSpace(location))
+			{
+				// Single file apps have no assemblies.
+				Process process = Process.GetCurrentProcess();
+				location = process.MainModule.FileName;
+			}
 
-			string companyName = versionInfo.CompanyName;
-			string copyright = versionInfo.LegalCopyright;
+			if (!string.IsNullOrWhiteSpace(location))
+			{
+				FileVersionInfo versionInfo =
+					FileVersionInfo.GetVersionInfo(location);
 
-			AssemblyName assemblyName = assembly.GetName();
-			string name = assemblyName.Name;
-			Version version = assemblyName.Version;
-			string assemblyVersion = version.ToString();
+				string companyName = versionInfo.CompanyName;
+				string copyright = versionInfo.LegalCopyright;
 
-			string header = string.Format(
-				CultureInfo.CurrentCulture,
-				"{0} {1} {2} {3}",
-				name,
-				assemblyVersion,
-				copyright,
-				companyName);
-			Console.WriteLine(header);
+				AssemblyName assemblyName = assembly.GetName();
+				string name = assemblyName.Name;
+				Version version = assemblyName.Version;
+				string assemblyVersion = version.ToString();
+
+				string header = string.Format(
+								CultureInfo.CurrentCulture,
+								"{0} {1} {2} {3}",
+								name,
+								assemblyVersion,
+								copyright,
+								companyName);
+				Console.WriteLine(header);
+			}
 
 			if (!string.IsNullOrWhiteSpace(additionalMessage))
 			{
@@ -265,7 +274,7 @@ namespace HttpTool
 
 		private static void StartUp()
 		{
-			LoggerConfiguration configuration = new LoggerConfiguration();
+			LoggerConfiguration configuration = new ();
 			LoggerSinkConfiguration sinkConfiguration = configuration.WriteTo;
 			sinkConfiguration.Console(LogEventLevel.Verbose, OutputTemplate);
 			sinkConfiguration.File(

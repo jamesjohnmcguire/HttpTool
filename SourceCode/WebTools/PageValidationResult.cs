@@ -1,6 +1,6 @@
 ﻿/////////////////////////////////////////////////////////////////////////////
 // <copyright file="PageValidationResult.cs" company="James John McGuire">
-// Copyright © 2016 - 2020 James John McGuire. All Rights Reserved.
+// Copyright © 2016 - 2022 James John McGuire. All Rights Reserved.
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
 
@@ -14,8 +14,8 @@ namespace WebTools
 {
 	public class PageValidationResult
 	{
-		public Uri Uri { get; set; }
+		public Uri Url { get; set; }
 
-		public IList<ValidationResult> Messages { get; }
+		public IList<ValidationResult> Messages { get; set; }
 	}
 }

@@ -22,7 +22,7 @@ bld/
 [Oo]bj/
 [Ll]og/
 
-# Visual Studio 2015 cache/options directory
+# Visual Studio cache/options directory
 .vs/
 
 # NUNIT
@@ -43,5 +43,8 @@ TestResult.xml
 .builds
 *.pidb
 *.svclog
-/SourceCode/HttpTool/Resources.Designer.cs
-/SourceCode/WebTools/Resources.Designer.cs
+Resources.Designer.cs
+
+act/
+
+Binaries/

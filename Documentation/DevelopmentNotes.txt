@@ -1,0 +1,59 @@
+Tasks
+	Change DLL names to match the following pattern: <Company>.<Component>.dll
+	fix CheckRedirects
+	Fix new warnings
+	Add reason text if invalid url to show in help
+	Fix to show copyright and company name in help
+	for login, use config file
+	Unhandled exception. System.Net.WebException: The remote server returned an error: (404) Not Found.	WebTools\SiteTest.cs:line 362
+	Page had no content http://news.localhost/account/english/
+	HttpTool	Add README
+	HttpTool	Add binaries
+reference?)
+		Package updates
+		CopyToCommands
+		CS0246: The type or namespace name 'AssemblyVersionAttribute' could not be found (are you missing a using directive or an assembly reference?)
+		Fix command line empty classes
+		Abot2.Core.HyperLinkParser.GetUris
+		Clean repo
+		git tag
+	Finished
+		Switch to serilog
+		HttpTool	There was a mismatch between the processor architecture of the project being built "MSIL" and the processor architecture of the reference, "AMD64". This mismatch may cause runtime failures. Please consider changing the targeted processor architecture of your project through the Configuration Manager so as to align the processor architectures between your project and references, or take a dependency on references with a processor architecture that matches the targeted processor architecture of your project. net5
+		HttpTool	https://github.com/jamesjohnmcguire/HttpTool/runs/1503734735?check_suite_focus=true
+		HttpTool	There was a mismatch between the processor architecture of the project being built "MSIL" and the processor architecture of the reference "HttpTool\SourceCode\Bin\Debug\AnyCPU\DigitalZenWorks.Common.Utilities.dll", "AMD64". This mismatch may cause runtime failures. Please consider changing the targeted processor architecture of your project through the Configuration Manager so as to align the processor architectures between your project and references, or take a dependency on references with a processor architecture that matches the targeted processor architecture of your project.
+		UtilitiesNet\act\actions-setup-dotnet@v1\__tests__\sample-csproj\Program.cs(1,17)	error CS0234: The type or namespace name 'VisualStudio' does not exist in the namespace 'Microsoft' (are you missing an assembly reference?)	UtilitiesNET.csproj]
+		HttpTool\SourceCode\UtilitiesNet\act\actions-setup-dotnet@v1\__tests__\sample-csproj\Program.cs(6,6)	error CS0246: The type or namespace name 'TestClassAttribute' could not be found (are you missing a using directive or an assembly reference?)	UtilitiesNET.csproj]
+		error CS0246: The type or namespace name 'TestClass' could not be found (are you missing a using directive or an assembly reference?)
+		error CS0246: The type or namespace name 'TestMethodAttribute' could not be found (are you missing a using directive or an assembly reference?)
+		error CS0246: The type or namespace name 'TestMethod' could not be found (are you missing a using directive or an assembly 		HttpRequestException: System.Net.Http.HttpRequestException: Request timeout occurred	System.Threading.Tasks.TaskCanceledException: The request was canceled due to the configured HttpClient.Timeout of 15 seconds elapsing.
+		System.NullReferenceException: Object reference not set to an instance of an object.	at WebTools\SiteTest.cs:line 309
+	Resources
+		https://stackoverflow.com/questions/32860666/httpclient-scrape-data-from-website-with-login-c-sharp
+
+		private readonly CookieContainer cookieJar = null;
+			clientHandler.CookieContainer = cookieJar;
+
+		/// <summary>
+		/// Add a cookie into the cookie jar.
+		/// </summary>
+		/// <param name="name">The name of the cookie.</param>
+		/// <param name="value">The value of the cookie.</param>
+		public void AddCookie(string name, string value)
+		{
+			Cookie cookie = new Cookie(name, value);
+			cookieJar.Add(cookie);
+		}
+WebClient.cs
+	Merge problems	Header copyright
+	Merge problems	Common.logging / just Serilog
+	Merge problems	namespace
+	Merge problems	Custom serverErrors
+	Merge problems				client.DefaultRequestHeaders.ConnectionClose = true;
+Cookie Handling
+	https://stackoverflow.com/questions/12373738/how-do-i-set-a-cookie-on-httpclients-httprequestmessage
+	https://stackoverflow.com/questions/18998354/httpwebrequest-headers-addcookie-value-vs-httpwebrequest-cookiecontainer
+	https://snipplr.com/view/4427
+	https://d-fens.ch/2016/12/27/howto-set-cookie-header-on-defaultrequestheaders-of-httpclient/
+HttpClient
+	http://web.archive.org/web/20180116003143if_/http://chimera.labs.oreilly.com/books/1234000001708/ch14.html#_wrapper
