@@ -19,7 +19,7 @@ namespace WebTools
 	/// https://stackoverflow.com/questions/18998354/httpwebrequest-headers-addcookie-value-vs-httpwebrequest-cookiecontainer
 	/// https://snipplr.com/view/4427.
 	/// </remarks>
-	public class CookieStore
+	public static class CookieStore
 	{
 		/// <summary>
 		/// Get all cookies from header.
@@ -33,7 +33,7 @@ namespace WebTools
 			ArrayList cookieList;
 			CookieCollection cookieCollection = new ();
 
-			if (header != string.Empty)
+			if (!string.IsNullOrWhiteSpace(header))
 			{
 				cookieList = ConvertCookieHeaderToArrayList(header);
 				cookieCollection =
@@ -46,8 +46,10 @@ namespace WebTools
 		private static ArrayList ConvertCookieHeaderToArrayList(
 			string cookHeader)
 		{
-			cookHeader = cookHeader.Replace("\r", string.Empty);
-			cookHeader = cookHeader.Replace("\n", string.Empty);
+			cookHeader = cookHeader.Replace(
+				"\r", string.Empty, StringComparison.OrdinalIgnoreCase);
+			cookHeader = cookHeader.Replace(
+				"\n", string.Empty, StringComparison.OrdinalIgnoreCase);
 
 			string[] cookieParts = cookHeader.Split(',');
 
@@ -108,9 +110,10 @@ namespace WebTools
 					if (subIndex == 0)
 					{
 						strCNameAndCValue = cookieParts[subIndex];
-						if (strCNameAndCValue != string.Empty)
+						if (!string.IsNullOrWhiteSpace(strCNameAndCValue))
 						{
-							int firstEqual = strCNameAndCValue.IndexOf("=");
+							int firstEqual = strCNameAndCValue.IndexOf(
+								"=", StringComparison.Ordinal);
 							string firstName =
 								strCNameAndCValue[..firstEqual];
 							string allValue =
@@ -122,13 +125,15 @@ namespace WebTools
 						continue;
 					}
 
-					if (cookieParts[subIndex].Contains("path", StringComparison.OrdinalIgnoreCase))
+					if (cookieParts[subIndex].Contains(
+						"path", StringComparison.OrdinalIgnoreCase))
 					{
 						strPNameAndPValue = cookieParts[subIndex];
-						if (strPNameAndPValue != string.Empty)
+						if (!string.IsNullOrWhiteSpace(strPNameAndPValue))
 						{
 							nameValuePairTemp = strPNameAndPValue.Split('=');
-							if (nameValuePairTemp[1] != string.Empty)
+							if (!string.IsNullOrWhiteSpace(
+								nameValuePairTemp[1]))
 							{
 								cookTemp.Path = nameValuePairTemp[1];
 							}
@@ -141,14 +146,16 @@ namespace WebTools
 						continue;
 					}
 
-					if (cookieParts[subIndex].Contains("domain", StringComparison.OrdinalIgnoreCase))
+					if (cookieParts[subIndex].Contains(
+						"domain", StringComparison.OrdinalIgnoreCase))
 					{
 						strPNameAndPValue = cookieParts[subIndex];
-						if (strPNameAndPValue != string.Empty)
+						if (!string.IsNullOrWhiteSpace(strPNameAndPValue))
 						{
 							nameValuePairTemp = strPNameAndPValue.Split('=');
 
-							if (nameValuePairTemp[1] != string.Empty)
+							if (!string.IsNullOrWhiteSpace(
+								nameValuePairTemp[1]))
 							{
 								cookTemp.Domain = nameValuePairTemp[1];
 							}
@@ -162,12 +169,12 @@ namespace WebTools
 					}
 				}
 
-				if (cookTemp.Path == string.Empty)
+				if (string.IsNullOrWhiteSpace(cookTemp.Path))
 				{
 					cookTemp.Path = "/";
 				}
 
-				if (cookTemp.Domain == string.Empty)
+				if (string.IsNullOrWhiteSpace(cookTemp.Domain))
 				{
 					cookTemp.Domain = host;
 				}

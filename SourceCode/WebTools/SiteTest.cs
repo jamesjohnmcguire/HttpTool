@@ -20,6 +20,8 @@ using System.Reflection;
 using System.Resources;
 using System.Threading.Tasks;
 
+[assembly: CLSCompliant(true)]
+
 namespace WebTools
 {
 	/// <summary>
@@ -180,117 +182,6 @@ namespace WebTools
 				CultureInfo.InvariantCulture,
 				message,
 				pageCount.ToString(CultureInfo.InvariantCulture));
-		}
-
-		/// <summary>
-		/// The process page crawl completed event handler.
-		/// </summary>
-		/// <param name="sender">The event sender.</param>
-		/// <param name="arguments">The event arguments.</param>
-		public async void ProcessPageCrawlCompleted(
-			object sender, PageCrawlCompletedArgs arguments)
-		{
-			try
-			{
-				bool hasContent = true;
-				bool contentErrors = false;
-				bool imagesCheck = true;
-				bool parseErrors = false;
-				bool problemsFound = false;
-				bool w3validation = true;
-				string message;
-
-				if (arguments != null)
-				{
-					CrawledPage crawledPage = arguments.CrawledPage;
-					string url = crawledPage.Uri.AbsoluteUri;
-
-					CheckHostsDifferent(crawledPage);
-
-					pagesCrawed.Add(url);
-
-					problemsFound = IsCrawlError(crawledPage);
-
-					CheckRedirects(crawledPage);
-
-					// if page has content and
-					// it's not one of types we're ignoring
-					if (!IgnoreTypes.Any(url.ToUpperInvariant().EndsWith))
-					{
-						hasContent = CheckForEmptyContent(crawledPage);
-
-						if (true == hasContent)
-						{
-							contentErrors = !CheckContentErrors(crawledPage);
-							parseErrors = !CheckParseErrors(crawledPage);
-							imagesCheck = CheckImages(crawledPage);
-
-							if (problemsFound == false
-								&& !url.Contains("localhost"))
-							{
-								w3validation = await ValidateFromW3Org(
-									crawledPage.Uri.ToString()).
-									ConfigureAwait(false);
-							}
-						}
-
-						SaveDocument(crawledPage);
-					}
-
-					if ((problemsFound == true) || (hasContent == false) ||
-						(contentErrors == true) || (parseErrors == true) ||
-						(imagesCheck == false) || (w3validation == false))
-					{
-						message = string.Format(
-							CultureInfo.InvariantCulture,
-							"Problems found on: {0} (from: {1})",
-							url,
-							crawledPage.ParentUri.AbsolutePath);
-						Log.Error(CultureInfo.InvariantCulture, m => m(
-							message));
-					}
-				}
-			}
-			catch (Exception exception) when
-				(exception is ArgumentException ||
-				exception is ArgumentNullException ||
-				exception is ArgumentOutOfRangeException ||
-				exception is FileNotFoundException ||
-				exception is IOException ||
-				exception is NotSupportedException ||
-				exception is NullReferenceException ||
-				exception is ObjectDisposedException ||
-				exception is FormatException ||
-				exception is TaskCanceledException ||
-				exception is UnauthorizedAccessException ||
-				exception is WebException)
-			{
-				Log.Error(CultureInfo.InvariantCulture, m => m(
-					exception.ToString()));
-			}
-
-			pageCount++;
-		}
-
-		/// <summary>
-		/// The process page crawl started event handler.
-		/// </summary>
-		/// <param name="sender">The event sender.</param>
-		/// <param name="arguments">The event arguments.</param>
-		public void ProcessPageCrawlStarted(
-			object sender, PageCrawlStartingArgs arguments)
-		{
-			if (arguments != null)
-			{
-				PageToCrawl page = arguments.PageToCrawl;
-
-				string message = string.Format(
-					CultureInfo.InvariantCulture,
-					"Checking: {0}",
-					page.Uri.AbsolutePath);
-				Log.Info(CultureInfo.InvariantCulture, m => m(
-					message));
-			}
 		}
 
 		/// <summary>
@@ -584,7 +475,8 @@ namespace WebTools
 
 		private void CheckHostsDifferent(CrawledPage crawledPage)
 		{
-			if (!crawledPage.Uri.Host.Equals(baseUri.Host))
+			if (!crawledPage.Uri.Host.Equals(
+				baseUri.Host, StringComparison.OrdinalIgnoreCase))
 			{
 				string parentUrl = crawledPage.ParentUri.AbsoluteUri;
 				string message = string.Format(
@@ -608,7 +500,8 @@ namespace WebTools
 					string responseUri =
 						crawledPage.Uri.AbsoluteUri;
 
-					if ((!requestUri.Equals(responseUri)) ||
+					if ((!requestUri.Equals(
+						responseUri, StringComparison.OrdinalIgnoreCase)) ||
 						(crawledPage.RedirectedFrom != null))
 					{
 						// This is a redirect
@@ -625,6 +518,118 @@ namespace WebTools
 			}
 		}
 
+		/// <summary>
+		/// The process page crawl completed event handler.
+		/// </summary>
+		/// <param name="sender">The event sender.</param>
+		/// <param name="arguments">The event arguments.</param>
+		private async void ProcessPageCrawlCompleted(
+			object sender, PageCrawlCompletedArgs arguments)
+		{
+			try
+			{
+				bool hasContent = true;
+				bool contentErrors = false;
+				bool imagesCheck = true;
+				bool parseErrors = false;
+				bool problemsFound = false;
+				bool w3validation = true;
+				string message;
+
+				if (arguments != null)
+				{
+					CrawledPage crawledPage = arguments.CrawledPage;
+					string url = crawledPage.Uri.AbsoluteUri;
+
+					CheckHostsDifferent(crawledPage);
+
+					pagesCrawed.Add(url);
+
+					problemsFound = IsCrawlError(crawledPage);
+
+					CheckRedirects(crawledPage);
+
+					// if page has content and
+					// it's not one of types we're ignoring
+					if (!IgnoreTypes.Any(url.ToUpperInvariant().EndsWith))
+					{
+						hasContent = CheckForEmptyContent(crawledPage);
+
+						if (true == hasContent)
+						{
+							contentErrors = !CheckContentErrors(crawledPage);
+							parseErrors = !CheckParseErrors(crawledPage);
+							imagesCheck = CheckImages(crawledPage);
+
+							if (problemsFound == false && !url.Contains(
+								"localhost",
+								StringComparison.OrdinalIgnoreCase))
+							{
+								w3validation = await ValidateFromW3Org(
+									crawledPage.Uri.ToString()).
+									ConfigureAwait(false);
+							}
+						}
+
+						SaveDocument(crawledPage);
+					}
+
+					if ((problemsFound == true) || (hasContent == false) ||
+						(contentErrors == true) || (parseErrors == true) ||
+						(imagesCheck == false) || (w3validation == false))
+					{
+						message = string.Format(
+							CultureInfo.InvariantCulture,
+							"Problems found on: {0} (from: {1})",
+							url,
+							crawledPage.ParentUri.AbsolutePath);
+						Log.Error(CultureInfo.InvariantCulture, m => m(
+							message));
+					}
+				}
+			}
+			catch (Exception exception) when
+				(exception is ArgumentException ||
+				exception is ArgumentNullException ||
+				exception is ArgumentOutOfRangeException ||
+				exception is FileNotFoundException ||
+				exception is IOException ||
+				exception is NotSupportedException ||
+				exception is NullReferenceException ||
+				exception is ObjectDisposedException ||
+				exception is FormatException ||
+				exception is TaskCanceledException ||
+				exception is UnauthorizedAccessException ||
+				exception is WebException)
+			{
+				Log.Error(CultureInfo.InvariantCulture, m => m(
+					exception.ToString()));
+			}
+
+			pageCount++;
+		}
+
+		/// <summary>
+		/// The process page crawl started event handler.
+		/// </summary>
+		/// <param name="sender">The event sender.</param>
+		/// <param name="arguments">The event arguments.</param>
+		private void ProcessPageCrawlStarted(
+			object sender, PageCrawlStartingArgs arguments)
+		{
+			if (arguments != null)
+			{
+				PageToCrawl page = arguments.PageToCrawl;
+
+				string message = string.Format(
+					CultureInfo.InvariantCulture,
+					"Checking: {0}",
+					page.Uri.AbsolutePath);
+				Log.Info(CultureInfo.InvariantCulture, m => m(
+					message));
+			}
+		}
+
 		private void SaveDocument(CrawledPage crawledPage)
 		{
 			if (true == SavePage)
@@ -633,7 +638,8 @@ namespace WebTools
 				string[] parts = crawledPage.Uri.LocalPath.Split(
 					new char[] { '/' });
 				string path = parts.Last() + crawledPage.Uri.Query;
-				path = path.Replace("?", "__");
+				path = path.Replace(
+					"?", "__", StringComparison.OrdinalIgnoreCase);
 				path = path.Replace('\\', '-');
 				File.WriteAllText(path, text);
 			}

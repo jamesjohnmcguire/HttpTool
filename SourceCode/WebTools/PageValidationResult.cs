@@ -24,9 +24,9 @@ namespace WebTools
 		public Uri Url { get; set; }
 
 		/// <summary>
-		/// Gets or sets a list of messages.
+		/// Gets a list of messages.
 		/// </summary>
 		/// <value>A list of messages.</value>
-		public IList<ValidationResult> Messages { get; set; }
+		public IList<ValidationResult> Messages { get; }
 	}
 }

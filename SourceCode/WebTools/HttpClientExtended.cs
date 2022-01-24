@@ -213,13 +213,16 @@ namespace WebTools
 
 				var stream = File.OpenRead(filePath);
 
-				HttpContent fileStreamContent = new StreamContent(stream);
+				using HttpContent fileStreamContent =
+					new StreamContent(stream);
 
 				using var formData = new MultipartFormDataContent();
 
 				formData.Add(fileStreamContent, fieldName, filePath);
-				HttpResponseMessage responseMessage =
-					await client.PostAsync(endPoint, formData);
+
+				Uri uri = new (endPoint);
+				HttpResponseMessage responseMessage = await client.PostAsync(
+					uri, formData).ConfigureAwait(false);
 
 				if (!responseMessage.IsSuccessStatusCode)
 				{
@@ -231,6 +234,7 @@ namespace WebTools
 
 				string fileName = Path.GetFileName(filePath);
 				string message = string.Format(
+					CultureInfo.InvariantCulture,
 					"{0} - Server response: {1}",
 					fileName,
 					response);
