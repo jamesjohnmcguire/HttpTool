@@ -11,10 +11,18 @@ IF "%1"=="release" GOTO release
 GOTO end
 
 :release
-CD Bin\Release\x64
+CD Binaries\Linux
+7z u HttpTool-Linux.zip .
+MOVE HttpTool-Linux.zip ..
 
-7z u HttpTool.zip . -xr!*.json -xr!ref
+CD ..\MacOS
+7z u HttpTool-MacOS.zip .
+MOVE HttpTool-MacOS.zip ..
 
-hub release create -a HttpTool.zip -m "%2" v%2
+CD ..\Windows
+7z u HttpTool-Windows.zip .
+MOVE HttpTool-Windows.zip ..
+
+gh release create v%2 --notes "%3" *.zip
 
 :end
