@@ -2,9 +2,11 @@
 	<PropertyGroup>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<AssemblyTitle>HttpTool</AssemblyTitle>
+		<AssemblyVersion>0.4.0.136</AssemblyVersion>
 		<CodeAnalysisRuleSet>..\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
 		<Copyright>Copyright © 2016 - 2022</Copyright>
 		<EnableNETAnalyzers>true</EnableNETAnalyzers>
+		<FileVersion>0.4.0.136</FileVersion>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<NeutralLanguage>en</NeutralLanguage>
@@ -13,6 +15,7 @@
 		<OutputType>Exe</OutputType>
 		<Product>HttpTool</Product>
 		<TargetFramework>net5.0</TargetFramework>
+		<Version>0.4.0.136</Version>
 	</PropertyGroup>
 
 	<ItemGroup>
