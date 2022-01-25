@@ -1,15 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
+		<AnalysisMode>AllEnabledByDefault</AnalysisMode>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<AssemblyTitle>DigitalZenWorks.Http.WebTools</AssemblyTitle>
+		<AssemblyVersion>1.0.0.138</AssemblyVersion>
 		<CodeAnalysisRuleSet>..\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
+		<Copyright>Copyright © 2016 - 2022 James John McGuire</Copyright>
 		<EnableNETAnalyzers>true</EnableNETAnalyzers>
+		<FileVersion>1.0.0.138</FileVersion>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<NoWarn>1701;1702;NU1605</NoWarn>
-		<OutputPath>$(SolutionDir)\Bin\$(Configuration)\$(Platform)</OutputPath>
+		<LangVersion>latest</LangVersion>
 		<NeutralLanguage>en</NeutralLanguage>
-		<RestoreProjectStyle>PackageReference</RestoreProjectStyle>
-		<TargetFramework>net5.0</TargetFramework>
+		<OutputPath>$(SolutionDir)\Bin\$(Configuration)\$(Platform)</OutputPath>
+		<Version>1.0.0.138</Version>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
+		<TargetFramework>net6.0</TargetFramework>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+		<TargetFramework>netstandard2.0</TargetFramework>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -24,20 +35,31 @@
 		</PackageReference>
 	</ItemGroup>
 
-	<ItemGroup>
-		<AdditionalFiles Include="stylecop.json" />
-	  <Compile Update="Resources.Designer.cs">
-	    <DesignTime>True</DesignTime>
-	    <AutoGen>True</AutoGen>
-	    <DependentUpon>Resources.resx</DependentUpon>
-	  </Compile>
+	<ItemGroup Condition="'$(Configuration)'=='Release'">
+		<PackageReference Include="System.Collections" Version="4.3.0" />
+		<PackageReference Include="System.Diagnostics.Debug" Version="4.3.0" />
+		<PackageReference Include="System.Diagnostics.Tracing" Version="4.3.0" />
+		<PackageReference Include="System.Globalization" Version="4.3.0" />
+		<PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0" />
+		<PackageReference Include="System.Resources.ResourceManager" Version="4.3.0" />
+		<PackageReference Include="System.Runtime.Handles" Version="4.3.0" />
+		<PackageReference Include="System.Threading" Version="4.3.0" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <EmbeddedResource Update="Resources.resx">
-	    <Generator>ResXFileCodeGenerator</Generator>
-	    <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-	  </EmbeddedResource>
+		<AdditionalFiles Include="stylecop.json" />
+		<Compile Update="Resources.Designer.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Resources.resx</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Update="Resources.resx">
+			<Generator>ResXFileCodeGenerator</Generator>
+			<LastGenOutput>Resources.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
 	</ItemGroup>
 
 </Project>

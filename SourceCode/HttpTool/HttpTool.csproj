@@ -1,17 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+
 	<PropertyGroup>
+		<AnalysisMode>AllEnabledByDefault</AnalysisMode>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-		<AssemblyTitle>HttpTool</AssemblyTitle>
+		<AssemblyTitle>DigitalZenWorks.Http.HttpTool</AssemblyTitle>
+		<AssemblyVersion>1.0.0.138</AssemblyVersion>
 		<CodeAnalysisRuleSet>..\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
-		<Copyright>Copyright © 2016 - 2022</Copyright>
+		<Copyright>Copyright © 2016 - 2022 James John McGuire</Copyright>
 		<EnableNETAnalyzers>true</EnableNETAnalyzers>
-		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<FileVersion>1.0.0.138</FileVersion>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<LangVersion>latest</LangVersion>
 		<NeutralLanguage>en</NeutralLanguage>
-		<NoWarn>1701;1702;NU1605</NoWarn>
 		<OutputPath>$(SolutionDir)\Bin\$(Configuration)\$(Platform)</OutputPath>
 		<OutputType>Exe</OutputType>
-		<Product>HttpTool</Product>
+		<Version>1.0.0.138</Version>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
+		<TargetFramework>net6.0</TargetFramework>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)'=='Release'">
 		<TargetFramework>net5.0</TargetFramework>
 	</PropertyGroup>
 
@@ -27,6 +37,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 	</ItemGroup>
+
 	<ItemGroup>
 		<ProjectReference Include="..\WebTools\WebTools.csproj" />
 	</ItemGroup>
@@ -44,5 +55,4 @@
 		</EmbeddedResource>
 	</ItemGroup>
 
-	<ProjectExtensions><VisualStudio><UserProperties stylecop_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>
 </Project>

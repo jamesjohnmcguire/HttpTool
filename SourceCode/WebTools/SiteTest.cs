@@ -20,8 +20,13 @@ using System.Reflection;
 using System.Resources;
 using System.Threading.Tasks;
 
+[assembly: CLSCompliant(true)]
+
 namespace WebTools
 {
+	/// <summary>
+	/// Provides support for web site testing.
+	/// </summary>
 	public class SiteTest : IDisposable
 	{
 		private static readonly ILog Log = LogManager.GetLogger(
@@ -51,6 +56,9 @@ namespace WebTools
 
 		private Uri baseUri;
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="SiteTest"/> class.
+		/// </summary>
 		public SiteTest()
 		{
 			pagesCrawed = new List<string>();
@@ -58,22 +66,42 @@ namespace WebTools
 			client = new HttpClientExtended();
 		}
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="SiteTest"/> class.
+		/// </summary>
+		/// <param name="tests">The document checks to use.</param>
 		public SiteTest(DocumentChecks tests)
 			: this()
 		{
 			Tests = tests;
 		}
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="SiteTest"/> class.
+		/// </summary>
+		/// <param name="tests">The document checks to use.</param>
+		/// <param name="uri">The URI to check.</param>
 		public SiteTest(DocumentChecks tests, Uri uri)
 			: this(tests)
 		{
 			baseUri = uri;
 		}
 
+		/// <summary>
+		/// Gets or sets a value indicating whether to save the page or not.
+		/// </summary>
+		/// <value>Indicates whether to save the page or not.</value>
 		public bool SavePage { get; set; }
 
+		/// <summary>
+		/// Gets or sets the document checks being used.
+		/// </summary>
+		/// <value>The document checks being used.</value>
 		public DocumentChecks Tests { get; set; }
 
+		/// <summary>
+		/// Clear the current console line.
+		/// </summary>
 		public static void ClearCurrentConsoleLine()
 		{
 			int currentLineCursor = Console.CursorTop;
@@ -92,6 +120,10 @@ namespace WebTools
 			GC.SuppressFinalize(this);
 		}
 
+		/// <summary>
+		/// Test the given URI.
+		/// </summary>
+		/// <param name="uri">The URI to test.</param>
 		public void Test(Uri uri)
 		{
 			pageCount = 0;
@@ -150,107 +182,6 @@ namespace WebTools
 				CultureInfo.InvariantCulture,
 				message,
 				pageCount.ToString(CultureInfo.InvariantCulture));
-		}
-
-		public async void ProcessPageCrawlCompleted(
-			object sender, PageCrawlCompletedArgs arguments)
-		{
-			try
-			{
-				bool hasContent = true;
-				bool contentErrors = false;
-				bool imagesCheck = true;
-				bool parseErrors = false;
-				bool problemsFound = false;
-				bool w3validation = true;
-				string message;
-
-				if (arguments != null)
-				{
-					CrawledPage crawledPage = arguments.CrawledPage;
-					string url = crawledPage.Uri.AbsoluteUri;
-
-					CheckHostsDifferent(crawledPage);
-
-					pagesCrawed.Add(url);
-
-					problemsFound = IsCrawlError(crawledPage);
-
-					CheckRedirects(crawledPage);
-
-					// if page has content and
-					// it's not one of types we're ignoring
-					if (!IgnoreTypes.Any(url.ToUpperInvariant().EndsWith))
-					{
-						hasContent = CheckForEmptyContent(crawledPage);
-
-						if (true == hasContent)
-						{
-							contentErrors = !CheckContentErrors(crawledPage);
-							parseErrors = !CheckParseErrors(crawledPage);
-							imagesCheck = CheckImages(crawledPage);
-
-							if (problemsFound == false
-								&& !url.Contains("localhost"))
-							{
-								w3validation = await ValidateFromW3Org(
-									crawledPage.Uri.ToString()).
-									ConfigureAwait(false);
-							}
-						}
-
-						SaveDocument(crawledPage);
-					}
-
-					if ((problemsFound == true) || (hasContent == false) ||
-						(contentErrors == true) || (parseErrors == true) ||
-						(imagesCheck == false) || (w3validation == false))
-					{
-						message = string.Format(
-							CultureInfo.InvariantCulture,
-							"Problems found on: {0} (from: {1})",
-							url,
-							crawledPage.ParentUri.AbsolutePath);
-						Log.Error(CultureInfo.InvariantCulture, m => m(
-							message));
-					}
-				}
-			}
-			catch (Exception exception) when
-				(exception is ArgumentException ||
-				exception is ArgumentNullException ||
-				exception is ArgumentOutOfRangeException ||
-				exception is FileNotFoundException ||
-				exception is IOException ||
-				exception is NotSupportedException ||
-				exception is NullReferenceException ||
-				exception is ObjectDisposedException ||
-				exception is FormatException ||
-				exception is TaskCanceledException ||
-				exception is UnauthorizedAccessException ||
-				exception is WebException)
-			{
-				Log.Error(CultureInfo.InvariantCulture, m => m(
-					exception.ToString()));
-			}
-
-			pageCount++;
-		}
-
-		public void ProcessPageCrawlStarted(
-			object sender, PageCrawlStartingArgs arguments)
-		{
-			if (arguments != null)
-			{
-				PageToCrawl page = arguments.PageToCrawl;
-
-				string message = string.Format(
-					CultureInfo.InvariantCulture,
-					"Checking: {0}",
-					page.Uri.AbsolutePath);
-				Log.Info(CultureInfo.InvariantCulture, m => m(
-					message));
-			}
 		}
 
 		/// <summary>
@@ -544,7 +475,8 @@ namespace WebTools
 
 		private void CheckHostsDifferent(CrawledPage crawledPage)
 		{
-			if (!crawledPage.Uri.Host.Equals(baseUri.Host))
+			if (!crawledPage.Uri.Host.Equals(
+				baseUri.Host, StringComparison.OrdinalIgnoreCase))
 			{
 				string parentUrl = crawledPage.ParentUri.AbsoluteUri;
 				string message = string.Format(
@@ -568,7 +500,8 @@ namespace WebTools
 					string responseUri =
 						crawledPage.Uri.AbsoluteUri;
 
-					if ((!requestUri.Equals(responseUri)) ||
+					if ((!requestUri.Equals(
+						responseUri, StringComparison.OrdinalIgnoreCase)) ||
 						(crawledPage.RedirectedFrom != null))
 					{
 						// This is a redirect
@@ -585,6 +518,123 @@ namespace WebTools
 			}
 		}
 
+		/// <summary>
+		/// The process page crawl completed event handler.
+		/// </summary>
+		/// <param name="sender">The event sender.</param>
+		/// <param name="arguments">The event arguments.</param>
+		private async void ProcessPageCrawlCompleted(
+			object sender, PageCrawlCompletedArgs arguments)
+		{
+			try
+			{
+				bool hasContent = true;
+				bool contentErrors = false;
+				bool imagesCheck = true;
+				bool parseErrors = false;
+				bool problemsFound = false;
+				bool w3validation = true;
+				string message;
+
+				if (arguments != null)
+				{
+					CrawledPage crawledPage = arguments.CrawledPage;
+					string url = crawledPage.Uri.AbsoluteUri;
+
+					CheckHostsDifferent(crawledPage);
+
+					pagesCrawed.Add(url);
+
+					problemsFound = IsCrawlError(crawledPage);
+
+					CheckRedirects(crawledPage);
+
+					// if page has content and
+					// it's not one of types we're ignoring
+					if (!IgnoreTypes.Any(url.ToUpperInvariant().EndsWith))
+					{
+						hasContent = CheckForEmptyContent(crawledPage);
+
+						if (true == hasContent)
+						{
+							contentErrors = !CheckContentErrors(crawledPage);
+							parseErrors = !CheckParseErrors(crawledPage);
+							imagesCheck = CheckImages(crawledPage);
+#if NETSTANDARD2_0
+							bool contains = url.Contains("localhost");
+#else
+							bool contains = url.Contains(
+								"localhost",
+								StringComparison.OrdinalIgnoreCase);
+#endif
+
+							if (contains == true)
+							{
+								w3validation = await ValidateFromW3Org(
+									crawledPage.Uri.ToString()).
+									ConfigureAwait(false);
+							}
+						}
+
+						SaveDocument(crawledPage);
+					}
+
+					if ((problemsFound == true) || (hasContent == false) ||
+						(contentErrors == true) || (parseErrors == true) ||
+						(imagesCheck == false) || (w3validation == false))
+					{
+						message = string.Format(
+							CultureInfo.InvariantCulture,
+							"Problems found on: {0} (from: {1})",
+							url,
+							crawledPage.ParentUri.AbsolutePath);
+						Log.Error(CultureInfo.InvariantCulture, m => m(
+							message));
+					}
+				}
+			}
+			catch (Exception exception) when
+				(exception is ArgumentException ||
+				exception is ArgumentNullException ||
+				exception is ArgumentOutOfRangeException ||
+				exception is FileNotFoundException ||
+				exception is IOException ||
+				exception is NotSupportedException ||
+				exception is NullReferenceException ||
+				exception is ObjectDisposedException ||
+				exception is FormatException ||
+				exception is TaskCanceledException ||
+				exception is UnauthorizedAccessException ||
+				exception is WebException)
+			{
+				Log.Error(CultureInfo.InvariantCulture, m => m(
+					exception.ToString()));
+			}
+
+			pageCount++;
+		}
+
+		/// <summary>
+		/// The process page crawl started event handler.
+		/// </summary>
+		/// <param name="sender">The event sender.</param>
+		/// <param name="arguments">The event arguments.</param>
+		private void ProcessPageCrawlStarted(
+			object sender, PageCrawlStartingArgs arguments)
+		{
+			if (arguments != null)
+			{
+				PageToCrawl page = arguments.PageToCrawl;
+
+				string message = string.Format(
+					CultureInfo.InvariantCulture,
+					"Checking: {0}",
+					page.Uri.AbsolutePath);
+				Log.Info(CultureInfo.InvariantCulture, m => m(
+					message));
+			}
+		}
+
 		private void SaveDocument(CrawledPage crawledPage)
 		{
 			if (true == SavePage)
@@ -593,7 +643,12 @@ namespace WebTools
 				string[] parts = crawledPage.Uri.LocalPath.Split(
 					new char[] { '/' });
 				string path = parts.Last() + crawledPage.Uri.Query;
+#if NETSTANDARD2_0
 				path = path.Replace("?", "__");
+#else
+				path = path.Replace(
+					"?", "__", StringComparison.OrdinalIgnoreCase);
+#endif
 				path = path.Replace('\\', '-');
 				File.WriteAllText(path, text);
 			}

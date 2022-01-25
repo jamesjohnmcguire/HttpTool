@@ -189,6 +189,13 @@ namespace WebTools
 			return response;
 		}
 
+		/// <summary>
+		/// Posts a file.
+		/// </summary>
+		/// <param name="endPoint">The end point to send to.</param>
+		/// <param name="fieldName">The name of field.</param>
+		/// <param name="filePath">The path of the file.</param>
+		/// <returns>The response of the request.</returns>
 		public async Task<string> PostFile(
 			string endPoint, string fieldName, string filePath)
 		{
@@ -206,13 +213,16 @@ namespace WebTools
 
 				var stream = File.OpenRead(filePath);
 
-				HttpContent fileStreamContent = new StreamContent(stream);
+				using HttpContent fileStreamContent =
+					new StreamContent(stream);
 
 				using var formData = new MultipartFormDataContent();
 
 				formData.Add(fileStreamContent, fieldName, filePath);
-				HttpResponseMessage responseMessage =
-					await client.PostAsync(endPoint, formData);
+
+				Uri uri = new (endPoint);
+				HttpResponseMessage responseMessage = await client.PostAsync(
+					uri, formData).ConfigureAwait(false);
 
 				if (!responseMessage.IsSuccessStatusCode)
 				{
@@ -224,6 +234,7 @@ namespace WebTools
 
 				string fileName = Path.GetFileName(filePath);
 				string message = string.Format(
+					CultureInfo.InvariantCulture,
 					"{0} - Server response: {1}",
 					fileName,
 					response);
@@ -234,6 +245,11 @@ namespace WebTools
 			return response;
 		}
 
+		/// <summary>
+		/// Get the request's response.
+		/// </summary>
+		/// <param name="uri">The URI of the request.</param>
+		/// <returns>The response of the request.</returns>
 		public HttpResponseMessage RequestGetResponse(Uri uri)
 		{
 			HttpResponseMessage response = client.GetAsync(uri).Result;
@@ -241,6 +257,11 @@ namespace WebTools
 			return response;
 		}
 
+		/// <summary>
+		/// Get the request's response as a string.
+		/// </summary>
+		/// <param name="uri">The URI of the request.</param>
+		/// <returns>The response of the request.</returns>
 		public string RequestGetResponseAsString(Uri uri)
 		{
 			string response = string.Empty;
@@ -308,6 +329,13 @@ namespace WebTools
 			return responseContent;
 		}
 
+		/// <summary>
+		/// Submit an HTTP request.
+		/// </summary>
+		/// <param name="method">The request method.</param>
+		/// <param name="requestUri">The request URI.</param>
+		/// <param name="parameters">The request parameters.</param>
+		/// <returns>The response message of the request.</returns>
 		public string Request(
 			HttpMethod method,
 			Uri requestUri,
@@ -359,6 +387,14 @@ namespace WebTools
 			return responseContent;
 		}
 
+		/// <summary>
+		/// Submit an HTTP request.
+		/// </summary>
+		/// <param name="method">The request method.</param>
+		/// <param name="query">The request query.</param>
+		/// <param name="keys">The request keys.</param>
+		/// <param name="values">The request values.</param>
+		/// <returns>The response message of the request.</returns>
 		public string Request(
 			HttpMethod method,
 			string query,
@@ -397,6 +433,10 @@ namespace WebTools
 			// free native resources
 		}
 
+		/// <summary>
+		/// The on property changed event handler.
+		/// </summary>
+		/// <param name="name">The property name.</param>
 		protected void OnPropertyChanged(string name)
 		{
 			PropertyChangedEventHandler handler = PropertyChanged;

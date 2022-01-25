@@ -8,6 +8,9 @@ using Newtonsoft.Json;
 
 namespace WebTools
 {
+	/// <summary>
+	/// Represents an error response.
+	/// </summary>
 	public class ErrorResponse
 	{
 		/// <summary>

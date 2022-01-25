@@ -16,6 +16,8 @@ using System.Reflection;
 using System.Resources;
 using WebTools;
 
+[assembly: CLSCompliant(true)]
+
 namespace HttpTool
 {
 	internal class Program
