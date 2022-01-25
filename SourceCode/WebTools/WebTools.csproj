@@ -3,17 +3,17 @@
 	<PropertyGroup>
 		<AnalysisMode>AllEnabledByDefault</AnalysisMode>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-		<AssemblyVersion>0.4.0.136</AssemblyVersion>
+		<AssemblyTitle>DigitalZenWorks.Http.WebTools</AssemblyTitle>
+		<AssemblyVersion>1.0.0.138</AssemblyVersion>
 		<CodeAnalysisRuleSet>..\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
+		<Copyright>Copyright © 2016 - 2022 James John McGuire</Copyright>
 		<EnableNETAnalyzers>true</EnableNETAnalyzers>
-		<FileVersion>0.4.0.136</FileVersion>
+		<FileVersion>1.0.0.138</FileVersion>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<LangVersion>latest</LangVersion>
-		<OutputPath>$(SolutionDir)\Bin\$(Configuration)\$(Platform)</OutputPath>
 		<NeutralLanguage>en</NeutralLanguage>
-		<RestoreProjectStyle>PackageReference</RestoreProjectStyle>
-		<TargetFramework>net5.0</TargetFramework>
-		<Version>0.4.0.136</Version>
+		<OutputPath>$(SolutionDir)\Bin\$(Configuration)\$(Platform)</OutputPath>
+		<Version>1.0.0.138</Version>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
