@@ -8,15 +8,20 @@
 		<Copyright>Copyright © 2016 - 2022</Copyright>
 		<EnableNETAnalyzers>true</EnableNETAnalyzers>
 		<FileVersion>0.4.0.136</FileVersion>
-		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<LangVersion>latest</LangVersion>
 		<NeutralLanguage>en</NeutralLanguage>
-		<NoWarn>1701;1702;NU1605</NoWarn>
 		<OutputPath>$(SolutionDir)\Bin\$(Configuration)\$(Platform)</OutputPath>
 		<OutputType>Exe</OutputType>
 		<Product>HttpTool</Product>
-		<TargetFramework>net5.0</TargetFramework>
 		<Version>0.4.0.136</Version>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
+		<TargetFramework>net6.0</TargetFramework>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+		<TargetFramework>net5.0</TargetFramework>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -47,6 +52,4 @@
 			<LastGenOutput>Resources.Designer.cs</LastGenOutput>
 		</EmbeddedResource>
 	</ItemGroup>
-
-	<ProjectExtensions><VisualStudio><UserProperties stylecop_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>
 </Project>
