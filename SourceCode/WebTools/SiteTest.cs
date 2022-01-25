@@ -560,10 +560,15 @@ namespace WebTools
 							contentErrors = !CheckContentErrors(crawledPage);
 							parseErrors = !CheckParseErrors(crawledPage);
 							imagesCheck = CheckImages(crawledPage);
-
-							if (problemsFound == false && !url.Contains(
+#if NETSTANDARD2_0
+							bool contains = url.Contains("localhost");
+#else
+							bool contains = url.Contains(
 								"localhost",
-								StringComparison.OrdinalIgnoreCase))
+								StringComparison.OrdinalIgnoreCase);
+#endif
+
+							if (contains == true)
 							{
 								w3validation = await ValidateFromW3Org(
 									crawledPage.Uri.ToString()).
@@ -638,8 +643,12 @@ namespace WebTools
 				string[] parts = crawledPage.Uri.LocalPath.Split(
 					new char[] { '/' });
 				string path = parts.Last() + crawledPage.Uri.Query;
+#if NETSTANDARD2_0
+				path = path.Replace("?", "__");
+#else
 				path = path.Replace(
 					"?", "__", StringComparison.OrdinalIgnoreCase);
+#endif
 				path = path.Replace('\\', '-');
 				File.WriteAllText(path, text);
 			}

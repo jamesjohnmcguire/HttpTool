@@ -46,10 +46,15 @@ namespace WebTools
 		private static ArrayList ConvertCookieHeaderToArrayList(
 			string cookHeader)
 		{
+#if NETSTANDARD2_0
+			cookHeader = cookHeader.Replace("\r", string.Empty);
+			cookHeader = cookHeader.Replace("\n", string.Empty);
+#else
 			cookHeader = cookHeader.Replace(
 				"\r", string.Empty, StringComparison.OrdinalIgnoreCase);
 			cookHeader = cookHeader.Replace(
 				"\n", string.Empty, StringComparison.OrdinalIgnoreCase);
+#endif
 
 			string[] cookieParts = cookHeader.Split(',');
 
@@ -100,8 +105,6 @@ namespace WebTools
 				cookieParts = cookieText.Split(';');
 
 				string strCNameAndCValue;
-				string strPNameAndPValue;
-				string[] nameValuePairTemp;
 				Cookie cookTemp = new ();
 
 				for (int subIndex = 0; subIndex < cookieParts.Length;
@@ -114,10 +117,17 @@ namespace WebTools
 						{
 							int firstEqual = strCNameAndCValue.IndexOf(
 								"=", StringComparison.Ordinal);
+#if NETSTANDARD2_0
 							string firstName =
-								strCNameAndCValue[..firstEqual];
+								strCNameAndCValue.Substring(0, firstEqual);
+							string allValue = strCNameAndCValue.Substring(
+								firstEqual + 1,
+								strCNameAndCValue.Length - (firstEqual + 1));
+#else
+							string firstName = strCNameAndCValue[..firstEqual];
 							string allValue =
 								strCNameAndCValue[(firstEqual + 1) ..];
+#endif
 							cookTemp.Name = firstName;
 							cookTemp.Value = allValue;
 						}
@@ -125,46 +135,19 @@ namespace WebTools
 						continue;
 					}
 
-					if (cookieParts[subIndex].Contains(
-						"path", StringComparison.OrdinalIgnoreCase))
-					{
-						strPNameAndPValue = cookieParts[subIndex];
-						if (!string.IsNullOrWhiteSpace(strPNameAndPValue))
-						{
-							nameValuePairTemp = strPNameAndPValue.Split('=');
-							if (!string.IsNullOrWhiteSpace(
-								nameValuePairTemp[1]))
-							{
-								cookTemp.Path = nameValuePairTemp[1];
-							}
-							else
-							{
-								cookTemp.Path = "/";
-							}
-						}
+					cookTemp =
+						ProcessCookiePart(cookieParts[subIndex], "path", "/");
 
+					if (cookTemp != null)
+					{
 						continue;
 					}
 
-					if (cookieParts[subIndex].Contains(
-						"domain", StringComparison.OrdinalIgnoreCase))
+					cookTemp = ProcessCookiePart(
+						cookieParts[subIndex], "domain", host);
+
+					if (cookTemp != null)
 					{
-						strPNameAndPValue = cookieParts[subIndex];
-						if (!string.IsNullOrWhiteSpace(strPNameAndPValue))
-						{
-							nameValuePairTemp = strPNameAndPValue.Split('=');
-
-							if (!string.IsNullOrWhiteSpace(
-								nameValuePairTemp[1]))
-							{
-								cookTemp.Domain = nameValuePairTemp[1];
-							}
-							else
-							{
-								cookTemp.Domain = host;
-							}
-						}
-
 						continue;
 					}
 				}
@@ -183,6 +166,41 @@ namespace WebTools
 			}
 
 			return cc;
+		}
+
+		private static Cookie ProcessCookiePart(string cookiePart, string key, string value)
+		{
+			Cookie cookTemp = null;
+
+#if NETSTANDARD2_0
+			bool contains = cookiePart.Contains(key);
+#else
+			bool contains = cookiePart.Contains(
+				key, StringComparison.OrdinalIgnoreCase);
+#endif
+
+			if (contains == true)
+			{
+				if (!string.IsNullOrWhiteSpace(cookiePart))
+				{
+					cookTemp = new ();
+
+					string[] nameValuePairTemp;
+
+					nameValuePairTemp = cookiePart.Split('=');
+
+					if (!string.IsNullOrWhiteSpace(nameValuePairTemp[1]))
+					{
+						cookTemp.Domain = nameValuePairTemp[1];
+					}
+					else
+					{
+						cookTemp.Domain = value;
+					}
+				}
+			}
+
+			return cookTemp;
 		}
 	}
 }
