@@ -57,3 +57,6 @@ Cookie Handling
 	https://d-fens.ch/2016/12/27/howto-set-cookie-header-on-defaultrequestheaders-of-httpclient/
 HttpClient
 	http://web.archive.org/web/20180116003143if_/http://chimera.labs.oreilly.com/books/1234000001708/ch14.html#_wrapper
+HttpTool
+	IL3000: 'System.Reflection.Assembly.Location' always returns an empty string for assemblies embedded in a single-file app. If the path to the app directory is needed, consider calling 'System.AppContext.BaseDirectory'. 
+	yml Error: error NETSDK1005: Assets file 'project.assets.json' doesn't have a target for 'netstandard2.0'. Ensure that restore has run and that you have included 'netstandard2.0' in the TargetFrameworks for your project. 
