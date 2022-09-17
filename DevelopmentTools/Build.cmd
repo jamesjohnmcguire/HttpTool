@@ -3,9 +3,9 @@ CD ..\SourceCode
 
 IF EXIST Bin\Release\AnyCPU\NUL DEL /Q Bin\Release\AnyCPU\*.*
 
-CALL dotnet publish --configuration Release -p:PublishSingleFile=true --runtime linux-x64 --self-contained true --output Binaries\Linux HttpTool
-CALL dotnet publish --configuration Release -p:PublishSingleFile=true --runtime osx-x64 --self-contained true --output Binaries\MacOS HttpTool
-CALL dotnet publish --configuration Release -p:PublishReadyToRun=true;PublishSingleFile=true --runtime win-x64 --self-contained true --output Binaries\Windows HttpTool
+CALL dotnet publish --configuration Release --output Binaries\Linux -p:PublishReadyToRun=true -p:PublishSingleFile=true --runtime linux-x64 --self-contained HttpTool
+CALL dotnet publish --configuration Release --output Binaries\MacOS -p:PublishReadyToRun=true -p:PublishSingleFile=true --runtime osx-x64 --self-contained HttpTool
+CALL dotnet publish --configuration Release --output Binaries\Windows -p:PublishReadyToRun=true -p:PublishSingleFile=true --runtime win-x64 --self-contained HttpTool
 
 IF "%1"=="release" GOTO release
 GOTO end
@@ -24,6 +24,8 @@ CD ..\Windows
 MOVE HttpTool-Windows.zip ..
 
 CD ..
-gh release create v%2 --notes %3 *.zip
+REM Unfortunately, the following command does not work from the windows command
+REM console.  Use a bash terminal.
+REM gh release create v%2 --notes %3 *.zip
 
 :end
