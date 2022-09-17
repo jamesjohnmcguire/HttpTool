@@ -36,6 +36,10 @@ namespace WebTools
 		/// Initializes a new instance of the
 		/// <see cref="HttpClientExtended"/> class.
 		/// </summary>
+		[System.Diagnostics.CodeAnalysis.SuppressMessage(
+			"Reliability",
+			"CA2000:Dispose objects before losing scope",
+			Justification = "This is truely a special case; don't dispose.")]
 		public HttpClientExtended()
 		{
 			HttpClientHandler clientHandler = new ();
