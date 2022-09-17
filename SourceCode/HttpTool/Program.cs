@@ -22,11 +22,6 @@ namespace HttpTool
 {
 	internal class Program
 	{
-		private const string LogFilePath = "HttpTool.log";
-		private const string OutputTemplate =
-			"[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] " +
-			"{Message:lj}{NewLine}{Exception}";
-
 		private static readonly string[] Commands =
 		{
 			"agilitypack", "empty", "enhanced", "help", "images", "redirects",
@@ -38,6 +33,24 @@ namespace HttpTool
 
 		private static readonly ResourceManager StringTable =
 			new ("HttpTool.Resources", Assembly.GetExecutingAssembly());
+
+		private static FileVersionInfo GetAssemblyInformation()
+		{
+			FileVersionInfo fileVersionInfo = null;
+
+			// Bacause single file apps have no assemblies, get the information
+			// from the process.
+			Process process = Process.GetCurrentProcess();
+
+			string location = process.MainModule.FileName;
+
+			if (!string.IsNullOrWhiteSpace(location))
+			{
+				fileVersionInfo = FileVersionInfo.GetVersionInfo(location);
+			}
+
+			return fileVersionInfo;
+		}
 
 		private static string GetCommand(string[] arguments)
 		{
@@ -111,6 +124,44 @@ namespace HttpTool
 			return url;
 		}
 
+		private static string GetVersion()
+		{
+			string assemblyVersion = string.Empty;
+
+			FileVersionInfo fileVersionInfo = GetAssemblyInformation();
+
+			if (fileVersionInfo != null)
+			{
+				assemblyVersion = fileVersionInfo.FileVersion;
+			}
+
+			return assemblyVersion;
+		}
+
+		private static void LogInitialization()
+		{
+			string applicationDataDirectory = @"DigitalZenWorks\HttpTool";
+			string baseDataDirectory = Environment.GetFolderPath(
+				Environment.SpecialFolder.ApplicationData,
+				Environment.SpecialFolderOption.Create) + @"\" +
+				applicationDataDirectory;
+
+			string logFilePath = baseDataDirectory + "\\HttpTool.log";
+			string outputTemplate =
+				"[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] " +
+				"{Message:lj}{NewLine}{Exception}";
+
+			LoggerConfiguration configuration = new ();
+			LoggerSinkConfiguration sinkConfiguration = configuration.WriteTo;
+			sinkConfiguration.Console(LogEventLevel.Verbose, outputTemplate);
+			sinkConfiguration.File(
+				logFilePath, LogEventLevel.Verbose, outputTemplate);
+			Serilog.Log.Logger = configuration.CreateLogger();
+
+			LogManager.Adapter =
+				new Common.Logging.Serilog.SerilogFactoryAdapter();
+		}
+
 		private static int Main(string[] arguments)
 		{
 			int returnCode = -1;
@@ -137,7 +188,10 @@ namespace HttpTool
 
 			try
 			{
-				StartUp();
+				LogInitialization();
+				string version = GetVersion();
+
+				Log.Info("Starting HttpTools Version: " + version);
 
 				result = ValidateArguments(arguments);
 
@@ -272,19 +326,6 @@ namespace HttpTool
 				"HELP",
 				CultureInfo.InstalledUICulture);
 			Console.WriteLine(message);
-		}
-
-		private static void StartUp()
-		{
-			LoggerConfiguration configuration = new ();
-			LoggerSinkConfiguration sinkConfiguration = configuration.WriteTo;
-			sinkConfiguration.Console(LogEventLevel.Verbose, OutputTemplate);
-			sinkConfiguration.File(
-				LogFilePath, LogEventLevel.Verbose, OutputTemplate);
-			Serilog.Log.Logger = configuration.CreateLogger();
-
-			LogManager.Adapter =
-				new Common.Logging.Serilog.SerilogFactoryAdapter();
 		}
 
 		/////////////////////////////////////////////////////////////////////
