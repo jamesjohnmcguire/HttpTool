@@ -140,7 +140,7 @@ namespace WebTools
 			crawlConfiguration.MaxPagesToCrawl = 10000;
 			crawlConfiguration.DownloadableContentTypes =
 				"text/html, text/plain, image/jpeg, image/pjpeg, image/png";
-			crawlConfiguration.CrawlTimeoutSeconds = 100;
+			crawlConfiguration.CrawlTimeoutSeconds = 0;
 			crawlConfiguration.HttpRequestTimeoutInSeconds = 100;
 			crawlConfiguration.MinCrawlDelayPerDomainMilliSeconds = 1000;
 
