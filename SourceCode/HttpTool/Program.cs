@@ -14,6 +14,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Resources;
+using System.Threading.Tasks;
 using WebTools;
 
 [assembly: CLSCompliant(true)]
@@ -162,11 +163,11 @@ namespace HttpTool
 				new Common.Logging.Serilog.SerilogFactoryAdapter();
 		}
 
-		private static int Main(string[] arguments)
+		private static async Task<int> Main(string[] arguments)
 		{
 			int returnCode = -1;
 
-			bool resultCode = Run(arguments);
+			bool resultCode = await Run(arguments).ConfigureAwait(false);
 
 			if (true == resultCode)
 			{
@@ -182,7 +183,7 @@ namespace HttpTool
 		/// The main processing function.
 		/// </summary>
 		/////////////////////////////////////////////////////////////////////
-		private static bool Run(string[] arguments)
+		private static async Task<bool> Run(string[] arguments)
 		{
 			bool result;
 
@@ -209,7 +210,7 @@ namespace HttpTool
 					Log.InfoFormat(CultureInfo.CurrentCulture, message, url);
 
 					Uri uri = new (url);
-					tester.Test(uri);
+					await tester.Test(uri).ConfigureAwait(false);
 				}
 				else
 				{

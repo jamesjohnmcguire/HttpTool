@@ -124,7 +124,9 @@ namespace WebTools
 		/// Test the given URI.
 		/// </summary>
 		/// <param name="uri">The URI to test.</param>
-		public void Test(Uri uri)
+		/// <returns>A <see cref="Task"/> representing the asynchronous
+		/// soperation.</returns>
+		public async Task Test(Uri uri)
 		{
 			pageCount = 0;
 			baseUri = uri;
@@ -149,7 +151,8 @@ namespace WebTools
 			crawler.PageCrawlStarting += ProcessPageCrawlStarted;
 			crawler.PageCrawlCompleted += ProcessPageCrawlCompleted;
 
-			CrawlResult result = crawler.CrawlAsync(baseUri).Result;
+			CrawlResult result = await
+				crawler.CrawlAsync(baseUri).ConfigureAwait(false);
 
 			if (result.ErrorOccurred)
 			{
