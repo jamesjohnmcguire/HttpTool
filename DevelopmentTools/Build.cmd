@@ -3,9 +3,9 @@ CD ..\SourceCode
 
 IF EXIST Bin\Release\AnyCPU\NUL DEL /Q Bin\Release\AnyCPU\*.*
 
-CALL dotnet publish --configuration Release --output Binaries\Linux -p:PublishReadyToRun=true -p:PublishSingleFile=true --runtime linux-x64 --self-contained HttpTool
-CALL dotnet publish --configuration Release --output Binaries\MacOS -p:PublishReadyToRun=true -p:PublishSingleFile=true --runtime osx-x64 --self-contained HttpTool
-CALL dotnet publish --configuration Release --output Binaries\Windows -p:PublishReadyToRun=true -p:PublishSingleFile=true --runtime win-x64 --self-contained HttpTool
+dotnet publish --configuration Release --output Binaries\Linux-x64 -p:Platform="Any CPU" -p:PublishReadyToRun=true -p:PublishSingleFile=true --runtime linux-x64 --self-contained HttpTool
+dotnet publish --configuration Release --output Binaries\MacOS-x64 -p:Platform="Any CPU" -p:PublishReadyToRun=true -p:PublishSingleFile=true --runtime osx-x64 --self-contained HttpTool
+dotnet publish --configuration Release --output Binaries\Windows-x64 -p:Platform="Any CPU" -p:PublishReadyToRun=true -p:PublishSingleFile=true --runtime win-x64 --self-contained HttpTool
 
 IF "%1"=="release" GOTO release
 GOTO end
