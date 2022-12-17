@@ -1,4 +1,5 @@
 Tasks
+	HttpTool	Add which type of tests are being run in log
 	Change DLL names to match the following pattern: <Company>.<Component>.dll
 	fix CheckRedirects
 	Fix new warnings
