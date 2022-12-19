@@ -139,11 +139,11 @@ namespace WebTools
 				"Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
 				"AppleWebKit/537.36 (KHTML, like Gecko) " +
 				"Chrome/60.0.3112.113 Safari/537.36 bot";
-			crawlConfiguration.MaxPagesToCrawl = 10000;
+			crawlConfiguration.MaxPagesToCrawl = 0;
 			crawlConfiguration.DownloadableContentTypes =
 				"text/html, text/plain, image/jpeg, image/pjpeg, image/png";
 			crawlConfiguration.CrawlTimeoutSeconds = 0;
-			crawlConfiguration.HttpRequestTimeoutInSeconds = 100;
+			crawlConfiguration.HttpRequestTimeoutInSeconds = 120;
 			crawlConfiguration.MinCrawlDelayPerDomainMilliSeconds = 1000;
 
 			using PoliteWebCrawler crawler = new (crawlConfiguration);
