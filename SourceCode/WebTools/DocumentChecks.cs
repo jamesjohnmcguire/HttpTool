@@ -1,6 +1,6 @@
 ﻿/////////////////////////////////////////////////////////////////////////////
 // <copyright file="DocumentChecks.cs" company="James John McGuire">
-// Copyright © 2016 - 2022 James John McGuire. All Rights Reserved.
+// Copyright © 2016 - 2023 James John McGuire. All Rights Reserved.
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
 
