@@ -39,10 +39,6 @@ namespace WebTools
 		/// Initializes a new instance of the
 		/// <see cref="HttpClientExtended"/> class.
 		/// </summary>
-		[System.Diagnostics.CodeAnalysis.SuppressMessage(
-			"Reliability",
-			"CA2000:Dispose objects before losing scope",
-			Justification = "This is truely a special case; don't dispose.")]
 		public HttpClientExtended()
 		{
 			HttpClientHandler clientHandler = new ();
@@ -127,10 +123,10 @@ namespace WebTools
 		}
 
 		/// <summary>
-		/// Gets an error message.
+		/// Gets or sets an error message.
 		/// </summary>
 		/// <value>An error message.</value>
-		public ServerMessage Error { get {return error; } }
+		public ServerMessage Error { get => error; set => error = value; }
 
 		/// <summary>
 		/// Gets or sets the host server.
@@ -534,7 +530,6 @@ namespace WebTools
 				exception is System.Net.WebException ||
 				exception is UnauthorizedAccessException)
 			{
-
 				if (exception is HttpRequestException ||
 					exception is IOException ||
 					exception is System.Net.WebException ||
@@ -542,6 +537,7 @@ namespace WebTools
 				{
 					trySecondChance = true;
 				}
+
 				IsError = true;
 
 				Log.Error(CultureInfo.InvariantCulture, m => m(
