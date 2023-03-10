@@ -1,5 +1,6 @@
 Tasks
 	HttpTool	Add which type of tests are being run in log
+	Change namespace WebTools
 	Change DLL names to match the following pattern: <Company>.<Component>.dll
 	fix CheckRedirects
 	Fix new warnings
@@ -10,6 +11,12 @@ Tasks
 	Page had no content http://news.localhost/account/english/
 	HttpTool	Add README
 	HttpTool	Add binaries
+		HttpTool\SourceCode\WebTools\SiteTest.cs(23,12): error CS0579: Duplicate 'CLSCompliant' attribute [WebTools.csproj]
+		HttpTool\SourceCode\WebTools\ServerMessage.cs(17,3): error CS0246: The type or namespace name 'Android' could not be found (are you missing a using directive or an assembly reference?) [WebTools.csproj]
+		HttpTool\SourceCode\WebTools\ServerMessage.cs(17,28): error CS0246: The type or namespace name 'AllMembers' could not be found (are you missing a using directive or an assembly reference?) [WebTools.csproj]
+		HttpTool\SourceCode\WebTools\ServerMessage.cs(56,10): error CS0246: The type or namespace name 'Errors' could not be found (are you missing a using directive or an assembly reference?) [WebTools.csproj]
+		HttpTool\SourceCode\WebTools\HttpClientExtended.cs(133,10): error CS0246: The type or namespace name 'ServerMessage' could not be found (are you missing a using directive or an assembly reference?) [WebTools.csproj]
+		HttpTool\SourceCode\WebTools\HttpClientExtended.cs(35,11): error CS0246: The type or namespace name 'ServerMessage' could not be found (are you missing a using directive or an assembly reference?) [WebTools.csproj]
 reference?)
 		Package updates
 		CopyToCommands
