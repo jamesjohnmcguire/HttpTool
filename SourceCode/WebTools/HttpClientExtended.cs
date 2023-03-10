@@ -32,6 +32,9 @@ namespace WebTools
 		private readonly IList<KeyValuePair<string, string>>
 			defaultParameters = new List<KeyValuePair<string, string>>();
 
+		private ServerMessage error;
+		private bool trySecondChance;
+
 		/// <summary>
 		/// Initializes a new instance of the
 		/// <see cref="HttpClientExtended"/> class.
@@ -122,6 +125,12 @@ namespace WebTools
 				return defaultParameters;
 			}
 		}
+
+		/// <summary>
+		/// Gets an error message.
+		/// </summary>
+		/// <value>An error message.</value>
+		public ServerMessage Error { get {return error; } }
 
 		/// <summary>
 		/// Gets or sets the host server.
@@ -514,16 +523,25 @@ namespace WebTools
 			catch (Exception exception) when (exception is ArgumentException ||
 				exception is ArgumentNullException ||
 				exception is ArgumentOutOfRangeException ||
-				exception is IOException ||
 				exception is FileNotFoundException ||
 				exception is FormatException ||
 				exception is HttpRequestException ||
+				exception is InvalidOperationException ||
+				exception is IOException ||
 				exception is NotSupportedException ||
 				exception is NullReferenceException ||
 				exception is ObjectDisposedException ||
 				exception is System.Net.WebException ||
 				exception is UnauthorizedAccessException)
 			{
+
+				if (exception is HttpRequestException ||
+					exception is IOException ||
+					exception is System.Net.WebException ||
+					exception is UnauthorizedAccessException)
+				{
+					trySecondChance = true;
+				}
 				IsError = true;
 
 				Log.Error(CultureInfo.InvariantCulture, m => m(
