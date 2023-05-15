@@ -1,4 +1,5 @@
 Tasks
+	httptool	Set log location
 	HttpTool	Add which type of tests are being run in log
 	Change namespace WebTools
 	Change DLL names to match the following pattern: <Company>.<Component>.dll
