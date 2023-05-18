@@ -329,8 +329,7 @@ namespace WebTools
 			{
 				IsError = true;
 
-				Log.Error(CultureInfo.InvariantCulture, m => m(
-					exception.ToString()));
+				Log.Error(exception.ToString());
 
 				responseContent = SetExceptionResponse(exception);
 			}
@@ -345,7 +344,7 @@ namespace WebTools
 		/// <param name="requestUri">The request URI.</param>
 		/// <param name="parameters">The request parameters.</param>
 		/// <returns>The response message of the request.</returns>
-		public string Request(
+		public async Task<string> Request(
 			HttpMethod method,
 			Uri requestUri,
 			IList<KeyValuePair<string, string>> parameters)
@@ -371,7 +370,8 @@ namespace WebTools
 						requestUrl);
 					}
 
-					responseContent = GetResponse(method, requestUrl, content);
+					responseContent = await GetResponse(
+						method, requestUrl, content).ConfigureAwait(false);
 				}
 			}
 			catch (Exception exception) when (exception is ArgumentException ||
@@ -404,7 +404,7 @@ namespace WebTools
 		/// <param name="keys">The request keys.</param>
 		/// <param name="values">The request values.</param>
 		/// <returns>The response message of the request.</returns>
-		public string Request(
+		public async Task<string> Request(
 			HttpMethod method,
 			string query,
 			string[] keys,
@@ -423,7 +423,86 @@ namespace WebTools
 			}
 
 			Uri uri = new (query);
-			return Request(method, uri, parameters);
+			return await
+				Request(method, uri, parameters).ConfigureAwait(false);
+		}
+
+		/// <summary>
+		/// Upload a file to the server.
+		/// </summary>
+		/// <param name="endPoint">The end point API to sent file to.</param>
+		/// <param name="fieldName">The name of form field.</param>
+		/// <param name="fileName">The filename to send.</param>
+		/// <param name="parameters">The parameters to send.</param>
+		/// <returns>A message body of the response.</returns>
+		public virtual async Task<string> UploadFile(
+			string endPoint,
+			string fieldName,
+			string fileName,
+			IList<KeyValuePair<string, string>> parameters)
+		{
+			string response = null;
+
+			if (!File.Exists(fileName))
+			{
+				Log.Error("UploadFile File doesn't exist!: " + fileName);
+			}
+			else
+			{
+				Log.Info("UploadFile Sending data: " + fileName);
+			}
+
+			string requestUrl = string.Format(
+				CultureInfo.InvariantCulture,
+				@"{0}{1}",
+				Host,
+				endPoint);
+
+			// make up the form data
+			using (MultipartFormDataContent content = new ())
+			{
+				content.Headers.ContentType.MediaType = "multipart/form-data";
+
+				// add the file
+				using FileStream fileStream = new (fileName, FileMode.Open);
+				using StreamContent stream = new (fileStream);
+				content.Add(stream, fieldName, fileName);
+
+				IList<StringContent> contents =
+					new List<StringContent>();
+
+				try
+				{
+					if (parameters != null)
+					{
+						foreach (KeyValuePair<string, string> keypair in
+							parameters)
+						{
+							// gets disposed in finally
+							StringContent parameter = new (keypair.Value);
+							contents.Add(parameter);
+
+							content.Add(parameter, keypair.Key);
+						}
+					}
+
+					using HttpResponseMessage httpResponseMessage =
+						await Client.PostAsync(
+							requestUrl, content).ConfigureAwait(false);
+					response = await httpResponseMessage.Content.
+						ReadAsStringAsync().ConfigureAwait(false);
+				}
+				finally
+				{
+					foreach (StringContent param in contents.ToList())
+					{
+						// contents.Remove(param);
+						param.Dispose();
+					}
+				}
+			}
+
+			return response;
 		}
 
 		/// <summary>
@@ -547,20 +626,19 @@ namespace WebTools
 			return responseContent;
 		}
 
-		private string GetResponse(
+		private async Task<string> GetResponse(
 			HttpMethod method,
 			string requestUrl,
 			FormUrlEncodedContent content)
 		{
-			string responseContent;
+			string responseContent = null;
+			IsError = false;
 
 			try
 			{
-				IsError = false;
-				ResponseMessage = null;
-
 				if (method == HttpMethod.Post)
 				{
+					HttpResponseMessage response = null;
 					Uri uri = new (requestUrl);
 
 					// save this as clients may want know this
@@ -568,72 +646,169 @@ namespace WebTools
 					RequestMessage.RequestUri = uri;
 					RequestMessage.Method = method;
 
-					ResponseMessage = client.PostAsync(uri, content).Result;
-					int statusCode = (int)ResponseMessage.StatusCode;
-
-					// We want to handle redirects ourselves so that we can
-					// determine the final redirect Location (via header)
-					if (statusCode >= 300 && statusCode <= 399)
+//					ResponseMessage = client.PostAsync(uri, content).Result;
+					using (response = await client.PostAsync(uri, content).
+						ConfigureAwait(false))
 					{
-						var redirectUri = ResponseMessage.Headers.Location;
-						if (!redirectUri.IsAbsoluteUri)
+						responseContent = await
+							response.Content.ReadAsStringAsync().
+							ConfigureAwait(false);
+
+						int statusCode = (int)response.StatusCode;
+
+						// We want to handle redirects ourselves so that we can
+						// determine the final redirect Location (via header)
+						if (statusCode >= 300 && statusCode <= 399)
 						{
-							string authority =
-								RequestMessage.RequestUri.GetLeftPart(
-									UriPartial.Authority);
-							redirectUri = new Uri(authority + redirectUri);
+							var redirectUri = response.Headers.Location;
+							if (!redirectUri.IsAbsoluteUri)
+							{
+								string authority =
+									RequestMessage.RequestUri.GetLeftPart(
+										UriPartial.Authority);
+								redirectUri = new Uri(authority + redirectUri);
+							}
+
+							string message = string.Format(
+								CultureInfo.InvariantCulture,
+								"Redirecting to {0}",
+								redirectUri);
+
+							Log.Info(CultureInfo.InvariantCulture, m => m(
+								message));
+
+							Log.Info(CultureInfo.InvariantCulture, m => m(
+								message));
+
+							responseContent = await
+								GetResponse(method, requestUrl, content).
+								ConfigureAwait(false);;
 						}
-
-						string message = string.Format(
-							CultureInfo.InvariantCulture,
-							"Redirecting to {0}",
-							redirectUri);
-
-						Log.Info(CultureInfo.InvariantCulture, m => m(
-							message));
-
-						responseContent =
-							GetResponse(method, requestUrl, content);
+						else if (!ResponseMessage.IsSuccessStatusCode)
+						{
+							Log.Error(CultureInfo.InvariantCulture, m => m(
+								"status code not ok"));
+						}
 					}
-					else if (!ResponseMessage.IsSuccessStatusCode)
+
+					responseContent = await
+						GetResponse(method, requestUrl, content).
+						ConfigureAwait(false); ;
+
+					if (false == response.IsSuccessStatusCode)
 					{
-						Log.Error(CultureInfo.InvariantCulture, m => m(
-							"status code not ok"));
+						IsError = true;
+
+						responseContent = HandleError(response, responseContent);
+
+						Log.ErrorFormat(
+							CultureInfo.InvariantCulture,
+							"error: {0}",
+							ResponseMessage.ReasonPhrase);
 					}
-				}
-
-				responseContent = ResponseMessage.Content.ReadAsStringAsync().Result;
-
-				if (false == ResponseMessage.IsSuccessStatusCode)
-				{
-					IsError = true;
-
-					Log.ErrorFormat(
-						CultureInfo.InvariantCulture,
-						"error: {0}",
-						ResponseMessage.ReasonPhrase);
 				}
 			}
 			catch (Exception exception) when (exception is ArgumentException ||
 				exception is ArgumentNullException ||
 				exception is ArgumentOutOfRangeException ||
 				exception is FileNotFoundException ||
+				exception is FormatException ||
+				exception is HttpRequestException ||
+				exception is InvalidOperationException ||
 				exception is IOException ||
 				exception is JsonSerializationException ||
+				exception is NullReferenceException ||
 				exception is NotSupportedException ||
 				exception is ObjectDisposedException ||
-				exception is System.FormatException ||
+				exception is System.Net.WebException ||
 				exception is UnauthorizedAccessException)
 			{
 				IsError = true;
 
-				Log.Error(CultureInfo.InvariantCulture, m => m(
-					exception.ToString()));
+				Log.Error(exception.ToString());
+
+				if (exception is HttpRequestException ||
+					exception is IOException ||
+					exception is System.Net.WebException ||
+					exception is UnauthorizedAccessException)
+				{
+					trySecondChance = true;
+				}
 
 				responseContent = SetExceptionResponse(exception);
 			}
 
 			return responseContent;
+		}
+
+		private async Task<string> GetResponse(
+			HttpMethod method,
+			string requestUrl,
+			IList<KeyValuePair<string, string>> parameters)
+		{
+			string responseContent = null;
+			IsError = false;
+
+			using FormUrlEncodedContent content = new (parameters);
+
+			responseContent = await GetResponse(method,requestUrl, content).
+				ConfigureAwait(false);
+
+			return responseContent;
+		}
+
+		private string HandleError(
+			HttpResponseMessage response, string content)
+		{
+			string errorResponse;
+			IsError = true;
+
+			Log.Error(response.ReasonPhrase);
+
+			bool validJson = IsValidJson(content);
+
+			if (validJson == true)
+			{
+				errorResponse = content;
+
+				error = JsonConvert.DeserializeObject<ServerMessage>(content);
+			}
+			else
+			{
+				string errorStatus = response.StatusCode.ToString();
+				string details = JsonConvert.SerializeObject(content);
+
+				string json = "{{ \"error\":" +
+				"\"{0}\",\"error_description\":\"{1}\"}}";
+				errorResponse = string.Format(
+					CultureInfo.InvariantCulture,
+					json,
+					errorStatus,
+					details);
+
+				error = JsonConvert.DeserializeObject<ServerMessage>(
+					errorResponse);
+			}
+
+			return errorResponse;
+		}
+
+		public static bool IsValidJson(string test)
+		{
+			bool isValid = false;
+
+			try
+			{
+				ServerMessage response =
+					JsonConvert.DeserializeObject<ServerMessage>(test);
+
+				isValid = true;
+			}
+			catch (JsonException)
+			{
+			}
+
+			return isValid;
 		}
 	}
 }
