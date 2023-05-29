@@ -26,7 +26,7 @@ namespace WebTools.Test
 		}
 
 		[Test]
-		public void TestHttpMinerExtended()
+		public async Task TestHttpMinerExtended()
 		{
 			HttpClientExtended client = new HttpClientExtended();
 
@@ -40,7 +40,8 @@ namespace WebTools.Test
 			pair = new("key2", "value2");
 			parameters.Add(pair);
 
-			string response = client.Request(HttpMethod.Post, uri, parameters);
+			string response = await client.Request(
+				HttpMethod.Post, uri, parameters).ConfigureAwait(false);
 
 			Assert.NotNull(response);
 		}
