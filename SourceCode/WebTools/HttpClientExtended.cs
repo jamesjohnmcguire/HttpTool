@@ -288,20 +288,20 @@ namespace WebTools
 		/// <summary>
 		/// Submit an HTTP request.
 		/// </summary>
-		/// <param name="method">The request method.</param>
-		/// <param name="requestUri">The request URI.</param>
-		/// <param name="parameters">The request parameters.</param>
+		/// <param name="method">The HTTP method to use.</param>
+		/// <param name="uri">The URI to request.</param>
+		/// <param name="parameters">The parameters to send.</param>
 		/// <returns>The response message of the request.</returns>
-		public async Task<string> Request(
+		public virtual async Task<string> Request(
 			HttpMethod method,
-			Uri requestUri,
+			Uri uri,
 			IList<KeyValuePair<string, string>> parameters)
 		{
 			string responseContent = null;
 
 			try
 			{
-				if (requestUri != null)
+				if (endPoint != null && parameters != null)
 				{
 					using FormUrlEncodedContent content = new (parameters);
 
@@ -320,25 +320,42 @@ namespace WebTools
 
 					responseContent = await GetResponse(
 						method, requestUrl, content).ConfigureAwait(false);
+
+					if (trySecondChance == true)
+					{
+						trySecondChance = false;
+
+					responseContent = await GetResponse(
+						method, requestUrl, content).ConfigureAwait(false);
+					}
 				}
 			}
-			catch (Exception exception) when (exception is ArgumentException ||
+			catch (Exception exception) when
+				(exception is ArgumentException ||
 				exception is ArgumentNullException ||
 				exception is ArgumentOutOfRangeException ||
 				exception is FileNotFoundException ||
 				exception is IOException ||
-				exception is JsonSerializationException ||
+				exception is JsonException ||
 				exception is NotSupportedException ||
 				exception is ObjectDisposedException ||
 				exception is System.FormatException ||
+				exception is TaskCanceledException ||
 				exception is UnauthorizedAccessException)
 			{
 				IsError = true;
 
-				Log.Error(CultureInfo.InvariantCulture, m => m(
-					exception.ToString()));
+				Log.Error(exception.ToString());
 
 				responseContent = SetExceptionResponse(exception);
+			}
+			catch (Exception exception)
+			{
+				IsError = true;
+
+				Log.Error(exception.ToString());
+
+				throw;
 			}
 
 			return responseContent;
