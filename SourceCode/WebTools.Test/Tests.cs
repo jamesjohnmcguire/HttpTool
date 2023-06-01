@@ -63,7 +63,7 @@ namespace WebTools.Test
 
 			string temporaryPath = Path.GetTempFileName();
 
-			string response = await client.PostFile(
+			string response = await client.UploadFile(
 				"https://www.digitalzenworks.com",
 				"test",
 				temporaryPath).ConfigureAwait(false);
