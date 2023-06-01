@@ -39,6 +39,10 @@ namespace WebTools
 		/// Initializes a new instance of the
 		/// <see cref="HttpClientExtended"/> class.
 		/// </summary>
+		[System.Diagnostics.CodeAnalysis.SuppressMessage(
+			"Reliability",
+			"CA2000:Dispose objects before losing scope",
+			Justification = "HttpClientHandler is exceptional case")]
 		public HttpClientExtended()
 		{
 			HttpClientHandler clientHandler = new ();
@@ -194,62 +198,6 @@ namespace WebTools
 		public async Task<string> GetWebPage(Uri uri)
 		{
 			string response = await Request(uri).ConfigureAwait(false);
-
-			return response;
-		}
-
-		/// <summary>
-		/// Posts a file.
-		/// </summary>
-		/// <param name="endPoint">The end point to send to.</param>
-		/// <param name="fieldName">The name of field.</param>
-		/// <param name="filePath">The path of the file.</param>
-		/// <returns>The response of the request.</returns>
-		public async Task<string> PostFile(
-			string endPoint, string fieldName, string filePath)
-		{
-			string response = null;
-
-			if (!File.Exists(filePath))
-			{
-				Log.Error("PostFile File doesn't exist!: " + filePath);
-			}
-			else
-			{
-				Log.Info("PostFile Sending data: " + filePath);
-
-				client.DefaultRequestHeaders.ConnectionClose = true;
-
-				var stream = File.OpenRead(filePath);
-
-				using HttpContent fileStreamContent =
-					new StreamContent(stream);
-
-				using var formData = new MultipartFormDataContent();
-
-				formData.Add(fileStreamContent, fieldName, filePath);
-
-				Uri uri = new (endPoint);
-				HttpResponseMessage responseMessage = await client.PostAsync(
-					uri, formData).ConfigureAwait(false);
-
-				if (!responseMessage.IsSuccessStatusCode)
-				{
-					Log.Error("PostFile failed");
-				}
-
-				response = await responseMessage.Content.ReadAsStringAsync().
-					ConfigureAwait(false);
-
-				string fileName = Path.GetFileName(filePath);
-				string message = string.Format(
-					CultureInfo.InvariantCulture,
-					"{0} - Server response: {1}",
-					fileName,
-					response);
-
-				Log.Info(message);
-			}
 
 			return response;
 		}
@@ -500,6 +448,62 @@ namespace WebTools
 						param.Dispose();
 					}
 				}
+			}
+
+			return response;
+		}
+
+		/// <summary>
+		/// Posts a file.
+		/// </summary>
+		/// <param name="endPoint">The end point to send to.</param>
+		/// <param name="fieldName">The name of field.</param>
+		/// <param name="filePath">The path of the file.</param>
+		/// <returns>The response of the request.</returns>
+		public async Task<string> UploadFile(
+			string endPoint, string fieldName, string filePath)
+		{
+			string response = null;
+
+			if (!File.Exists(filePath))
+			{
+				Log.Error("UploadFile File doesn't exist!: " + filePath);
+			}
+			else
+			{
+				Log.Info("UploadFile Sending data: " + filePath);
+
+				client.DefaultRequestHeaders.ConnectionClose = true;
+
+				var stream = File.OpenRead(filePath);
+
+				using HttpContent fileStreamContent =
+					new StreamContent(stream);
+
+				using var formData = new MultipartFormDataContent();
+
+				formData.Add(fileStreamContent, fieldName, filePath);
+
+				Uri uri = new (endPoint);
+				HttpResponseMessage responseMessage = await client.PostAsync(
+					uri, formData).ConfigureAwait(false);
+
+				if (!responseMessage.IsSuccessStatusCode)
+				{
+					Log.Error("UploadFile failed");
+				}
+
+				response = await responseMessage.Content.ReadAsStringAsync().
+					ConfigureAwait(false);
+
+				string fileName = Path.GetFileName(filePath);
+				string message = string.Format(
+					CultureInfo.InvariantCulture,
+					"{0} - Server response: {1}",
+					fileName,
+					response);
+
+				Log.Info(message);
 			}
 
 			return response;
