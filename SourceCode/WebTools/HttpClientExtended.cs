@@ -158,6 +158,30 @@ namespace WebTools
 		public HttpResponseMessage ResponseMessage { get; set; }
 
 		/// <summary>
+		/// Is valid json method.
+		/// </summary>
+		/// <param name="test">The string to test.</param>
+		/// <returns>A value indicating whether the text is valid json
+		/// or not.</returns>
+		public static bool IsValidJson(string test)
+		{
+			bool isValid = false;
+
+			try
+			{
+				ServerMessage response =
+					JsonConvert.DeserializeObject<ServerMessage>(test);
+
+				isValid = true;
+			}
+			catch (JsonException)
+			{
+			}
+
+			return isValid;
+		}
+
+		/// <summary>
 		/// Add a cookie into the cookie jar.
 		/// </summary>
 		/// <param name="name">The name of the cookie.</param>
@@ -301,11 +325,11 @@ namespace WebTools
 
 			try
 			{
-				if (endPoint != null && parameters != null)
+				if (uri != null && parameters != null)
 				{
 					using FormUrlEncodedContent content = new (parameters);
 
-					string requestUrl = requestUri.AbsoluteUri;
+					string requestUrl = uri.AbsoluteUri;
 					bool isComplete = Uri.IsWellFormedUriString(
 						requestUrl, UriKind.Absolute);
 
@@ -325,8 +349,8 @@ namespace WebTools
 					{
 						trySecondChance = false;
 
-					responseContent = await GetResponse(
-						method, requestUrl, content).ConfigureAwait(false);
+						responseContent = await GetResponse(
+							method, requestUrl, content).ConfigureAwait(false);
 					}
 				}
 			}
@@ -444,16 +468,20 @@ namespace WebTools
 							parameters)
 						{
 							// gets disposed in finally
+#pragma warning disable CA2000 // Dispose objects before losing scope
 							StringContent parameter = new (keypair.Value);
+#pragma warning restore CA2000 // Dispose objects before losing scope
 							contents.Add(parameter);
 
 							content.Add(parameter, keypair.Key);
 						}
 					}
 
+					Uri uri = new (requestUrl);
+
 					using HttpResponseMessage httpResponseMessage =
 						await Client.PostAsync(
-							requestUrl, content).ConfigureAwait(false);
+							uri, content).ConfigureAwait(false);
 					response = await httpResponseMessage.Content.
 						ReadAsStringAsync().ConfigureAwait(false);
 				}
@@ -667,7 +695,6 @@ namespace WebTools
 					RequestMessage.RequestUri = uri;
 					RequestMessage.Method = method;
 
-//					ResponseMessage = client.PostAsync(uri, content).Result;
 					using (response = await client.PostAsync(uri, content).
 						ConfigureAwait(false))
 					{
@@ -703,7 +730,7 @@ namespace WebTools
 
 							responseContent = await
 								GetResponse(method, requestUrl, content).
-								ConfigureAwait(false);;
+								ConfigureAwait(false);
 						}
 						else if (!ResponseMessage.IsSuccessStatusCode)
 						{
@@ -714,7 +741,7 @@ namespace WebTools
 
 					responseContent = await
 						GetResponse(method, requestUrl, content).
-						ConfigureAwait(false); ;
+						ConfigureAwait(false);
 
 					if (false == response.IsSuccessStatusCode)
 					{
@@ -772,7 +799,7 @@ namespace WebTools
 
 			using FormUrlEncodedContent content = new (parameters);
 
-			responseContent = await GetResponse(method,requestUrl, content).
+			responseContent = await GetResponse(method, requestUrl, content).
 				ConfigureAwait(false);
 
 			return responseContent;
@@ -812,24 +839,6 @@ namespace WebTools
 			}
 
 			return errorResponse;
-		}
-
-		public static bool IsValidJson(string test)
-		{
-			bool isValid = false;
-
-			try
-			{
-				ServerMessage response =
-					JsonConvert.DeserializeObject<ServerMessage>(test);
-
-				isValid = true;
-			}
-			catch (JsonException)
-			{
-			}
-
-			return isValid;
 		}
 	}
 }
