@@ -278,17 +278,21 @@ namespace WebTools
 			return error;
 		}
 
-		private static bool URLExists(Uri url)
+		private async Task<bool> URLExists(Uri url)
 		{
-			bool result = true;
-			HttpWebResponse response = null;
+			bool result = false;
 
 			try
 			{
-				WebRequest webRequest = WebRequest.Create(url);
-				webRequest.Timeout = 5000; // miliseconds
-				webRequest.Method = "HEAD";
-				response = (HttpWebResponse)webRequest.GetResponse();
+				HttpClient httpClient = client.Client;
+
+				// Do only Head request to avoid download full file.
+				using HttpRequestMessage message =
+					new (HttpMethod.Head, url);
+				HttpResponseMessage response =
+					await httpClient.SendAsync(message).ConfigureAwait(false);
+
+				result = response.IsSuccessStatusCode;
 			}
 			catch (Exception exception) when
 				(exception is ArgumentException ||
@@ -308,13 +312,6 @@ namespace WebTools
 				result = false;
 				Log.Error(CultureInfo.InvariantCulture, m => m(
 					exception.ToString()));
-			}
-			finally
-			{
-				if (response != null)
-				{
-					response.Close();
-				}
 			}
 
 			return result;
@@ -382,7 +379,7 @@ namespace WebTools
 			return hasContent;
 		}
 
-		private bool CheckImages(CrawledPage crawledPage)
+		private async Task<bool> CheckImages(CrawledPage crawledPage)
 		{
 			bool result = true;
 
@@ -413,7 +410,8 @@ namespace WebTools
 								GetAbsoluteUrlString(baseUrl, source.Value);
 
 							Uri uri = new (imageUrl);
-							bool exists = URLExists(uri);
+							bool exists = await
+								URLExists(uri).ConfigureAwait(false);
 
 							if (false == exists)
 							{
@@ -562,7 +560,7 @@ namespace WebTools
 						{
 							contentErrors = !CheckContentErrors(crawledPage);
 							parseErrors = !CheckParseErrors(crawledPage);
-							imagesCheck = CheckImages(crawledPage);
+							imagesCheck = await CheckImages(crawledPage).ConfigureAwait(false);
 #if NETSTANDARD2_0
 							bool contains = url.Contains("localhost");
 #else
