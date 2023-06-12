@@ -1,6 +1,11 @@
 Tasks
-	httptool	Set log location
-	HttpTool	Add which type of tests are being run in log
+	Flush out API - Consistent naming
+	Flush out API - returning full requests, or just body (as string)
+	Flush out API - string vs Uri
+	Host wrapping should happen in a derived or client class
+	secondChange - Needs to stay class field
+	Set log location
+	Add which type of tests are being run in log
 	Change namespace WebTools
 	Change DLL names to match the following pattern: <Company>.<Component>.dll
 	fix CheckRedirects
@@ -12,6 +17,8 @@ Tasks
 	Page had no content http://news.localhost/account/english/
 	HttpTool	Add README
 	HttpTool	Add binaries
+		Flush out API - endPoint vs requestUri
+		Decide on logging
 		HttpTool\SourceCode\WebTools\SiteTest.cs(23,12): error CS0579: Duplicate 'CLSCompliant' attribute [WebTools.csproj]
 		HttpTool\SourceCode\WebTools\ServerMessage.cs(17,3): error CS0246: The type or namespace name 'Android' could not be found (are you missing a using directive or an assembly reference?) [WebTools.csproj]
 		HttpTool\SourceCode\WebTools\ServerMessage.cs(17,28): error CS0246: The type or namespace name 'AllMembers' could not be found (are you missing a using directive or an assembly reference?) [WebTools.csproj]
