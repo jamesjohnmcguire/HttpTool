@@ -214,19 +214,6 @@ namespace WebTools
 		}
 
 		/// <summary>
-		/// Gets the response body content of the given uri.
-		/// </summary>
-		/// <param name="uri">The uri of web page.</param>
-		/// <returns>A <see cref="Task{TResult}"/> representing the result
-		/// of the asynchronous operation.</returns>
-		public async Task<string> GetWebPage(Uri uri)
-		{
-			string response = await GetUriBody(uri).ConfigureAwait(false);
-
-			return response;
-		}
-
-		/// <summary>
 		/// Get the request's response.
 		/// </summary>
 		/// <param name="uri">The URI of the request.</param>
