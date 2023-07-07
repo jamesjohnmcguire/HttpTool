@@ -321,46 +321,6 @@ namespace WebTools
 		}
 
 		/// <summary>
-		/// Get the request's response.
-		/// </summary>
-		/// <param name="uri">The URI of the request.</param>
-		/// <returns>The response of the request.</returns>
-		public HttpResponseMessage RequestGetResponse(Uri uri)
-		{
-			HttpResponseMessage response = client.GetAsync(uri).Result;
-
-			return response;
-		}
-
-		/// <summary>
-		/// Get the request's response as a string.
-		/// </summary>
-		/// <param name="uri">The URI of the request.</param>
-		/// <returns>The response of the request.</returns>
-		public string RequestGetResponseAsString(Uri uri)
-		{
-			string response = string.Empty;
-			try
-			{
-				response = client.GetStringAsync(uri).Result;
-			}
-			catch (TaskCanceledException exception)
-			{
-				Log.Error(CultureInfo.InvariantCulture, m => m(
-					exception.ToString()));
-
-				if (false ==
-					exception.CancellationToken.IsCancellationRequested)
-				{
-					Log.Error(CultureInfo.InvariantCulture, m => m(
-						"likely a time out"));
-				}
-			}
-
-			return response;
-		}
-
-		/// <summary>
 		/// Requests the body of the given URI.
 		/// </summary>
 		/// <param name="uri">The uri of web page.</param>
@@ -396,6 +356,46 @@ namespace WebTools
 			}
 
 			return responseContent;
+		}
+
+		/// <summary>
+		/// Request the URI response.
+		/// </summary>
+		/// <param name="uri">The URI of the request.</param>
+		/// <returns>The response of the request.</returns>
+		public HttpResponseMessage RequestUriResponse(Uri uri)
+		{
+			HttpResponseMessage response = client.GetAsync(uri).Result;
+
+			return response;
+		}
+
+		/// <summary>
+		/// Request the URI response as a string.
+		/// </summary>
+		/// <param name="uri">The URI of the request.</param>
+		/// <returns>The response of the request.</returns>
+		public string RequestUriResponseAsString(Uri uri)
+		{
+			string response = string.Empty;
+			try
+			{
+				response = client.GetStringAsync(uri).Result;
+			}
+			catch (TaskCanceledException exception)
+			{
+				Log.Error(CultureInfo.InvariantCulture, m => m(
+					exception.ToString()));
+
+				if (false ==
+					exception.CancellationToken.IsCancellationRequested)
+				{
+					Log.Error(CultureInfo.InvariantCulture, m => m(
+						"likely a time out"));
+				}
+			}
+
+			return response;
 		}
 
 		/// <summary>

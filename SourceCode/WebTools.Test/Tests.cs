@@ -52,7 +52,7 @@ namespace WebTools.Test
 			HttpClientExtended client = new HttpClientExtended();
 
 			Uri uri = new("https://www.digitalzenworks.com");
-			HttpResponseMessage response = client.RequestGetResponse(uri);
+			HttpResponseMessage response = client.RequestUriResponse(uri);
 
 			Assert.NotNull(response);
 		}
