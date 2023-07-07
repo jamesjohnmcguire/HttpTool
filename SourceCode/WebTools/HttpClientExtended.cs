@@ -214,46 +214,6 @@ namespace WebTools
 		}
 
 		/// <summary>
-		/// Get the request's response.
-		/// </summary>
-		/// <param name="uri">The URI of the request.</param>
-		/// <returns>The response of the request.</returns>
-		public HttpResponseMessage RequestGetResponse(Uri uri)
-		{
-			HttpResponseMessage response = client.GetAsync(uri).Result;
-
-			return response;
-		}
-
-		/// <summary>
-		/// Get the request's response as a string.
-		/// </summary>
-		/// <param name="uri">The URI of the request.</param>
-		/// <returns>The response of the request.</returns>
-		public string RequestGetResponseAsString(Uri uri)
-		{
-			string response = string.Empty;
-			try
-			{
-				response = client.GetStringAsync(uri).Result;
-			}
-			catch (TaskCanceledException exception)
-			{
-				Log.Error(CultureInfo.InvariantCulture, m => m(
-					exception.ToString()));
-
-				if (false ==
-					exception.CancellationToken.IsCancellationRequested)
-				{
-					Log.Error(CultureInfo.InvariantCulture, m => m(
-						"likely a time out"));
-				}
-			}
-
-			return response;
-		}
-
-		/// <summary>
 		/// Requests the body of the given url.
 		/// </summary>
 		/// <param name="uri">The uri of web page.</param>
@@ -275,16 +235,11 @@ namespace WebTools
 			catch (Exception exception) when
 				(exception is ArgumentException ||
 				exception is ArgumentNullException ||
-				exception is ArgumentOutOfRangeException ||
-				exception is FileNotFoundException ||
 				exception is FormatException ||
 				exception is HttpRequestException ||
-				exception is IOException ||
-				exception is JsonException ||
-				exception is NotSupportedException ||
+				exception is InvalidOperationException ||
 				exception is ObjectDisposedException ||
-				exception is TaskCanceledException ||
-				exception is UnauthorizedAccessException)
+				exception is TaskCanceledException)
 			{
 				IsError = true;
 
@@ -401,6 +356,46 @@ namespace WebTools
 			Uri uri = new (query);
 			return await
 				Request(method, uri, parameters).ConfigureAwait(false);
+		}
+
+		/// <summary>
+		/// Get the request's response.
+		/// </summary>
+		/// <param name="uri">The URI of the request.</param>
+		/// <returns>The response of the request.</returns>
+		public HttpResponseMessage RequestGetResponse(Uri uri)
+		{
+			HttpResponseMessage response = client.GetAsync(uri).Result;
+
+			return response;
+		}
+
+		/// <summary>
+		/// Get the request's response as a string.
+		/// </summary>
+		/// <param name="uri">The URI of the request.</param>
+		/// <returns>The response of the request.</returns>
+		public string RequestGetResponseAsString(Uri uri)
+		{
+			string response = string.Empty;
+			try
+			{
+				response = client.GetStringAsync(uri).Result;
+			}
+			catch (TaskCanceledException exception)
+			{
+				Log.Error(CultureInfo.InvariantCulture, m => m(
+					exception.ToString()));
+
+				if (false ==
+					exception.CancellationToken.IsCancellationRequested)
+				{
+					Log.Error(CultureInfo.InvariantCulture, m => m(
+						"likely a time out"));
+				}
+			}
+
+			return response;
 		}
 
 		/// <summary>
