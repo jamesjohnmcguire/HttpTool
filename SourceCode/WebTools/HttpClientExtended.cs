@@ -214,44 +214,6 @@ namespace WebTools
 		}
 
 		/// <summary>
-		/// Requests the body of the given url.
-		/// </summary>
-		/// <param name="uri">The uri of web page.</param>
-		/// <returns>The response message of the request.</returns>
-		public async Task<string> GetUriBody(Uri uri)
-		{
-			string responseContent = null;
-
-			try
-			{
-				uri = GetCompleteUri(uri);
-
-				if (uri != null)
-				{
-					responseContent = await client.GetStringAsync(uri).
-						ConfigureAwait(false);
-				}
-			}
-			catch (Exception exception) when
-				(exception is ArgumentException ||
-				exception is ArgumentNullException ||
-				exception is FormatException ||
-				exception is HttpRequestException ||
-				exception is InvalidOperationException ||
-				exception is ObjectDisposedException ||
-				exception is TaskCanceledException)
-			{
-				IsError = true;
-
-				Log.Error(exception.ToString());
-
-				responseContent = SetExceptionResponse(exception);
-			}
-
-			return responseContent;
-		}
-
-		/// <summary>
 		/// Submit an HTTP request.
 		/// </summary>
 		/// <param name="method">The HTTP method to use.</param>
@@ -396,6 +358,44 @@ namespace WebTools
 			}
 
 			return response;
+		}
+
+		/// <summary>
+		/// Requests the body of the given URI.
+		/// </summary>
+		/// <param name="uri">The uri of web page.</param>
+		/// <returns>The response message of the request.</returns>
+		public async Task<string> RequestUriBody(Uri uri)
+		{
+			string responseContent = null;
+
+			try
+			{
+				uri = GetCompleteUri(uri);
+
+				if (uri != null)
+				{
+					responseContent = await client.GetStringAsync(uri).
+						ConfigureAwait(false);
+				}
+			}
+			catch (Exception exception) when
+				(exception is ArgumentException ||
+				exception is ArgumentNullException ||
+				exception is FormatException ||
+				exception is HttpRequestException ||
+				exception is InvalidOperationException ||
+				exception is ObjectDisposedException ||
+				exception is TaskCanceledException)
+			{
+				IsError = true;
+
+				Log.Error(exception.ToString());
+
+				responseContent = SetExceptionResponse(exception);
+			}
+
+			return responseContent;
 		}
 
 		/// <summary>
