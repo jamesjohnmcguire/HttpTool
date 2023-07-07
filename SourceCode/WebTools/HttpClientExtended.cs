@@ -221,7 +221,7 @@ namespace WebTools
 		/// of the asynchronous operation.</returns>
 		public async Task<string> GetWebPage(Uri uri)
 		{
-			string response = await Request(uri).ConfigureAwait(false);
+			string response = await GetUriBody(uri).ConfigureAwait(false);
 
 			return response;
 		}
@@ -271,7 +271,7 @@ namespace WebTools
 		/// </summary>
 		/// <param name="uri">The uri of web page.</param>
 		/// <returns>The response message of the request.</returns>
-		public async Task<string> Request(Uri uri)
+		public async Task<string> GetUriBody(Uri uri)
 		{
 			string responseContent = null;
 
@@ -614,6 +614,7 @@ namespace WebTools
 			if (uri != null)
 			{
 				string requestUrl = uri.AbsoluteUri;
+
 				bool isComplete = Uri.IsWellFormedUriString(
 					requestUrl, UriKind.Absolute);
 

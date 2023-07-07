@@ -20,7 +20,7 @@ namespace WebTools.Test
 
 			Uri uri = new("https://www.digitalzenworks.com");
 			string response =
-				await client.Request(uri).ConfigureAwait(false);
+				await client.GetUriBody(uri).ConfigureAwait(false);
 
 			Assert.NotNull(response);
 		}

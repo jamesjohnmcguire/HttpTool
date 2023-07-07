@@ -667,7 +667,7 @@ namespace WebTools
 					url);
 				Uri uri = new (validator);
 				string response =
-					await client.Request(uri).ConfigureAwait(false);
+					await client.GetUriBody(uri).ConfigureAwait(false);
 
 				if (!string.IsNullOrWhiteSpace(response))
 				{
