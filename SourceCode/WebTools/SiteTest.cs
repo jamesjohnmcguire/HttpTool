@@ -4,6 +4,7 @@
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
 
+using Abot2.Core;
 using Abot2.Crawler;
 using Abot2.Poco;
 using Common.Logging;
@@ -20,7 +21,7 @@ using System.Reflection;
 using System.Resources;
 using System.Threading.Tasks;
 
-[assembly: CLSCompliant(true)]
+[assembly: CLSCompliant(false)]
 
 namespace WebTools
 {
@@ -48,6 +49,8 @@ namespace WebTools
 
 		private readonly HttpClientExtended client;
 
+		private readonly IDictionary<string, string> cookies;
+
 		private readonly IList<string> imagesChecked;
 
 		private readonly IList<string> pagesCrawed;
@@ -64,6 +67,7 @@ namespace WebTools
 			pagesCrawed = new List<string>();
 			imagesChecked = new List<string>();
 			client = new HttpClientExtended();
+			cookies = new Dictionary<string, string>();
 		}
 
 		/// <summary>
@@ -112,6 +116,22 @@ namespace WebTools
 		}
 
 		/// <summary>
+		/// Adds the cookie.
+		/// </summary>
+		/// <param name="cookie">The cookie.</param>
+		public void AddCookie(string cookie)
+		{
+			if (!string.IsNullOrWhiteSpace(cookie))
+			{
+				string[] parts = cookie.Split('=');
+				string name = parts[0];
+				string value = parts[1];
+
+				cookies.Add(name, value);
+			}
+		}
+
+		/// <summary>
 		/// Disposes the object resources.
 		/// </summary>
 		public void Dispose()
@@ -145,8 +165,34 @@ namespace WebTools
 			crawlConfiguration.CrawlTimeoutSeconds = 0;
 			crawlConfiguration.HttpRequestTimeoutInSeconds = 120;
 			crawlConfiguration.MinCrawlDelayPerDomainMilliSeconds = 1000;
+			crawlConfiguration.IsRespectRobotsDotTextEnabled = false;
+			crawlConfiguration.IsSendingCookiesEnabled = true;
 
-			using PoliteWebCrawler crawler = new (crawlConfiguration);
+			WebContentExtractor contentExtractor = new ();
+			CookieContainer cookieContainer = new ();
+
+			using PageRequester pageRequester = new (
+				crawlConfiguration,
+				contentExtractor,
+				cookieContainer);
+
+			foreach (var cookie in cookies)
+			{
+				pageRequester.AddCookie(uri, cookie.Key, cookie.Value);
+			}
+
+			HyperLinkParser parser = new ();
+
+			using PoliteWebCrawler crawler = new (
+				crawlConfiguration,
+				null,
+				null,
+				null,
+				pageRequester,
+				parser,
+				null,
+				null,
+				null);
 
 			crawler.PageCrawlStarting += ProcessPageCrawlStarted;
 			crawler.PageCrawlCompleted += ProcessPageCrawlCompleted;
