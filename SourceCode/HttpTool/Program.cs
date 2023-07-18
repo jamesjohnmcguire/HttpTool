@@ -5,10 +5,13 @@
 /////////////////////////////////////////////////////////////////////////////
 
 using Common.Logging;
+using DigitalZenWorks.CommandLine.Commands;
 using Serilog;
 using Serilog.Configuration;
 using Serilog.Events;
 using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
@@ -23,12 +26,6 @@ namespace HttpTool
 {
 	internal class Program
 	{
-		private static readonly string[] Commands =
-		{
-			"agilitypack", "empty", "enhanced", "help", "images", "redirects",
-			"standard", "testall", "validate"
-		};
-
 		private static readonly ILog Log = LogManager.GetLogger(
 			System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -53,20 +50,44 @@ namespace HttpTool
 			return fileVersionInfo;
 		}
 
-		private static string GetCommand(string[] arguments)
+		private static IList<Command> GetCommands()
 		{
-			string command;
+			IList<Command> commands = new List<Command>();
 
-			if (arguments.Length < 2)
-			{
-				command = "standard";
-			}
-			else
-			{
-				command = arguments[0];
-			}
+			Command help = new ("help");
+			help.Description = "Show this information";
+			commands.Add(help);
 
-			return command;
+			IList<CommandOption> options = new List<CommandOption>();
+
+			CommandOption cookie = new ("c", "cookie", false);
+			options.Add(cookie);
+
+			Command agilityPack = new ("agilitypack", options, 0, "Run agility pack tests");
+			commands.Add(agilityPack);
+
+			Command empty = new ("empty", options, 0, "Run empty page tests");
+			commands.Add(empty);
+
+			Command enhanced = new ("enhanced", options, 0, "Run all enhanced tests");
+			commands.Add(enhanced);
+
+			Command images = new ("images", options, 0, "Run missing images tests");
+			commands.Add(images);
+
+			Command redirects = new ("redirects", options, 0, "Run redirect tests");
+			commands.Add(redirects);
+
+			Command standard = new ("standard", options, 0, "Run standard tests (default)");
+			commands.Add(standard);
+
+			Command testall = new ("testall", options, 0, "Run all tests");
+			commands.Add(testall);
+
+			Command validate = new ("validate", options, 0, "Run w3c HTML validation tests");
+			commands.Add(validate);
+
+			return commands;
 		}
 
 		private static DocumentChecks GetTests(string command)
@@ -154,9 +175,15 @@ namespace HttpTool
 
 			LoggerConfiguration configuration = new ();
 			LoggerSinkConfiguration sinkConfiguration = configuration.WriteTo;
-			sinkConfiguration.Console(LogEventLevel.Verbose, outputTemplate);
+			sinkConfiguration.Console(
+				LogEventLevel.Verbose,
+				outputTemplate,
+				CultureInfo.InvariantCulture);
 			sinkConfiguration.File(
-				logFilePath, LogEventLevel.Verbose, outputTemplate);
+				logFilePath,
+				LogEventLevel.Verbose,
+				outputTemplate,
+				CultureInfo.InvariantCulture);
 			Serilog.Log.Logger = configuration.CreateLogger();
 
 			LogManager.Adapter =
@@ -185,7 +212,7 @@ namespace HttpTool
 		/////////////////////////////////////////////////////////////////////
 		private static async Task<bool> Run(string[] arguments)
 		{
-			bool result;
+			bool result = false;
 
 			try
 			{
@@ -194,15 +221,33 @@ namespace HttpTool
 
 				Log.Info("Starting HttpTools Version: " + version);
 
-				result = ValidateArguments(arguments);
+				IList<Command> commands = GetCommands();
 
-				if (true == result)
+				CommandLineArguments commandLine = new (commands, arguments);
+
+				arguments = UpdateArguments(arguments);
+
+				if (commandLine.ValidArguments == false)
 				{
-					string command = GetCommand(arguments);
+					Log.Error(commandLine.ErrorMessage);
+					ShowHelp(null);
+				}
+				else
+				{
+					Command command = commandLine.Command;
+
 					string url = GetUrl(arguments);
-					DocumentChecks tests = GetTests(command);
+					DocumentChecks tests = GetTests(command.Name);
 
 					using SiteTest tester = new (tests);
+
+					bool hasCookie = command.DoesOptionExist(
+						"c", "cookie");
+
+					if (hasCookie == true)
+					{
+						tester.AddCookie(command.Parameters[1]);
+					}
 
 					string message = StringTable.GetString(
 						"RUNNING_TESTS",
@@ -211,13 +256,15 @@ namespace HttpTool
 
 					Uri uri = new (url);
 					await tester.Test(uri).ConfigureAwait(false);
-				}
-				else
-				{
-					ShowHelp(null);
+
+					result = true;
 				}
 			}
-			catch (Exception exception)
+			catch (Exception exception) when
+				(exception is ArgumentNullException ||
+				exception is ArgumentException ||
+				exception is InvalidOperationException ||
+				exception is NullReferenceException)
 			{
 				Log.Error(CultureInfo.InvariantCulture, m => m(
 					exception.ToString()));
@@ -313,43 +360,31 @@ namespace HttpTool
 				"HELP",
 				CultureInfo.InstalledUICulture);
 			Console.WriteLine(message);
+
+			Console.WriteLine(message);
+
+			message = StringTable.GetString(
+				"COOKIE",
+				CultureInfo.InstalledUICulture);
+			Console.WriteLine(message);
 		}
 
-		/////////////////////////////////////////////////////////////////////
-		/// <summary>
-		/// Validate the command line arguments.
-		/// </summary>
-		/////////////////////////////////////////////////////////////////////
-		private static bool ValidateArguments(string[] arguments)
+		private static string[] UpdateArguments(string[] arguments)
 		{
-			bool result = false;
-
-			if (arguments.Length > 0)
+			if (arguments.Length > 0 && arguments.Length < 2)
 			{
-				string command;
-				string url;
+				string[] newArguments = new string[arguments.Length + 1];
+				int index = arguments.Length;
 
-				if (arguments.Length < 2)
+				while (index >= 1)
 				{
-					command = "standard";
-					url = arguments[0];
-				}
-				else
-				{
-					command = arguments[0];
-					url = arguments[1];
+					newArguments[index] = arguments[index - 1];
 				}
 
-				if (Commands.Contains(command))
-				{
-					if (Uri.IsWellFormedUriString(url, UriKind.Absolute))
-					{
-						result = true;
-					}
-				}
+				arguments[0] = "standard";
 			}
 
-			return result;
+			return arguments;
 		}
 	}
 }

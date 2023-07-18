@@ -156,4 +156,7 @@
   <data name="HTTPTOOL" xml:space="preserve">
     <value>HttpTool &lt;command&gt; &lt;url&gt;</value>
   </data>
+  <data name="COOKIE" xml:space="preserve">
+    <value>-c --cookie cookie (name=data)</value>
+  </data>
 </root>
