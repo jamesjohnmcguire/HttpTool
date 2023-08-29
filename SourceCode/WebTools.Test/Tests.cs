@@ -16,7 +16,7 @@ namespace WebTools.Test
 		[Test]
 		public async Task TestHttpMinerBasic()
 		{
-			HttpClientExtended client = new HttpClientExtended();
+			HttpManager client = new HttpManager();
 
 			Uri uri = new("https://www.digitalzenworks.com");
 			string response =
@@ -28,7 +28,7 @@ namespace WebTools.Test
 		[Test]
 		public async Task TestHttpMinerExtended()
 		{
-			HttpClientExtended client = new HttpClientExtended();
+			HttpManager client = new HttpManager();
 
 			Uri uri = new("https://www.digitalzenworks.com");
 
@@ -49,7 +49,7 @@ namespace WebTools.Test
 		[Test]
 		public void TestHttpMinerSimple()
 		{
-			HttpClientExtended client = new HttpClientExtended();
+			HttpManager client = new HttpManager();
 
 			Uri uri = new("https://www.digitalzenworks.com");
 			HttpResponseMessage response = client.RequestUriResponse(uri);
@@ -60,7 +60,7 @@ namespace WebTools.Test
 		[Test]
 		public async Task TestHttpMinerExtendedUploadFile()
 		{
-			HttpClientExtended client = new HttpClientExtended();
+			HttpManager client = new HttpManager();
 
 			string temporaryPath = Path.GetTempFileName();
 

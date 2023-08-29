@@ -1,5 +1,5 @@
 ﻿/////////////////////////////////////////////////////////////////////////////
-// <copyright file="HttpClientExtended.cs" company="James John McGuire">
+// <copyright file="HttpManager.cs" company="James John McGuire">
 // Copyright © 2016 - 2023 James John McGuire. All Rights Reserved.
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
@@ -22,7 +22,7 @@ namespace WebTools
 	/// <summary>
 	/// Represents an extended HTTP client for communicating with web servers.
 	/// </summary>
-	public class HttpClientExtended : IDisposable, INotifyPropertyChanged
+	public class HttpManager : IDisposable, INotifyPropertyChanged
 	{
 		private static readonly ILog Log = LogManager.GetLogger(
 			System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
@@ -37,13 +37,13 @@ namespace WebTools
 
 		/// <summary>
 		/// Initializes a new instance of the
-		/// <see cref="HttpClientExtended"/> class.
+		/// <see cref="HttpManager"/> class.
 		/// </summary>
 		[System.Diagnostics.CodeAnalysis.SuppressMessage(
 			"Reliability",
 			"CA2000:Dispose objects before losing scope",
 			Justification = "HttpClientHandler is exceptional case")]
-		public HttpClientExtended()
+		public HttpManager()
 		{
 			HttpClientHandler clientHandler = new ();
 
@@ -66,23 +66,23 @@ namespace WebTools
 
 		/// <summary>
 		/// Initializes a new instance of the
-		/// <see cref="HttpClientExtended"/> class.
+		/// <see cref="HttpManager"/> class.
 		/// </summary>
 		/// <param name="host">The default host URI.</param>
-		public HttpClientExtended(string host)
+		public HttpManager(string host)
 			: this()
 		{
 			Host = host;
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="HttpClientExtended"/>
+		/// Initializes a new instance of the <see cref="HttpManager"/>
 		/// class with with headers and default parameters.
 		/// </summary>
 		/// <param name="headers">The additional headers to add.</param>
 		/// <param name="defaultParameters">A list of default parameters for
 		/// the client to use on each call to the server.</param>
-		public HttpClientExtended(
+		public HttpManager(
 			IList<MediaTypeWithQualityHeaderValue> headers,
 			IList<KeyValuePair<string, string>> defaultParameters)
 			: this()

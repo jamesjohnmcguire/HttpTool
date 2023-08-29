@@ -47,7 +47,7 @@ namespace WebTools
 		private static readonly ResourceManager StringTable = new (
 			"WebTools.Resources", Assembly.GetExecutingAssembly());
 
-		private readonly HttpClientExtended client;
+		private readonly HttpManager client;
 
 		private readonly IDictionary<string, string> cookies;
 
@@ -66,7 +66,7 @@ namespace WebTools
 		{
 			pagesCrawed = new List<string>();
 			imagesChecked = new List<string>();
-			client = new HttpClientExtended();
+			client = new HttpManager();
 			cookies = new Dictionary<string, string>();
 		}
 
