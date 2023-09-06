@@ -1,22 +1,27 @@
 Tasks
-	Flush out API - Consistent naming
-	Flush out API - returning full requests, or just body (as string)
-	Flush out API - string vs Uri
-	Host wrapping should happen in a derived or client class
-	secondChange - Needs to stay class field
-	Set log location
-	Add which type of tests are being run in log
-	Change namespace WebTools
-	Change DLL names to match the following pattern: <Company>.<Component>.dll
 	fix CheckRedirects
 	Fix new warnings
-	Add reason text if invalid url to show in help
-	Fix to show copyright and company name in help
-	for login, use config file
-	Unhandled exception. System.Net.WebException: The remote server returned an error: (404) Not Found.	WebTools\SiteTest.cs:line 362
-	Page had no content http://news.localhost/account/english/
+	Change namespace WebTools
+	Change DLL names to match the following pattern: <Company>.<Component>.dll
+	SiteTests	Add SiteTests class
+	SiteTests	Expose Tests as APIs
+	SiteTests	Set secondary log for errors
+	SiteTests	Add which type of tests are being run in log
+	HttpManager	Host wrapping should happen in a derived or client class
+	HttpManager	secondChange - Needs to stay class field
+	SiteTests	Set log location
+	SiteTests	Add reason text if invalid url to show in help
+	SiteTests	Fix to show copyright and company name in help
+	SiteTests	for login, use config file
+	SiteTests	Unhandled exception. System.Net.WebException: The remote server returned an error: (404) Not Found.	WebTools\SiteTest.cs:line 362
+	SiteTests	Page had no content http://news.localhost/account/english/
 	HttpTool	Add README
 	HttpTool	Add binaries
+	HttpManager	Flush out API - string vs Uri
+	Finished
+		Flush out API - Consistent naming
+		Flush out API - returning full requests, or just body (as string)
+		Rename HttpClientExtended
 		Flush out API - endPoint vs requestUri
 		Decide on logging
 		HttpTool\SourceCode\WebTools\SiteTest.cs(23,12): error CS0579: Duplicate 'CLSCompliant' attribute [WebTools.csproj]
@@ -25,7 +30,6 @@ Tasks
 		HttpTool\SourceCode\WebTools\ServerMessage.cs(56,10): error CS0246: The type or namespace name 'Errors' could not be found (are you missing a using directive or an assembly reference?) [WebTools.csproj]
 		HttpTool\SourceCode\WebTools\HttpClientExtended.cs(133,10): error CS0246: The type or namespace name 'ServerMessage' could not be found (are you missing a using directive or an assembly reference?) [WebTools.csproj]
 		HttpTool\SourceCode\WebTools\HttpClientExtended.cs(35,11): error CS0246: The type or namespace name 'ServerMessage' could not be found (are you missing a using directive or an assembly reference?) [WebTools.csproj]
-reference?)
 		Package updates
 		CopyToCommands
 		CS0246: The type or namespace name 'AssemblyVersionAttribute' could not be found (are you missing a using directive or an assembly reference?)
