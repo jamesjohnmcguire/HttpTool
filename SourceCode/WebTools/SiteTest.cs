@@ -547,11 +547,11 @@ namespace WebTools
 					string responseUri =
 						crawledPage.Uri.AbsoluteUri;
 
-					if ((!requestUri.Equals(
-						responseUri, StringComparison.OrdinalIgnoreCase)) ||
-						(crawledPage.RedirectedFrom != null))
+					SiteTests.IsRedirect(requestUri, responseUri);
+
+					if (crawledPage.RedirectedFrom != null)
 					{
-						// This is a redirect
+						// Special case.
 						string message = StringTable.GetString(
 							"REDIRECTED",
 							CultureInfo.InstalledUICulture);
