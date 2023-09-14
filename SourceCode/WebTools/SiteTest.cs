@@ -332,6 +332,15 @@ namespace WebTools
 			{
 				HttpClient httpClient = client.Client;
 
+				// Remove query parameters.
+				int index = url.AbsoluteUri.IndexOf('?', StringComparison.Ordinal);
+
+				if (index != -1)
+				{
+					string cleanUri = url.AbsoluteUri.Substring(0, index);
+					url = new Uri(cleanUri);
+				}
+
 				// Do only Head request to avoid download full file.
 				using HttpRequestMessage message =
 					new (HttpMethod.Head, url);
