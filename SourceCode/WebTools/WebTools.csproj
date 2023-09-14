@@ -10,12 +10,12 @@
 		<Company>Digital Zen Works</Company>
 		<Copyright>Copyright © 2016 - 2023 James John McGuire</Copyright>
 		<EnableNETAnalyzers>true</EnableNETAnalyzers>
-		<FileVersion>1.3.142.0</FileVersion>
+		<FileVersion>1.3.143.0</FileVersion>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<LangVersion>latest</LangVersion>
 		<NeutralLanguage>en</NeutralLanguage>
 		<OutputPath>$(SolutionDir)\Bin\$(Configuration)\$(Platform)</OutputPath>
-		<Version>1.3.142</Version>
+		<Version>1.3.143</Version>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
