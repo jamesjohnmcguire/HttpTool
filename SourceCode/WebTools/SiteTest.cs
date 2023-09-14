@@ -366,8 +366,9 @@ namespace WebTools
 				exception is UriFormatException)
 			{
 				result = false;
-				Log.Error(CultureInfo.InvariantCulture, m => m(
-					exception.ToString()));
+
+				Log.Error("Exception Processing: " + url.AbsoluteUri);
+				Log.Error(exception.ToString());
 			}
 
 			return result;
