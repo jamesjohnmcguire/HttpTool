@@ -19,6 +19,7 @@ using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Resources;
+using System.Threading;
 using System.Threading.Tasks;
 
 [assembly: CLSCompliant(false)]
@@ -367,8 +368,20 @@ namespace WebTools
 			{
 				result = false;
 
-				Log.Error("Exception Processing: " + url.AbsoluteUri);
-				Log.Error(exception.ToString());
+				using SemaphoreSlim semaphoreSlim = new (1, 1);
+
+				await semaphoreSlim.WaitAsync().ConfigureAwait(false);
+
+				try
+				{
+					Log.Error("Exception Processing: " + url.AbsoluteUri);
+					Log.Error(exception.ToString());
+				}
+				finally
+				{
+					semaphoreSlim.Release();
+				}
+
 			}
 
 			return result;
