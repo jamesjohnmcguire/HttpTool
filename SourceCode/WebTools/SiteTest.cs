@@ -347,6 +347,7 @@ namespace WebTools
 				exception is System.IO.FileNotFoundException ||
 				exception is FormatException ||
 				exception is System.IO.IOException ||
+				exception is HttpRequestException ||
 				exception is JsonSerializationException ||
 				exception is NotImplementedException ||
 				exception is NotSupportedException ||
