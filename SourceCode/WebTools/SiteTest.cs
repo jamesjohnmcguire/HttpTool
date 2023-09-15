@@ -334,7 +334,11 @@ namespace WebTools
 				HttpClient httpClient = client.Client;
 
 				// Remove query parameters.
+#if NET5_0_OR_GREATER
 				int index = url.AbsoluteUri.IndexOf('?', StringComparison.Ordinal);
+#else
+				int index = url.AbsoluteUri.IndexOf('?');
+#endif
 
 				if (index != -1)
 				{
@@ -343,8 +347,8 @@ namespace WebTools
 				}
 
 				// Do only Head request to avoid download full file.
-				using HttpRequestMessage message =
-					new (HttpMethod.Head, url);
+				using HttpRequestMessage message = new (HttpMethod.Head, url);
+
 				HttpResponseMessage response =
 					await httpClient.SendAsync(message).ConfigureAwait(false);
 
@@ -381,7 +385,6 @@ namespace WebTools
 				{
 					semaphoreSlim.Release();
 				}
-
 			}
 
 			return result;
@@ -597,89 +600,100 @@ namespace WebTools
 		private async void ProcessPageCrawlCompleted(
 			object sender, PageCrawlCompletedArgs arguments)
 		{
+			using SemaphoreSlim semaphoreSlim = new (1, 1);
+
+			await semaphoreSlim.WaitAsync().ConfigureAwait(false);
+
 			try
 			{
-				bool hasContent = true;
-				bool contentErrors = false;
-				bool imagesCheck = true;
-				bool parseErrors = false;
-				bool problemsFound = false;
-				bool w3validation = true;
-				string message;
-
-				if (arguments != null)
+				try
 				{
-					CrawledPage crawledPage = arguments.CrawledPage;
-					string url = crawledPage.Uri.AbsoluteUri;
+					bool hasContent = true;
+					bool contentErrors = false;
+					bool imagesCheck = true;
+					bool parseErrors = false;
+					bool problemsFound = false;
+					bool w3validation = true;
+					string message;
 
-					CheckHostsDifferent(crawledPage);
-
-					pagesCrawed.Add(url);
-
-					problemsFound = IsCrawlError(crawledPage);
-
-					CheckRedirects(crawledPage);
-
-					// if page has content and
-					// it's not one of types we're ignoring
-					if (!IgnoreTypes.Any(url.ToUpperInvariant().EndsWith))
+					if (arguments != null)
 					{
-						hasContent = CheckForEmptyContent(crawledPage);
+						CrawledPage crawledPage = arguments.CrawledPage;
+						string url = crawledPage.Uri.AbsoluteUri;
 
-						if (true == hasContent)
+						CheckHostsDifferent(crawledPage);
+
+						pagesCrawed.Add(url);
+
+						problemsFound = IsCrawlError(crawledPage);
+
+						CheckRedirects(crawledPage);
+
+						// if page has content and
+						// it's not one of types we're ignoring
+						if (!IgnoreTypes.Any(url.ToUpperInvariant().EndsWith))
 						{
-							contentErrors = !CheckContentErrors(crawledPage);
-							parseErrors = !CheckParseErrors(crawledPage);
-							imagesCheck = await CheckImages(crawledPage).ConfigureAwait(false);
+							hasContent = CheckForEmptyContent(crawledPage);
+
+							if (true == hasContent)
+							{
+								contentErrors = !CheckContentErrors(crawledPage);
+								parseErrors = !CheckParseErrors(crawledPage);
+								imagesCheck = await CheckImages(crawledPage).ConfigureAwait(false);
 #if NETSTANDARD2_0
-							bool contains = url.Contains("localhost");
+								bool contains = url.Contains("localhost");
 #else
-							bool contains = url.Contains(
-								"localhost",
-								StringComparison.OrdinalIgnoreCase);
+								bool contains = url.Contains(
+									"localhost",
+									StringComparison.OrdinalIgnoreCase);
 #endif
 
-							if (contains == true)
-							{
-								w3validation = await ValidateFromW3Org(
-									crawledPage.Uri.ToString()).
-									ConfigureAwait(false);
+								if (contains == true)
+								{
+									w3validation = await ValidateFromW3Org(
+										crawledPage.Uri.ToString()).
+										ConfigureAwait(false);
+								}
 							}
+
+							SaveDocument(crawledPage);
 						}
 
-						SaveDocument(crawledPage);
-					}
-
-					if ((problemsFound == true) || (hasContent == false) ||
-						(contentErrors == true) || (parseErrors == true) ||
-						(imagesCheck == false) || (w3validation == false))
-					{
-						message = string.Format(
-							CultureInfo.InvariantCulture,
-							"Problems found on: {0} (from: {1})",
-							url,
-							crawledPage.ParentUri.AbsolutePath);
-						Log.Error(CultureInfo.InvariantCulture, m => m(
-							message));
+						if ((problemsFound == true) || (hasContent == false) ||
+							(contentErrors == true) || (parseErrors == true) ||
+							(imagesCheck == false) || (w3validation == false))
+						{
+							message = string.Format(
+								CultureInfo.InvariantCulture,
+								"Problems found on: {0} (from: {1})",
+								url,
+								crawledPage.ParentUri.AbsolutePath);
+							Log.Error(CultureInfo.InvariantCulture, m => m(
+								message));
+						}
 					}
 				}
+				catch (Exception exception) when
+					(exception is ArgumentException ||
+					exception is ArgumentNullException ||
+					exception is ArgumentOutOfRangeException ||
+					exception is FileNotFoundException ||
+					exception is IOException ||
+					exception is NotSupportedException ||
+					exception is NullReferenceException ||
+					exception is ObjectDisposedException ||
+					exception is FormatException ||
+					exception is TaskCanceledException ||
+					exception is UnauthorizedAccessException ||
+					exception is WebException)
+				{
+					Log.Error(CultureInfo.InvariantCulture, m => m(
+						exception.ToString()));
+				}
 			}
-			catch (Exception exception) when
-				(exception is ArgumentException ||
-				exception is ArgumentNullException ||
-				exception is ArgumentOutOfRangeException ||
-				exception is FileNotFoundException ||
-				exception is IOException ||
-				exception is NotSupportedException ||
-				exception is NullReferenceException ||
-				exception is ObjectDisposedException ||
-				exception is FormatException ||
-				exception is TaskCanceledException ||
-				exception is UnauthorizedAccessException ||
-				exception is WebException)
+			finally
 			{
-				Log.Error(CultureInfo.InvariantCulture, m => m(
-					exception.ToString()));
+				semaphoreSlim.Release();
 			}
 
 			pageCount++;
