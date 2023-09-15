@@ -658,19 +658,6 @@ namespace WebTools
 
 							SaveDocument(crawledPage);
 						}
-
-						if ((problemsFound == true) || (hasContent == false) ||
-							(contentErrors == true) || (parseErrors == true) ||
-							(imagesCheck == false) || (w3validation == false))
-						{
-							message = string.Format(
-								CultureInfo.InvariantCulture,
-								"Problems found on: {0} (from: {1})",
-								url,
-								crawledPage.ParentUri.AbsolutePath);
-							Log.Error(CultureInfo.InvariantCulture, m => m(
-								message));
-						}
 					}
 				}
 				catch (Exception exception) when
