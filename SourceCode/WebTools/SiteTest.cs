@@ -683,7 +683,7 @@ namespace WebTools
 				}
 
 				// Do only Head request to avoid download full file.
-				using HttpRequestMessage message = new(HttpMethod.Head, url);
+				using HttpRequestMessage message = new (HttpMethod.Head, url);
 
 				HttpResponseMessage response =
 					await httpClient.SendAsync(message).ConfigureAwait(false);
@@ -694,9 +694,9 @@ namespace WebTools
 				(exception is ArgumentException ||
 				exception is ArgumentNullException ||
 				exception is ArgumentOutOfRangeException ||
-				exception is System.IO.FileNotFoundException ||
+				exception is FileNotFoundException ||
 				exception is FormatException ||
-				exception is System.IO.IOException ||
+				exception is IOException ||
 				exception is HttpRequestException ||
 				exception is JsonSerializationException ||
 				exception is NotImplementedException ||
@@ -708,7 +708,7 @@ namespace WebTools
 			{
 				result = false;
 
-				using SemaphoreSlim semaphoreSlim = new(1, 1);
+				using SemaphoreSlim semaphoreSlim = new (1, 1);
 
 				await semaphoreSlim.WaitAsync().ConfigureAwait(false);
 
