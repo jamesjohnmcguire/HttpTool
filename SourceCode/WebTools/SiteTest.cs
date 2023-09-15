@@ -419,7 +419,7 @@ namespace WebTools
 
 							Uri uri = new (imageUrl);
 							bool exists = await
-								URLExists(uri).ConfigureAwait(false);
+								UrlExists(uri).ConfigureAwait(false);
 
 							if (false == exists)
 							{
@@ -661,7 +661,7 @@ namespace WebTools
 			}
 		}
 
-		private async Task<bool> URLExists(Uri url)
+		private async Task<bool> UrlExists(Uri url)
 		{
 			bool result = false;
 
