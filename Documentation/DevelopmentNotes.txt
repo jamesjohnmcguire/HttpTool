@@ -1,6 +1,9 @@
 Tasks
-	fix CheckRedirects
-	Fix new warnings
+	site with htts://
+	No command given
+	Unhandled exception. System.Net.Http.HttpRequestException: An error occurred while sending the request. System.IO.IOException: The response ended prematurely. at WebTools.SiteTest.UrlExists(Uri url)
+	move clean url to 484
+	HttpTool\Program.cs:27 Type 'Program' can be sealed because it has no subtypes in its containing assembly and is not externally visibles
 	Change namespace WebTools
 	Change DLL names to match the following pattern: <Company>.<Component>.dll
 	SiteTests	Add SiteTests class
@@ -19,6 +22,11 @@ Tasks
 	HttpTool	Add binaries
 	HttpManager	Flush out API - string vs Uri
 	Finished
+		remove Problems found on: https://irdiworld.com/what-is-irdi-business-group/ (from: /)
+		fix CheckRedirects
+		Fix new warnings
+		HttpTool\SourceCode\WebTools\SiteTest.cs(337,46): error CS1503: Argument 2: cannot convert from 'System.StringComparison' to 'int'
+		HttpTool\SourceCode\WebTools\SiteTest.cs(389,4): warning SA1508: A closing brace should not be preceded by a blank line.
 		Flush out API - Consistent naming
 		Flush out API - returning full requests, or just body (as string)
 		Rename HttpClientExtended
