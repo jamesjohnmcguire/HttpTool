@@ -325,71 +325,6 @@ namespace WebTools
 			return error;
 		}
 
-		private async Task<bool> URLExists(Uri url)
-		{
-			bool result = false;
-
-			try
-			{
-				HttpClient httpClient = client.Client;
-
-				// Remove query parameters.
-#if NET5_0_OR_GREATER
-				int index = url.AbsoluteUri.IndexOf('?', StringComparison.Ordinal);
-#else
-				int index = url.AbsoluteUri.IndexOf('?');
-#endif
-
-				if (index != -1)
-				{
-					string cleanUri = url.AbsoluteUri.Substring(0, index);
-					url = new Uri(cleanUri);
-				}
-
-				// Do only Head request to avoid download full file.
-				using HttpRequestMessage message = new (HttpMethod.Head, url);
-
-				HttpResponseMessage response =
-					await httpClient.SendAsync(message).ConfigureAwait(false);
-
-				result = response.IsSuccessStatusCode;
-			}
-			catch (Exception exception) when
-				(exception is ArgumentException ||
-				exception is ArgumentNullException ||
-				exception is ArgumentOutOfRangeException ||
-				exception is System.IO.FileNotFoundException ||
-				exception is FormatException ||
-				exception is System.IO.IOException ||
-				exception is HttpRequestException ||
-				exception is JsonSerializationException ||
-				exception is NotImplementedException ||
-				exception is NotSupportedException ||
-				exception is ObjectDisposedException ||
-				exception is System.Security.SecurityException ||
-				exception is UnauthorizedAccessException ||
-				exception is UriFormatException)
-			{
-				result = false;
-
-				using SemaphoreSlim semaphoreSlim = new (1, 1);
-
-				await semaphoreSlim.WaitAsync().ConfigureAwait(false);
-
-				try
-				{
-					Log.Error("Exception Processing: " + url.AbsoluteUri);
-					Log.Error(exception.ToString());
-				}
-				finally
-				{
-					semaphoreSlim.Release();
-				}
-			}
-
-			return result;
-		}
-
 		private bool CheckContentErrors(CrawledPage crawledPage)
 		{
 			bool result = true;
@@ -724,6 +659,71 @@ namespace WebTools
 				path = path.Replace('\\', '-');
 				File.WriteAllText(path, text);
 			}
+		}
+
+		private async Task<bool> URLExists(Uri url)
+		{
+			bool result = false;
+
+			try
+			{
+				HttpClient httpClient = client.Client;
+
+				// Remove query parameters.
+#if NET5_0_OR_GREATER
+				int index = url.AbsoluteUri.IndexOf('?', StringComparison.Ordinal);
+#else
+				int index = url.AbsoluteUri.IndexOf('?');
+#endif
+
+				if (index != -1)
+				{
+					string cleanUri = url.AbsoluteUri.Substring(0, index);
+					url = new Uri(cleanUri);
+				}
+
+				// Do only Head request to avoid download full file.
+				using HttpRequestMessage message = new(HttpMethod.Head, url);
+
+				HttpResponseMessage response =
+					await httpClient.SendAsync(message).ConfigureAwait(false);
+
+				result = response.IsSuccessStatusCode;
+			}
+			catch (Exception exception) when
+				(exception is ArgumentException ||
+				exception is ArgumentNullException ||
+				exception is ArgumentOutOfRangeException ||
+				exception is System.IO.FileNotFoundException ||
+				exception is FormatException ||
+				exception is System.IO.IOException ||
+				exception is HttpRequestException ||
+				exception is JsonSerializationException ||
+				exception is NotImplementedException ||
+				exception is NotSupportedException ||
+				exception is ObjectDisposedException ||
+				exception is System.Security.SecurityException ||
+				exception is UnauthorizedAccessException ||
+				exception is UriFormatException)
+			{
+				result = false;
+
+				using SemaphoreSlim semaphoreSlim = new(1, 1);
+
+				await semaphoreSlim.WaitAsync().ConfigureAwait(false);
+
+				try
+				{
+					Log.Error("Exception Processing: " + url.AbsoluteUri);
+					Log.Error(exception.ToString());
+				}
+				finally
+				{
+					semaphoreSlim.Release();
+				}
+			}
+
+			return result;
 		}
 
 		private async Task<bool> ValidateFromW3Org(string url)
