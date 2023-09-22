@@ -1,8 +1,11 @@
 Tasks
-	site with htts://
-	No command given
 	Unhandled exception. System.Net.Http.HttpRequestException: An error occurred while sending the request. System.IO.IOException: The response ended prematurely. at WebTools.SiteTest.UrlExists(Uri url)
 	move clean url to 484
+	Log errors to it:s own file
+	Site Map option
+	site with htts://
+	No command given
+	Enhance APIs
 	HttpTool\Program.cs:27 Type 'Program' can be sealed because it has no subtypes in its containing assembly and is not externally visibles
 	Change namespace WebTools
 	Change DLL names to match the following pattern: <Company>.<Component>.dll
@@ -22,6 +25,7 @@ Tasks
 	HttpTool	Add binaries
 	HttpManager	Flush out API - string vs Uri
 	Finished
+		Directory of C:\Bin\Release\Any CPU\WebTools.dll
 		remove Problems found on: https://irdiworld.com/what-is-irdi-business-group/ (from: /)
 		fix CheckRedirects
 		Fix new warnings
