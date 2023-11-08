@@ -583,7 +583,7 @@ namespace WebTools
 									StringComparison.OrdinalIgnoreCase);
 #endif
 
-								if (contains == true)
+								if (contains == false)
 								{
 									w3validation = await ValidateFromW3Org(
 										crawledPage.Uri.ToString()).
