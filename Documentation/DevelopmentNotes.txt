@@ -94,3 +94,18 @@ HttpTool
 	yml Error: error NETSDK1005: Assets file 'project.assets.json' doesn't have a target for 'netstandard2.0'. Ensure that restore has run and that you have included 'netstandard2.0' in the TargetFrameworks for your project. 
 HttpTool
 					var links = crawledPage.ParsedLinks;
+HttpTool
+	method head fails on images
+	Exception Processing: /wp-content/themes/bootstrap-irdi/assets/images/irdi-banner.png
+		System.Net.Http.HttpRequestException: An error occurred while sending the request.
+			---> System.IO.IOException: The response ended prematurely.
+			at System.Net.Http.HttpConnection.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+			--- End of inner exception stack trace ---
+			at System.Net.Http.HttpConnection.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+			at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+			at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+			at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+			at WebTools.SiteTest.URLExists(Uri url) in C:\Users\User\Data\Clients\DigitalZenWorks\DevelopmentTools\SourceCode\HttpTool\SourceCode\WebTools\SiteTest.cs:line 338
+	Remove [2023-11-08 10:11:52 ERR] Problems found on: https://irdiworld.com/what-is-irdi-business-group/ (from: /)
+	if url contains localhost == true - shouldn't this false?
+				message.Version = HttpVersion.Version20;
