@@ -24,7 +24,7 @@ using WebTools;
 
 namespace HttpTool
 {
-	internal class Program
+	internal sealed class Program
 	{
 		private static readonly ILog Log = LogManager.GetLogger(
 			System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
