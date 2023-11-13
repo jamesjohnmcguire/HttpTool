@@ -34,12 +34,6 @@ namespace WebTools
 		private static readonly ILog Log = LogManager.GetLogger(
 			System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-		private static readonly string[] ServerErrors =
-		{
-			"A PHP Error was encountered", "A Database Error Occurred",
-			"Parse error", "データベースエラーが発生しました"
-		};
-
 		private static readonly string[] IgnoreTypes =
 		{
 			"GIF", "JPG", "JPEG", "PDF", "PNG"
@@ -170,6 +164,7 @@ namespace WebTools
 				bool parseErrors = false;
 				bool problemsFound = false;
 				bool w3validation = true;
+				bool isActiveTest = false;
 
 				if (uri != null)
 				{
@@ -188,34 +183,65 @@ namespace WebTools
 						{
 							if (pageContent != null)
 							{
-								hasContent = CheckForEmptyContent(
-									uri,
-									parentUri,
-									response,
-									pageContent);
+								isActiveTest = Tests.HasFlag(
+									DocumentChecks.EmptyContent);
+
+								if (isActiveTest == true)
+								{
+									hasContent =
+										SiteTests.CheckForEmptyContent(
+											uri,
+											parentUri,
+											response,
+											pageContent);
+								}
 
 								if (true == hasContent)
 								{
-									contentErrors =
-										!CheckContentErrors(uri, pageContent);
+									isActiveTest = Tests.HasFlag(
+										DocumentChecks.ContentErrors);
 
-									parseErrors =
-										!CheckParseErrors(uri, pageContent);
-									imagesCheck = await CheckImages(
-										uri, pageContent).
-										ConfigureAwait(false);
+									if (isActiveTest == true)
+									{
+										contentErrors =
+											!SiteTests.CheckContentErrors(
+												uri, pageContent);
+									}
+
+									isActiveTest = Tests.HasFlag(
+										DocumentChecks.ParseErrors);
+
+									if (isActiveTest == true)
+									{
+										parseErrors =
+											!SiteTests.CheckParseErrors(
+												uri, pageContent);
+									}
+
+									isActiveTest = Tests.HasFlag(
+										DocumentChecks.ImagesExist);
+
+									if (isActiveTest == true)
+									{
+										imagesCheck = await CheckImages(
+											uri, pageContent).
+											ConfigureAwait(false);
+									}
 
 									SaveDocument(uri, pageContent);
 								}
 #if NETSTANDARD2_0
-								bool contains = url.Contains("localhost");
+								bool isLocalhost = url.Contains("localhost");
 #else
-								bool contains = url.Contains(
+								bool isLocalhost = url.Contains(
 									"localhost",
 									StringComparison.OrdinalIgnoreCase);
 #endif
+								isActiveTest = Tests.HasFlag(
+									DocumentChecks.W3cValidation);
 
-								if (contains == false)
+								if (isLocalhost == false &&
+									isActiveTest == true)
 								{
 									w3validation = await ValidateFromW3Org(
 										url).ConfigureAwait(false);
@@ -227,9 +253,11 @@ namespace WebTools
 					problemsFound =
 						IsCrawlError(uri, response, requestException);
 
-					if (request != null)
+					isActiveTest = Tests.HasFlag(DocumentChecks.Redirect);
+
+					if (request != null && isActiveTest == true)
 					{
-						CheckRedirects(uri, request, response, redirectedFrom);
+						SiteTests.CheckRedirects(uri, request, redirectedFrom);
 					}
 				}
 			}
@@ -429,153 +457,51 @@ namespace WebTools
 			return error;
 		}
 
-		private bool CheckContentErrors(Uri uri, string pageContent)
-		{
-			bool result = true;
-
-			if (Tests.HasFlag(DocumentChecks.ContentErrors))
-			{
-				string url = uri.AbsoluteUri;
-
-				bool isIgnoreType =
-					IgnoreTypes.Any(url.ToUpperInvariant().EndsWith);
-
-				if (isIgnoreType == false)
-				{
-					if (ServerErrors.Any(pageContent.Contains))
-					{
-						result = false;
-
-						string message = string.Format(
-							CultureInfo.InvariantCulture,
-							"Page contains error messages: {0}",
-							uri.AbsoluteUri);
-						Log.Error(message);
-					}
-				}
-			}
-
-			return result;
-		}
-
-		private bool CheckForEmptyContent(
-			Uri uri,
-			Uri parentUri,
-			HttpResponseMessage response,
-			string pageContent)
-		{
-			bool hasContent = true;
-			if (Tests.HasFlag(DocumentChecks.EmptyContent))
-			{
-				if (string.IsNullOrWhiteSpace(pageContent))
-				{
-					hasContent = false;
-
-					if (response != null)
-					{
-						string message = string.Format(
-							CultureInfo.InvariantCulture,
-							"Page had no content {0}",
-							uri.AbsoluteUri);
-						Log.Error(message);
-
-						message = string.Format(
-							CultureInfo.InvariantCulture,
-							"Parent: {0}",
-							parentUri.AbsoluteUri);
-						Log.Error(message);
-					}
-				}
-			}
-
-			return hasContent;
-		}
-
 		private async Task<bool> CheckImages(Uri uri, string pageContent)
 		{
 			bool result = true;
 
-			if (Tests.HasFlag(DocumentChecks.ImagesExist))
-			{
-				HtmlDocument agilityPackHtmlDocument = new ();
-				agilityPackHtmlDocument.LoadHtml(pageContent);
+			HtmlDocument agilityPackHtmlDocument = new ();
+			agilityPackHtmlDocument.LoadHtml(pageContent);
 
-				HtmlNodeCollection nodes =
-					agilityPackHtmlDocument.DocumentNode.SelectNodes(
+			HtmlNodeCollection nodes =
+				agilityPackHtmlDocument.DocumentNode.SelectNodes(
 					@"//img[@src]");
 
-				if (null != nodes)
-				{
-					foreach (var image in nodes)
-					{
-						var source = image.Attributes["src"];
-						string contents = source.Value;
-
-						if (!imagesChecked.Contains(contents))
-						{
-							string baseUrl = string.Format(
-								CultureInfo.InvariantCulture,
-								"{0}://{1}",
-								uri.Scheme,
-								uri.Host);
-							string imageUrl =
-								GetAbsoluteUrlString(baseUrl, source.Value);
-
-							Uri imageUri = new (imageUrl);
-							bool exists = await
-								UrlExists(imageUri).ConfigureAwait(false);
-
-							if (false == exists)
-							{
-								result = false;
-
-								string message = string.Format(
-									CultureInfo.InvariantCulture,
-									"image missing: {0} in {1}",
-									imageUrl,
-									uri.AbsoluteUri);
-								Log.Error(message);
-							}
-
-							imagesChecked.Add(source.Value);
-						}
-					}
-				}
-			}
-
-			return result;
-		}
-
-		private bool CheckParseErrors(Uri uri, string pageContent)
-		{
-			bool result = true;
-
-			if (Tests.HasFlag(DocumentChecks.ParseErrors))
+			if (null != nodes)
 			{
-				HtmlDocument agilityPackHtmlDocument = new ();
-				agilityPackHtmlDocument.LoadHtml(pageContent);
-
-				IEnumerable<HtmlParseError> parseErrors =
-					agilityPackHtmlDocument.ParseErrors;
-
-				if (null != parseErrors)
+				foreach (var image in nodes)
 				{
-					foreach (HtmlParseError error in parseErrors)
+					var source = image.Attributes["src"];
+					string contents = source.Value;
+
+					if (!imagesChecked.Contains(contents))
 					{
-						// Ignoring error "End tag </option> is not required"
-						// as it doesn't really seem like a problem
-						if (error.Code != HtmlParseErrorCode.TagNotClosed)
+						string baseUrl = string.Format(
+							CultureInfo.InvariantCulture,
+							"{0}://{1}",
+							uri.Scheme,
+							uri.Host);
+						string imageUrl =
+							GetAbsoluteUrlString(baseUrl, source.Value);
+
+						Uri imageUri = new (imageUrl);
+						bool exists = await
+							UrlExists(imageUri).ConfigureAwait(false);
+
+						if (false == exists)
 						{
 							result = false;
 
 							string message = string.Format(
 								CultureInfo.InvariantCulture,
-								"HtmlAgilityPack: {0} in {1} at line: {2}",
-								error.Reason,
-								uri.AbsoluteUri,
-								error.Line);
+								"image missing: {0} in {1}",
+								imageUrl,
+								uri.AbsoluteUri);
 							Log.Error(message);
 						}
+
+						imagesChecked.Add(source.Value);
 					}
 				}
 			}
@@ -596,38 +522,6 @@ namespace WebTools
 					parentUrl);
 				Log.Error(CultureInfo.InvariantCulture, m => m(
 					message));
-			}
-		}
-
-		private void CheckRedirects(
-			Uri uri,
-			HttpRequestMessage request,
-			HttpResponseMessage response,
-			object redirectedFrom)
-		{
-			if (Tests.HasFlag(DocumentChecks.Redirect))
-			{
-				if (response != null)
-				{
-					string requestUri = request.RequestUri.AbsoluteUri;
-
-					string responseUri = uri.AbsoluteUri;
-
-					SiteTests.IsRedirect(requestUri, responseUri);
-
-					if (redirectedFrom != null)
-					{
-						// Special case.
-						string message = StringTable.GetString(
-							"REDIRECTED",
-							CultureInfo.InstalledUICulture);
-						Log.InfoFormat(
-							CultureInfo.InvariantCulture,
-							message,
-							requestUri,
-							responseUri);
-					}
-				}
 			}
 		}
 
@@ -778,41 +672,39 @@ namespace WebTools
 		{
 			bool succesCode = true;
 
-			if (Tests.HasFlag(DocumentChecks.W3cValidation))
+			string validator = string.Format(
+				CultureInfo.InvariantCulture,
+				"http://validator.w3.org/nu/?doc={0}&out=json",
+				url);
+
+			Uri uri = new (validator);
+			string response =
+				await client.RequestUriBody(uri).ConfigureAwait(false);
+
+			if (!string.IsNullOrWhiteSpace(response))
 			{
-				string validator = string.Format(
-					CultureInfo.InvariantCulture,
-					"http://validator.w3.org/nu/?doc={0}&out=json",
-					url);
-				Uri uri = new (validator);
-				string response =
-					await client.RequestUriBody(uri).ConfigureAwait(false);
+				PageValidationResult pageResults =
+					JsonConvert.DeserializeObject<PageValidationResult>(
+						response);
+				IList<ValidationResult> results = pageResults.Messages;
 
-				if (!string.IsNullOrWhiteSpace(response))
+				if (results != null)
 				{
-					PageValidationResult pageResults =
-						JsonConvert.DeserializeObject<PageValidationResult>(
-							response);
-					IList<ValidationResult> results = pageResults.Messages;
-
-					if (results != null)
+					foreach (ValidationResult result in results)
 					{
-						foreach (ValidationResult result in results)
-						{
-							succesCode = false;
+						succesCode = false;
 
-							string message = string.Format(
-								CultureInfo.InvariantCulture,
-								"{0} {1} Result: {2}:{3} line: {4} - {5}",
-								"W3 Validation for page ",
-								url,
-								result.Type,
-								result.SubType,
-								result.LastLine,
-								result.Message);
-							Log.Error(CultureInfo.InvariantCulture, m => m(
-								message));
-						}
+						string message = string.Format(
+							CultureInfo.InvariantCulture,
+							"{0} {1} Result: {2}:{3} line: {4} - {5}",
+							"W3 Validation for page ",
+							url,
+							result.Type,
+							result.SubType,
+							result.LastLine,
+							result.Message);
+						Log.Error(CultureInfo.InvariantCulture, m => m(
+							message));
 					}
 				}
 			}
