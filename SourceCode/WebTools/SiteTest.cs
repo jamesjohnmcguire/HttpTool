@@ -142,6 +142,116 @@ namespace WebTools
 		}
 
 		/// <summary>
+		/// Reviews the response.
+		/// </summary>
+		/// <param name="uri">The URI.</param>
+		/// <param name="parentUri">The parent URI.</param>
+		/// <param name="request">The request.</param>
+		/// <param name="response">The response.</param>
+		/// <param name="pageContent">Content of the page.</param>
+		/// <param name="redirectedFrom">The redirected from.</param>
+		/// <param name="requestException">The request exception.</param>
+		/// <returns>A <see cref="Task"/> representing the asynchronous
+		/// operation.</returns>
+		public async Task ResponseReview(
+			Uri uri,
+			Uri parentUri,
+			HttpRequestMessage request,
+			HttpResponseMessage response,
+			string pageContent,
+			CrawledPage redirectedFrom,
+			HttpRequestException requestException)
+		{
+			try
+			{
+				bool hasContent = true;
+				bool contentErrors = false;
+				bool imagesCheck = true;
+				bool parseErrors = false;
+				bool problemsFound = false;
+				bool w3validation = true;
+
+				if (uri != null)
+				{
+					string url = uri.AbsoluteUri;
+
+					if (parentUri != null)
+					{
+						CheckHostsDifferent(uri, parentUri);
+
+						// if page has content and
+						// it's not one of types we're ignoring.
+						bool isIgnoreType =
+							IgnoreTypes.Any(url.ToUpperInvariant().EndsWith);
+
+						if (isIgnoreType == false)
+						{
+							if (pageContent != null)
+							{
+								hasContent = CheckForEmptyContent(
+									uri,
+									parentUri,
+									response,
+									pageContent);
+
+								if (true == hasContent)
+								{
+									contentErrors =
+										!CheckContentErrors(uri, pageContent);
+
+									parseErrors =
+										!CheckParseErrors(uri, pageContent);
+									imagesCheck = await CheckImages(
+										uri, pageContent).
+										ConfigureAwait(false);
+
+									SaveDocument(uri, pageContent);
+								}
+#if NETSTANDARD2_0
+								bool contains = url.Contains("localhost");
+#else
+								bool contains = url.Contains(
+									"localhost",
+									StringComparison.OrdinalIgnoreCase);
+#endif
+
+								if (contains == false)
+								{
+									w3validation = await ValidateFromW3Org(
+										url).ConfigureAwait(false);
+								}
+							}
+						}
+					}
+
+					problemsFound =
+						IsCrawlError(uri, response, requestException);
+
+					if (request != null)
+					{
+						CheckRedirects(uri, request, response, redirectedFrom);
+					}
+				}
+			}
+			catch (Exception exception) when
+				(exception is ArgumentException ||
+				exception is ArgumentNullException ||
+				exception is ArgumentOutOfRangeException ||
+				exception is FileNotFoundException ||
+				exception is IOException ||
+				exception is NotSupportedException ||
+				exception is NullReferenceException ||
+				exception is ObjectDisposedException ||
+				exception is FormatException ||
+				exception is TaskCanceledException ||
+				exception is UnauthorizedAccessException ||
+				exception is WebException)
+			{
+				Log.Error(exception.ToString());
+			}
+		}
+
+		/// <summary>
 		/// Test the given URI.
 		/// </summary>
 		/// <param name="uri">The URI to test.</param>
@@ -261,56 +371,51 @@ namespace WebTools
 			return uri.ToString();
 		}
 
-		private static bool IsCrawlError(CrawledPage crawledPage)
+		private static bool IsCrawlError(
+			Uri uri, HttpResponseMessage response, HttpRequestException exception)
 		{
 			bool error = false;
 
-			string message = string.Empty;
-			string url = crawledPage.Uri.AbsoluteUri;
+			string message;
+			string url = uri.AbsoluteUri;
 
-			if (null == crawledPage.HttpResponseMessage)
+			if (exception != null)
+			{
+				message = string.Format(
+					CultureInfo.InvariantCulture,
+					"HttpRequestException: {0}",
+					exception.ToString());
+				Log.Error(message);
+			}
+
+			if (response == null)
 			{
 				message = string.Format(
 					CultureInfo.InvariantCulture,
 					"HttpResponseMessage is null: {0}",
 					url);
-				Log.Error(CultureInfo.InvariantCulture, m => m(
-					message));
+				Log.Error(message);
 			}
-
-			if (null != crawledPage.HttpRequestException)
+			else
 			{
-				message = string.Format(
-					CultureInfo.InvariantCulture,
-					"HttpRequestException: {0}",
-					crawledPage.HttpRequestException.ToString());
-				Log.Error(CultureInfo.InvariantCulture, m => m(
-					message));
+				if (response.StatusCode != HttpStatusCode.OK)
+				{
+					string statusCode =
+						response.StatusCode.ToString();
+
+					message = StringTable.GetString(
+						"KEY_PAIR",
+						CultureInfo.InstalledUICulture);
+					Log.InfoFormat(
+						CultureInfo.InvariantCulture,
+						message,
+						statusCode,
+						url);
+				}
 			}
 
-			if (crawledPage.HttpResponseMessage != null &&
-				crawledPage.HttpResponseMessage.StatusCode !=
-					HttpStatusCode.OK)
-			{
-				HttpResponseMessage response =
-					crawledPage.HttpResponseMessage;
-				string statusCode =
-					response.StatusCode.ToString();
-
-				message = StringTable.GetString(
-					"KEY_PAIR",
-					CultureInfo.InstalledUICulture);
-				Log.InfoFormat(
-					CultureInfo.InvariantCulture,
-					message,
-					statusCode,
-					url);
-			}
-
-			if ((null != crawledPage.HttpRequestException) ||
-				(null == crawledPage.HttpResponseMessage) ||
-				(crawledPage.HttpResponseMessage.StatusCode !=
-					HttpStatusCode.OK))
+			if ((exception != null) || (response == null) ||
+				(response.StatusCode != HttpStatusCode.OK))
 			{
 				error = true;
 
@@ -318,35 +423,34 @@ namespace WebTools
 					CultureInfo.InvariantCulture,
 					"Error: {0}",
 					url);
-				Log.Error(CultureInfo.InvariantCulture, m => m(
-					message));
+				Log.Error(message);
 			}
 
 			return error;
 		}
 
-		private bool CheckContentErrors(CrawledPage crawledPage)
+		private bool CheckContentErrors(Uri uri, string pageContent)
 		{
 			bool result = true;
 
 			if (Tests.HasFlag(DocumentChecks.ContentErrors))
 			{
-				string url = crawledPage.Uri.AbsoluteUri;
+				string url = uri.AbsoluteUri;
 
-				if (!IgnoreTypes.Any(url.EndsWith))
+				bool isIgnoreType =
+					IgnoreTypes.Any(url.ToUpperInvariant().EndsWith);
+
+				if (isIgnoreType == false)
 				{
-					string text = crawledPage.Content.Text;
-
-					if (ServerErrors.Any(text.Contains))
+					if (ServerErrors.Any(pageContent.Contains))
 					{
 						result = false;
 
 						string message = string.Format(
 							CultureInfo.InvariantCulture,
 							"Page contains error messages: {0}",
-							crawledPage.Uri.AbsoluteUri);
-						Log.Error(CultureInfo.InvariantCulture, m => m(
-							message));
+							uri.AbsoluteUri);
+						Log.Error(message);
 					}
 				}
 			}
@@ -354,32 +458,32 @@ namespace WebTools
 			return result;
 		}
 
-		private bool CheckForEmptyContent(CrawledPage crawledPage)
+		private bool CheckForEmptyContent(
+			Uri uri,
+			Uri parentUri,
+			HttpResponseMessage response,
+			string pageContent)
 		{
 			bool hasContent = true;
 			if (Tests.HasFlag(DocumentChecks.EmptyContent))
 			{
-				string text = crawledPage.Content.Text;
-
-				if (string.IsNullOrEmpty(text))
+				if (string.IsNullOrWhiteSpace(pageContent))
 				{
 					hasContent = false;
 
-					if ((null != crawledPage) &&
-						(null != crawledPage.HttpResponseMessage))
+					if (response != null)
 					{
 						string message = string.Format(
 							CultureInfo.InvariantCulture,
 							"Page had no content {0}",
-							crawledPage.Uri.AbsoluteUri);
-						Log.Error(CultureInfo.InvariantCulture, m => m(
-							message));
+							uri.AbsoluteUri);
+						Log.Error(message);
+
 						message = string.Format(
 							CultureInfo.InvariantCulture,
 							"Parent: {0}",
-							crawledPage.ParentUri.AbsoluteUri);
-						Log.Error(CultureInfo.InvariantCulture, m => m(
-							message));
+							parentUri.AbsoluteUri);
+						Log.Error(message);
 					}
 				}
 			}
@@ -387,16 +491,16 @@ namespace WebTools
 			return hasContent;
 		}
 
-		private async Task<bool> CheckImages(CrawledPage crawledPage)
+		private async Task<bool> CheckImages(Uri uri, string pageContent)
 		{
 			bool result = true;
 
 			if (Tests.HasFlag(DocumentChecks.ImagesExist))
 			{
 				HtmlDocument agilityPackHtmlDocument = new ();
-				agilityPackHtmlDocument.LoadHtml(crawledPage.Content.Text);
+				agilityPackHtmlDocument.LoadHtml(pageContent);
 
-				HtmlAgilityPack.HtmlNodeCollection nodes =
+				HtmlNodeCollection nodes =
 					agilityPackHtmlDocument.DocumentNode.SelectNodes(
 					@"//img[@src]");
 
@@ -412,14 +516,14 @@ namespace WebTools
 							string baseUrl = string.Format(
 								CultureInfo.InvariantCulture,
 								"{0}://{1}",
-								crawledPage.Uri.Scheme,
-								crawledPage.Uri.Host);
+								uri.Scheme,
+								uri.Host);
 							string imageUrl =
 								GetAbsoluteUrlString(baseUrl, source.Value);
 
-							Uri uri = new (imageUrl);
+							Uri imageUri = new (imageUrl);
 							bool exists = await
-								UrlExists(uri).ConfigureAwait(false);
+								UrlExists(imageUri).ConfigureAwait(false);
 
 							if (false == exists)
 							{
@@ -429,9 +533,8 @@ namespace WebTools
 									CultureInfo.InvariantCulture,
 									"image missing: {0} in {1}",
 									imageUrl,
-									crawledPage.Uri.AbsoluteUri);
-								Log.Error(CultureInfo.InvariantCulture, m => m(
-									message));
+									uri.AbsoluteUri);
+								Log.Error(message);
 							}
 
 							imagesChecked.Add(source.Value);
@@ -443,22 +546,21 @@ namespace WebTools
 			return result;
 		}
 
-		private bool CheckParseErrors(CrawledPage crawledPage)
+		private bool CheckParseErrors(Uri uri, string pageContent)
 		{
 			bool result = true;
 
 			if (Tests.HasFlag(DocumentChecks.ParseErrors))
 			{
 				HtmlDocument agilityPackHtmlDocument = new ();
-				agilityPackHtmlDocument.LoadHtml(crawledPage.Content.Text);
+				agilityPackHtmlDocument.LoadHtml(pageContent);
 
-				IEnumerable<HtmlAgilityPack.HtmlParseError> parseErrors =
+				IEnumerable<HtmlParseError> parseErrors =
 					agilityPackHtmlDocument.ParseErrors;
 
 				if (null != parseErrors)
 				{
-					foreach (HtmlAgilityPack.HtmlParseError error in
-						parseErrors)
+					foreach (HtmlParseError error in parseErrors)
 					{
 						// Ignoring error "End tag </option> is not required"
 						// as it doesn't really seem like a problem
@@ -470,10 +572,9 @@ namespace WebTools
 								CultureInfo.InvariantCulture,
 								"HtmlAgilityPack: {0} in {1} at line: {2}",
 								error.Reason,
-								crawledPage.Uri.AbsoluteUri,
+								uri.AbsoluteUri,
 								error.Line);
-							Log.Error(CultureInfo.InvariantCulture, m => m(
-								message));
+							Log.Error(message);
 						}
 					}
 				}
@@ -482,12 +583,13 @@ namespace WebTools
 			return result;
 		}
 
-		private void CheckHostsDifferent(CrawledPage crawledPage)
+		private void CheckHostsDifferent(Uri uri, Uri parentUri)
 		{
-			if (!crawledPage.Uri.Host.Equals(
-				baseUri.Host, StringComparison.OrdinalIgnoreCase))
+			string host = uri.Host;
+
+			if (!host.Equals(baseUri.Host, StringComparison.OrdinalIgnoreCase))
 			{
-				string parentUrl = crawledPage.ParentUri.AbsoluteUri;
+				string parentUrl = parentUri.AbsoluteUri;
 				string message = string.Format(
 					CultureInfo.InvariantCulture,
 					"Warning: Switching hosts from {0}",
@@ -497,21 +599,23 @@ namespace WebTools
 			}
 		}
 
-		private void CheckRedirects(CrawledPage crawledPage)
+		private void CheckRedirects(
+			Uri uri,
+			HttpRequestMessage request,
+			HttpResponseMessage response,
+			object redirectedFrom)
 		{
 			if (Tests.HasFlag(DocumentChecks.Redirect))
 			{
-				if (null != crawledPage.HttpResponseMessage)
+				if (response != null)
 				{
-					string requestUri =
-						crawledPage.HttpRequestMessage.RequestUri.AbsoluteUri;
+					string requestUri = request.RequestUri.AbsoluteUri;
 
-					string responseUri =
-						crawledPage.Uri.AbsoluteUri;
+					string responseUri = uri.AbsoluteUri;
 
 					SiteTests.IsRedirect(requestUri, responseUri);
 
-					if (crawledPage.RedirectedFrom != null)
+					if (redirectedFrom != null)
 					{
 						// Special case.
 						string message = StringTable.GetString(
@@ -536,81 +640,26 @@ namespace WebTools
 			object sender, PageCrawlCompletedArgs arguments)
 		{
 			using SemaphoreSlim semaphoreSlim = new (1, 1);
-
 			await semaphoreSlim.WaitAsync().ConfigureAwait(false);
 
 			try
 			{
-				try
+				if (arguments != null)
 				{
-					bool hasContent = true;
-					bool contentErrors = false;
-					bool imagesCheck = true;
-					bool parseErrors = false;
-					bool problemsFound = false;
-					bool w3validation = true;
-					string message;
+					CrawledPage crawledPage = arguments.CrawledPage;
+					string url = crawledPage.Uri.AbsoluteUri;
 
-					if (arguments != null)
-					{
-						CrawledPage crawledPage = arguments.CrawledPage;
-						string url = crawledPage.Uri.AbsoluteUri;
+					pagesCrawed.Add(url);
 
-						CheckHostsDifferent(crawledPage);
-
-						pagesCrawed.Add(url);
-
-						problemsFound = IsCrawlError(crawledPage);
-
-						CheckRedirects(crawledPage);
-
-						// if page has content and
-						// it's not one of types we're ignoring
-						if (!IgnoreTypes.Any(url.ToUpperInvariant().EndsWith))
-						{
-							hasContent = CheckForEmptyContent(crawledPage);
-
-							if (true == hasContent)
-							{
-								contentErrors = !CheckContentErrors(crawledPage);
-								parseErrors = !CheckParseErrors(crawledPage);
-								imagesCheck = await CheckImages(crawledPage).ConfigureAwait(false);
-#if NETSTANDARD2_0
-								bool contains = url.Contains("localhost");
-#else
-								bool contains = url.Contains(
-									"localhost",
-									StringComparison.OrdinalIgnoreCase);
-#endif
-
-								if (contains == false)
-								{
-									w3validation = await ValidateFromW3Org(
-										crawledPage.Uri.ToString()).
-										ConfigureAwait(false);
-								}
-							}
-
-							SaveDocument(crawledPage);
-						}
-					}
-				}
-				catch (Exception exception) when
-					(exception is ArgumentException ||
-					exception is ArgumentNullException ||
-					exception is ArgumentOutOfRangeException ||
-					exception is FileNotFoundException ||
-					exception is IOException ||
-					exception is NotSupportedException ||
-					exception is NullReferenceException ||
-					exception is ObjectDisposedException ||
-					exception is FormatException ||
-					exception is TaskCanceledException ||
-					exception is UnauthorizedAccessException ||
-					exception is WebException)
-				{
-					Log.Error(CultureInfo.InvariantCulture, m => m(
-						exception.ToString()));
+					await ResponseReview(
+						crawledPage.Uri,
+						crawledPage.ParentUri,
+						crawledPage.HttpRequestMessage,
+						crawledPage.HttpResponseMessage,
+						crawledPage.Content.Text,
+						crawledPage.RedirectedFrom,
+						crawledPage.HttpRequestException).
+						ConfigureAwait(false);
 				}
 			}
 			finally
@@ -642,14 +691,12 @@ namespace WebTools
 			}
 		}
 
-		private void SaveDocument(CrawledPage crawledPage)
+		private void SaveDocument(Uri uri, string pageContent)
 		{
 			if (true == SavePage)
 			{
-				string text = crawledPage.Content.Text;
-				string[] parts = crawledPage.Uri.LocalPath.Split(
-					new char[] { '/' });
-				string path = parts.Last() + crawledPage.Uri.Query;
+				string[] parts = uri.LocalPath.Split('/');
+				string path = parts.Last() + uri.Query;
 #if NETSTANDARD2_0
 				path = path.Replace("?", "__");
 #else
@@ -657,7 +704,7 @@ namespace WebTools
 					"?", "__", StringComparison.OrdinalIgnoreCase);
 #endif
 				path = path.Replace('\\', '-');
-				File.WriteAllText(path, text);
+				File.WriteAllText(path, pageContent);
 			}
 		}
 
@@ -671,14 +718,15 @@ namespace WebTools
 
 				// Remove query parameters.
 #if NET5_0_OR_GREATER
-				int index = url.AbsoluteUri.IndexOf('?', StringComparison.Ordinal);
+				int index =
+					url.AbsoluteUri.IndexOf('?', StringComparison.Ordinal);
 #else
 				int index = url.AbsoluteUri.IndexOf('?');
 #endif
 
 				if (index != -1)
 				{
-					string cleanUri = url.AbsoluteUri.Substring(0, index);
+					string cleanUri = url.AbsoluteUri[..index];
 					url = new Uri(cleanUri);
 				}
 
