@@ -156,126 +156,101 @@ namespace WebTools
 			CrawledPage redirectedFrom,
 			HttpRequestException requestException)
 		{
-			try
+			bool hasContent = true;
+			bool contentErrors = false;
+			bool imagesCheck = true;
+			bool parseErrors = false;
+			bool problemsFound = false;
+			bool w3validation = true;
+			bool isActiveTest = false;
+
+			if (uri != null)
 			{
-				bool hasContent = true;
-				bool contentErrors = false;
-				bool imagesCheck = true;
-				bool parseErrors = false;
-				bool problemsFound = false;
-				bool w3validation = true;
-				bool isActiveTest = false;
+				string url = uri.AbsoluteUri;
 
-				if (uri != null)
+				if (parentUri != null)
 				{
-					string url = uri.AbsoluteUri;
+					SiteTests.CheckHostsDifferent(baseUri, uri, parentUri);
 
-					if (parentUri != null)
+					// if page has content and
+					// it's not one of types we're ignoring.
+					bool isIgnoreType =
+						IgnoreTypes.Any(url.ToUpperInvariant().EndsWith);
+
+					if (pageContent != null && isIgnoreType == false)
 					{
-						CheckHostsDifferent(uri, parentUri);
+						isActiveTest = Tests.HasFlag(
+							DocumentChecks.EmptyContent);
 
-						// if page has content and
-						// it's not one of types we're ignoring.
-						bool isIgnoreType =
-							IgnoreTypes.Any(url.ToUpperInvariant().EndsWith);
-
-						if (isIgnoreType == false)
+						if (isActiveTest == true)
 						{
-							if (pageContent != null)
+							hasContent =
+								SiteTests.CheckForEmptyContent(
+									uri,
+									parentUri,
+									response,
+									pageContent);
+						}
+
+						if (true == hasContent)
+						{
+							isActiveTest = Tests.HasFlag(
+								DocumentChecks.ContentErrors);
+
+							if (isActiveTest == true)
 							{
-								isActiveTest = Tests.HasFlag(
-									DocumentChecks.EmptyContent);
+								contentErrors = !SiteTests.CheckContentErrors(
+										uri, pageContent);
+							}
 
-								if (isActiveTest == true)
-								{
-									hasContent =
-										SiteTests.CheckForEmptyContent(
-											uri,
-											parentUri,
-											response,
-											pageContent);
-								}
+							isActiveTest = Tests.HasFlag(
+								DocumentChecks.ParseErrors);
 
-								if (true == hasContent)
-								{
-									isActiveTest = Tests.HasFlag(
-										DocumentChecks.ContentErrors);
+							if (isActiveTest == true)
+							{
+								parseErrors = !SiteTests.CheckParseErrors(
+										uri, pageContent);
+							}
 
-									if (isActiveTest == true)
-									{
-										contentErrors =
-											!SiteTests.CheckContentErrors(
-												uri, pageContent);
-									}
+							isActiveTest = Tests.HasFlag(
+								DocumentChecks.ImagesExist);
 
-									isActiveTest = Tests.HasFlag(
-										DocumentChecks.ParseErrors);
+							if (isActiveTest == true)
+							{
+								imagesCheck = await CheckImages(
+									uri, pageContent).
+									ConfigureAwait(false);
+							}
 
-									if (isActiveTest == true)
-									{
-										parseErrors =
-											!SiteTests.CheckParseErrors(
-												uri, pageContent);
-									}
-
-									isActiveTest = Tests.HasFlag(
-										DocumentChecks.ImagesExist);
-
-									if (isActiveTest == true)
-									{
-										imagesCheck = await CheckImages(
-											uri, pageContent).
-											ConfigureAwait(false);
-									}
-
-									SaveDocument(uri, pageContent);
-								}
+							SaveDocument(uri, pageContent);
 #if NETSTANDARD2_0
-								bool isLocalhost = url.Contains("localhost");
+							bool isLocalhost = url.Contains("localhost");
 #else
-								bool isLocalhost = url.Contains(
-									"localhost",
-									StringComparison.OrdinalIgnoreCase);
+							bool isLocalhost = url.Contains(
+								"localhost",
+								StringComparison.OrdinalIgnoreCase);
 #endif
-								isActiveTest = Tests.HasFlag(
-									DocumentChecks.W3cValidation);
+							isActiveTest = Tests.HasFlag(
+								DocumentChecks.W3cValidation);
 
-								if (isLocalhost == false &&
-									isActiveTest == true)
-								{
-									w3validation = await ValidateFromW3Org(
-										url).ConfigureAwait(false);
-								}
+							if (isLocalhost == false && isActiveTest == true)
+							{
+								w3validation = await ValidateFromW3Org(
+									url).ConfigureAwait(false);
 							}
 						}
 					}
-
-					problemsFound =
-						IsCrawlError(uri, response, requestException);
-
-					isActiveTest = Tests.HasFlag(DocumentChecks.Redirect);
-
-					if (request != null && isActiveTest == true)
-					{
-						SiteTests.CheckRedirects(uri, request, redirectedFrom);
-					}
 				}
-			}
-			catch (Exception exception) when
-				(exception is ArgumentException ||
-				exception is ArgumentNullException ||
-				exception is ArgumentOutOfRangeException ||
-				exception is FileNotFoundException ||
-				exception is IOException ||
-				exception is NotSupportedException ||
-				exception is NullReferenceException ||
-				exception is ObjectDisposedException ||
-				exception is FormatException ||
-				exception is TaskCanceledException ||
-				exception is UnauthorizedAccessException ||
-				exception is WebException)
-			{
-				Log.Error(exception.ToString());
+
+				problemsFound =
+					IsCrawlError(uri, response, requestException);
+
+				isActiveTest = Tests.HasFlag(DocumentChecks.Redirect);
+
+				if (request != null && isActiveTest == true)
+				{
+					SiteTests.CheckRedirects(uri, request, redirectedFrom);
+				}
 			}
 		}
 
@@ -509,22 +484,6 @@ namespace WebTools
 			return result;
 		}
 
-		private void CheckHostsDifferent(Uri uri, Uri parentUri)
-		{
-			string host = uri.Host;
-
-			if (!host.Equals(baseUri.Host, StringComparison.OrdinalIgnoreCase))
-			{
-				string parentUrl = parentUri.AbsoluteUri;
-				string message = string.Format(
-					CultureInfo.InvariantCulture,
-					"Warning: Switching hosts from {0}",
-					parentUrl);
-				Log.Error(CultureInfo.InvariantCulture, m => m(
-					message));
-			}
-		}
-
 		/// <summary>
 		/// The process page crawl completed event handler.
 		/// </summary>
@@ -555,6 +514,22 @@ namespace WebTools
 						crawledPage.HttpRequestException).
 						ConfigureAwait(false);
 				}
+			}
+			catch (Exception exception) when
+				(exception is ArgumentException ||
+				exception is ArgumentNullException ||
+				exception is ArgumentOutOfRangeException ||
+				exception is FileNotFoundException ||
+				exception is IOException ||
+				exception is NotSupportedException ||
+				exception is NullReferenceException ||
+				exception is ObjectDisposedException ||
+				exception is FormatException ||
+				exception is TaskCanceledException ||
+				exception is UnauthorizedAccessException ||
+				exception is WebException)
+			{
+				Log.Error(exception.ToString());
 			}
 			finally
 			{

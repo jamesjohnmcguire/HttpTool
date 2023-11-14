@@ -125,6 +125,29 @@ namespace WebTools
 		}
 
 		/// <summary>
+		/// Checks if the hosts are different.
+		/// </summary>
+		/// <param name="originalUrl">The original URL.</param>
+		/// <param name="uri">The URI.</param>
+		/// <param name="parentUri">The parent URI.</param>
+		public static void CheckHostsDifferent(
+			Uri originalUrl, Uri uri, Uri parentUri)
+		{
+			string originalHost = originalUrl.Host;
+			string host = uri.Host;
+
+			if (!host.Equals(originalHost, StringComparison.OrdinalIgnoreCase))
+			{
+				string parentUrl = parentUri.AbsoluteUri;
+				string message = string.Format(
+					CultureInfo.InvariantCulture,
+					"Warning: Switching hosts from {0}",
+					parentUrl);
+				Log.Error(message);
+			}
+		}
+
+		/// <summary>
 		/// Checks for parse errors.
 		/// </summary>
 		/// <param name="uri">The URI.</param>
