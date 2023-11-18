@@ -1,16 +1,24 @@
 Tasks
-	Unhandled exception. System.Net.Http.HttpRequestException: An error occurred while sending the request. System.IO.IOException: The response ended prematurely. at WebTools.SiteTest.UrlExists(Uri url)
-	move clean url to 484
-	Log errors to it:s own file
+	Remove Problems found on: https://irdiworld.com/what-is-irdi-business-group/ (from: /)
+	WebTool	Add README
+	WebTool	Add Nuget Package
+	SiteTest	Unhandled exception. System.Net.Http.HttpRequestException: An error occurred while sending the request. System.IO.IOException: The response ended prematurely. at WebTools.SiteTest.UrlExists(Uri url)
+	SiteTest	Move clean url to 484
+	SiteTest	Log errors to it:s own file
 	Site Map option
-	site with htts://
-	No command given
-	Enhance APIs
-	HttpTool\Program.cs:27 Type 'Program' can be sealed because it has no subtypes in its containing assembly and is not externally visibles
+	SiteTest	Handle case: site with htts://
+	SiteTest	No command given
 	Change namespace WebTools
 	Change DLL names to match the following pattern: <Company>.<Component>.dll
-	SiteTests	Add SiteTests class
-	SiteTests	Expose Tests as APIs
+	Try	message.Version = HttpVersion.Version20;
+	Update	var links = crawledPage.ParsedLinks;
+	IL3000: 'System.Reflection.Assembly.Location' always returns an empty string for assemblies embedded in a single-file app. If the path to the app directory is needed, consider calling 'System.AppContext.BaseDirectory'. 
+	yml Error: error NETSDK1005: Assets file 'project.assets.json' doesn't have a target for 'netstandard2.0'. Ensure that restore has run and that you have included 'netstandard2.0' in the TargetFrameworks for your project. 
+	WebClient.cs	Merge problems	Header copyright
+	WebClient.cs	Merge problems	Common.logging / just Serilog
+	WebClient.cs	Merge problems	namespace
+	WebClient.cs	Merge problems	Custom serverErrors
+	WebClient.cs	Merge problems				client.DefaultRequestHeaders.ConnectionClose = true;
 	SiteTests	Set secondary log for errors
 	SiteTests	Add which type of tests are being run in log
 	HttpManager	Host wrapping should happen in a derived or client class
@@ -21,10 +29,18 @@ Tasks
 	SiteTests	for login, use config file
 	SiteTests	Unhandled exception. System.Net.WebException: The remote server returned an error: (404) Not Found.	WebTools\SiteTest.cs:line 362
 	SiteTests	Page had no content http://news.localhost/account/english/
-	HttpTool	Add README
 	HttpTool	Add binaries
 	HttpManager	Flush out API - string vs Uri
 	Finished
+		if url contains localhost == true - shouldn't this false?
+		move Tests.HasFlag calls
+		Make API calls public
+		Refactor ResponseReview
+		HttpTool	Add README
+		SiteTests	Add SiteTests class
+		SiteTests	Expose Tests as APIs
+		SiteTest	Enhance APIs
+		HttpTool\Program.cs:27 Type 'Program' can be sealed because it has no subtypes in its containing assembly and is not externally visibles
 		Directory of C:\Bin\Release\Any CPU\WebTools.dll
 		remove Problems found on: https://irdiworld.com/what-is-irdi-business-group/ (from: /)
 		fix CheckRedirects
@@ -49,7 +65,6 @@ Tasks
 		Abot2.Core.HyperLinkParser.GetUris
 		Clean repo
 		git tag
-	Finished
 		Switch to serilog
 		HttpTool	There was a mismatch between the processor architecture of the project being built "MSIL" and the processor architecture of the reference, "AMD64". This mismatch may cause runtime failures. Please consider changing the targeted processor architecture of your project through the Configuration Manager so as to align the processor architectures between your project and references, or take a dependency on references with a processor architecture that matches the targeted processor architecture of your project. net5
 		HttpTool	https://github.com/jamesjohnmcguire/HttpTool/runs/1503734735?check_suite_focus=true
@@ -60,8 +75,12 @@ Tasks
 		error CS0246: The type or namespace name 'TestMethodAttribute' could not be found (are you missing a using directive or an assembly reference?)
 		error CS0246: The type or namespace name 'TestMethod' could not be found (are you missing a using directive or an assembly 		HttpRequestException: System.Net.Http.HttpRequestException: Request timeout occurred	System.Threading.Tasks.TaskCanceledException: The request was canceled due to the configured HttpClient.Timeout of 15 seconds elapsing.
 		System.NullReferenceException: Object reference not set to an instance of an object.	at WebTools\SiteTest.cs:line 309
-	Resources
-		https://stackoverflow.com/questions/32860666/httpclient-scrape-data-from-website-with-login-c-sharp
+Notes
+	Cookie Handling
+		https://stackoverflow.com/questions/12373738/how-do-i-set-a-cookie-on-httpclients-httprequestmessage
+		https://stackoverflow.com/questions/18998354/httpwebrequest-headers-addcookie-value-vs-httpwebrequest-cookiecontainer
+		https://snipplr.com/view/4427
+		https://d-fens.ch/2016/12/27/howto-set-cookie-header-on-defaultrequestheaders-of-httpclient/
 
 		private readonly CookieContainer cookieJar = null;
 			clientHandler.CookieContainer = cookieJar;
@@ -76,36 +95,19 @@ Tasks
 			Cookie cookie = new Cookie(name, value);
 			cookieJar.Add(cookie);
 		}
-WebClient.cs
-	Merge problems	Header copyright
-	Merge problems	Common.logging / just Serilog
-	Merge problems	namespace
-	Merge problems	Custom serverErrors
-	Merge problems				client.DefaultRequestHeaders.ConnectionClose = true;
-Cookie Handling
-	https://stackoverflow.com/questions/12373738/how-do-i-set-a-cookie-on-httpclients-httprequestmessage
-	https://stackoverflow.com/questions/18998354/httpwebrequest-headers-addcookie-value-vs-httpwebrequest-cookiecontainer
-	https://snipplr.com/view/4427
-	https://d-fens.ch/2016/12/27/howto-set-cookie-header-on-defaultrequestheaders-of-httpclient/
-HttpClient
-	http://web.archive.org/web/20180116003143if_/http://chimera.labs.oreilly.com/books/1234000001708/ch14.html#_wrapper
-HttpTool
-	IL3000: 'System.Reflection.Assembly.Location' always returns an empty string for assemblies embedded in a single-file app. If the path to the app directory is needed, consider calling 'System.AppContext.BaseDirectory'. 
-	yml Error: error NETSDK1005: Assets file 'project.assets.json' doesn't have a target for 'netstandard2.0'. Ensure that restore has run and that you have included 'netstandard2.0' in the TargetFrameworks for your project. 
-HttpTool
-					var links = crawledPage.ParsedLinks;
-HttpTool
+Issues
 	method head fails on images
-	Exception Processing: /wp-content/themes/bootstrap-irdi/assets/images/irdi-banner.png
-		System.Net.Http.HttpRequestException: An error occurred while sending the request.
-			---> System.IO.IOException: The response ended prematurely.
-			at System.Net.Http.HttpConnection.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
-			--- End of inner exception stack trace ---
-			at System.Net.Http.HttpConnection.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
-			at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
-			at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
-			at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
-			at WebTools.SiteTest.URLExists(Uri url) in C:\Users\User\Data\Clients\DigitalZenWorks\DevelopmentTools\SourceCode\HttpTool\SourceCode\WebTools\SiteTest.cs:line 338
-	Remove [2023-11-08 10:11:52 ERR] Problems found on: https://irdiworld.com/what-is-irdi-business-group/ (from: /)
-	if url contains localhost == true - shouldn't this false?
-				message.Version = HttpVersion.Version20;
+		Exception Processing: /wp-content/themes/bootstrap-irdi/assets/images/irdi-banner.png
+			System.Net.Http.HttpRequestException: An error occurred while sending the request.
+				---> System.IO.IOException: The response ended prematurely.
+				at System.Net.Http.HttpConnection.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+				--- End of inner exception stack trace ---
+				at System.Net.Http.HttpConnection.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+				at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+				at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+				at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+				at WebTools.SiteTest.URLExists(Uri url) in C:\Users\User\Data\Clients\DigitalZenWorks\DevelopmentTools\SourceCode\HttpTool\SourceCode\WebTools\SiteTest.cs:line 338
+Resources
+	Login
+		https://stackoverflow.com/questions/32860666/httpclient-scrape-data-from-website-with-login-c-sharp
+	http://web.archive.org/web/20180116003143if_/http://chimera.labs.oreilly.com/books/1234000001708/ch14.html#_wrapper
