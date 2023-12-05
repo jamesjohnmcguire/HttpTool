@@ -22,7 +22,7 @@ namespace WebTools.Test
 			string response =
 				await client.RequestUriBody(uri).ConfigureAwait(false);
 
-			Assert.NotNull(response);
+			Assert.That(response, Is.Not.Null);
 		}
 
 		[Test]
@@ -43,7 +43,7 @@ namespace WebTools.Test
 			string response = await client.Request(
 				HttpMethod.Post, uri, parameters).ConfigureAwait(false);
 
-			Assert.NotNull(response);
+			Assert.That(response, Is.Not.Null);
 		}
 
 		[Test]
@@ -54,7 +54,7 @@ namespace WebTools.Test
 			Uri uri = new("https://www.digitalzenworks.com");
 			HttpResponseMessage response = client.RequestUriResponse(uri);
 
-			Assert.NotNull(response);
+			Assert.That(response, Is.Not.Null);
 		}
 
 		[Test]
@@ -69,7 +69,7 @@ namespace WebTools.Test
 				"test",
 				temporaryPath).ConfigureAwait(false);
 
-			Assert.NotNull(response);
+			Assert.That(response, Is.Not.Null);
 		}
 	}
 }
