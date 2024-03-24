@@ -1,5 +1,6 @@
 Tasks
-	Remove Problems found on: https://irdiworld.com/what-is-irdi-business-group/ (from: /)
+	HttpTool	Increase delay
+	Remove Image Retrieval problems found on: https://irdiworld.com/what-is-irdi-business-group/ (from: /)
 	WebTool	Add README
 	WebTool	Add Nuget Package
 	SiteTest	Unhandled exception. System.Net.Http.HttpRequestException: An error occurred while sending the request. System.IO.IOException: The response ended prematurely. at WebTools.SiteTest.UrlExists(Uri url)
@@ -12,8 +13,8 @@ Tasks
 	Change DLL names to match the following pattern: <Company>.<Component>.dll
 	Try	message.Version = HttpVersion.Version20;
 	Update	var links = crawledPage.ParsedLinks;
-	IL3000: 'System.Reflection.Assembly.Location' always returns an empty string for assemblies embedded in a single-file app. If the path to the app directory is needed, consider calling 'System.AppContext.BaseDirectory'. 
-	yml Error: error NETSDK1005: Assets file 'project.assets.json' doesn't have a target for 'netstandard2.0'. Ensure that restore has run and that you have included 'netstandard2.0' in the TargetFrameworks for your project. 
+	IL3000: 'System.Reflection.Assembly.Location' always returns an empty string for assemblies embedded in a single-file app. If the path to the app directory is needed, consider calling 'System.AppContext.BaseDirectory'.
+	yml Error: error NETSDK1005: Assets file 'project.assets.json' doesn't have a target for 'netstandard2.0'. Ensure that restore has run and that you have included 'netstandard2.0' in the TargetFrameworks for your project.
 	WebClient.cs	Merge problems	Header copyright
 	WebClient.cs	Merge problems	Common.logging / just Serilog
 	WebClient.cs	Merge problems	namespace
