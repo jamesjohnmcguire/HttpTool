@@ -1,9 +1,9 @@
-﻿{
+{
   "$schema": "https://raw.githubusercontent.com/DotNetAnalyzers/StyleCopAnalyzers/master/StyleCop.Analyzers/StyleCop.Analyzers/Settings/stylecop.schema.json",
   "settings": {
     "documentationRules": {
       "companyName": "James John McGuire",
-      "copyrightText": "Copyright © 2016 - 2024 {companyName}. All Rights Reserved.",
+      "copyrightText": "Copyright © 2016 - 2025 {companyName}. All Rights Reserved.",
       "xmlHeader": true,
       "fileNamingConvention": "metadata"
     },
