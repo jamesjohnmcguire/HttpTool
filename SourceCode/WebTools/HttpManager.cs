@@ -7,6 +7,7 @@
 using Common.Logging;
 using Newtonsoft.Json;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -15,6 +16,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace WebTools
@@ -57,7 +59,7 @@ namespace WebTools
 
 			client.Timeout = TimeSpan.FromMinutes(2);
 			string userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
-				"AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 " +
+				"AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 " +
 				"Safari/537.36";
 			client.DefaultRequestHeaders.Add("User-Agent", userAgent);
 
@@ -211,6 +213,88 @@ namespace WebTools
 		{
 			Dispose(true);
 			GC.SuppressFinalize(this);
+		}
+
+		/// <summary>
+		/// Submit an HTTP request.
+		/// </summary>
+		/// <param name="method">The HTTP method to use.</param>
+		/// <param name="uri">The URI to request.</param>
+		/// <param name="body">The body of parameters to send.</param>
+		/// <returns>The response message of the request.</returns>
+		public virtual async Task<string> Request(
+			HttpMethod method,
+			string url,
+			string body)
+		{
+			string responseContent = null;
+
+			try
+			{
+				if (url != null && body != null)
+				{
+					Uri uri = new (url);
+
+					StringContent content =
+						new (body, Encoding.UTF8, "application/json");
+
+					content.Headers.ContentType =
+						new ("application/json");
+
+					string requestUrl = uri.AbsoluteUri;
+					bool isComplete = Uri.IsWellFormedUriString(
+						requestUrl, UriKind.Absolute);
+
+					if (false == isComplete)
+					{
+						requestUrl = string.Format(
+						CultureInfo.InvariantCulture,
+						@"{0}{1}",
+						Host,
+						requestUrl);
+					}
+
+					responseContent = await GetResponse(
+						method, requestUrl, content).ConfigureAwait(false);
+
+					if (trySecondChance == true)
+					{
+						trySecondChance = false;
+
+						responseContent = await GetResponse(
+							method, requestUrl, content).ConfigureAwait(false);
+					}
+				}
+			}
+			catch (Exception exception) when
+				(exception is ArgumentException ||
+				exception is ArgumentNullException ||
+				exception is ArgumentOutOfRangeException ||
+				exception is FileNotFoundException ||
+				exception is IOException ||
+				exception is JsonException ||
+				exception is NotSupportedException ||
+				exception is ObjectDisposedException ||
+				exception is System.FormatException ||
+				exception is TaskCanceledException ||
+				exception is UnauthorizedAccessException)
+			{
+				IsError = true;
+
+				Log.Error(exception.ToString());
+
+				responseContent = SetExceptionResponse(exception);
+			}
+			catch (Exception exception)
+			{
+				IsError = true;
+
+				Log.Error(exception.ToString());
+
+				throw;
+			}
+
+			return responseContent;
 		}
 
 		/// <summary>
@@ -737,6 +821,115 @@ namespace WebTools
 							"error: {0}",
 							ResponseMessage.ReasonPhrase);
 					}
+				}
+			}
+			catch (Exception exception) when (exception is ArgumentException ||
+				exception is ArgumentNullException ||
+				exception is ArgumentOutOfRangeException ||
+				exception is FileNotFoundException ||
+				exception is FormatException ||
+				exception is HttpRequestException ||
+				exception is InvalidOperationException ||
+				exception is IOException ||
+				exception is JsonSerializationException ||
+				exception is NullReferenceException ||
+				exception is NotSupportedException ||
+				exception is ObjectDisposedException ||
+				exception is System.Net.WebException ||
+				exception is UnauthorizedAccessException)
+			{
+				IsError = true;
+
+				Log.Error(exception.ToString());
+
+				if (exception is HttpRequestException ||
+					exception is IOException ||
+					exception is System.Net.WebException ||
+					exception is UnauthorizedAccessException)
+				{
+					trySecondChance = true;
+				}
+
+				responseContent = SetExceptionResponse(exception);
+			}
+
+			return responseContent;
+		}
+
+		private async Task<string> GetPostResponse(
+			Uri uri,
+			StringContent content)
+		{
+			string responseContent = null;
+			IsError = false;
+
+			using HttpResponseMessage response =
+				await client.PostAsync(uri, content).ConfigureAwait(false);
+
+			responseContent = await response.Content.ReadAsStringAsync().
+				ConfigureAwait(false);
+
+			if (response.IsSuccessStatusCode == false)
+			{
+				IsError = true;
+
+				Log.Error("status code not ok");
+
+				responseContent = HandleError(response, responseContent);
+
+				Log.ErrorFormat(
+					CultureInfo.InvariantCulture,
+					"error: {0}",
+					ResponseMessage.ReasonPhrase);
+			}
+			else
+			{
+				int statusCode = (int)response.StatusCode;
+
+				// We want to handle redirects ourselves so that we can
+				// determine the final redirect Location (via header)
+				if (statusCode >= 300 && statusCode <= 399)
+				{
+					var redirectUri = response.Headers.Location;
+					if (!redirectUri.IsAbsoluteUri)
+					{
+						string authority =
+							RequestMessage.RequestUri.GetLeftPart(
+								UriPartial.Authority);
+						redirectUri = new Uri(authority + redirectUri);
+					}
+
+					string message = string.Format(
+						CultureInfo.InvariantCulture,
+						"Redirecting to {0}",
+						redirectUri);
+
+					Log.Info(message);
+
+					responseContent = await GetPostResponse(uri, content).
+						ConfigureAwait(false);
+				}
+			}
+
+			return responseContent;
+		}
+
+		private async Task<string> GetResponse(
+			HttpMethod method,
+			string requestUrl,
+			StringContent content)
+		{
+			string responseContent = null;
+			IsError = false;
+
+			try
+			{
+				if (method == HttpMethod.Post)
+				{
+					Uri uri = new (requestUrl);
+
+					responseContent = await GetPostResponse(uri, content).
+						ConfigureAwait(false);
 				}
 			}
 			catch (Exception exception) when (exception is ArgumentException ||
