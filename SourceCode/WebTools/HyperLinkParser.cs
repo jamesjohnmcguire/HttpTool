@@ -1,6 +1,6 @@
 ﻿/////////////////////////////////////////////////////////////////////////////
 // <copyright file="HyperLinkParser.cs" company="James John McGuire">
-// Copyright © 2016 - 2025 James John McGuire. All Rights Reserved.
+// Copyright © 2016 - 2026 James John McGuire. All Rights Reserved.
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
 
