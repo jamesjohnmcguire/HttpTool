@@ -4,26 +4,24 @@
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
 
-using Common.Logging;
-using DigitalZenWorks.CommandLine.Commands;
-using Serilog;
-using Serilog.Configuration;
-using Serilog.Events;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Diagnostics;
-using System.Globalization;
-using System.Linq;
-using System.Reflection;
-using System.Resources;
-using System.Threading.Tasks;
-using WebTools;
-
-[assembly: CLSCompliant(true)]
+[assembly: System.CLSCompliant(true)]
 
 namespace HttpTool
 {
+	using System;
+	using System.Collections.Generic;
+	using System.Diagnostics;
+	using System.Globalization;
+	using System.Reflection;
+	using System.Resources;
+	using System.Threading.Tasks;
+	using Common.Logging;
+	using DigitalZenWorks.CommandLine.Commands;
+	using Serilog;
+	using Serilog.Configuration;
+	using Serilog.Events;
+	using WebTools;
+
 	internal sealed class Program
 	{
 		private static readonly ILog Log = LogManager.GetLogger(

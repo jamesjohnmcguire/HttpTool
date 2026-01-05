@@ -4,18 +4,18 @@
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
 
-using Common.Logging;
-using HtmlAgilityPack;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Net.Http;
-using System.Reflection;
-using System.Resources;
-
 namespace WebTools
 {
+	using System;
+	using System.Collections.Generic;
+	using System.Globalization;
+	using System.Linq;
+	using System.Net.Http;
+	using System.Reflection;
+	using System.Resources;
+	using Common.Logging;
+	using HtmlAgilityPack;
+
 	/// <summary>
 	/// Manages automated site testing.
 	/// </summary>

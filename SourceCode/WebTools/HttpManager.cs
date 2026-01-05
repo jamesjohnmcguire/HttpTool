@@ -4,21 +4,21 @@
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
 
-using Common.Logging;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Threading.Tasks;
-
 namespace WebTools
 {
+	using System;
+	using System.Collections.Generic;
+	using System.ComponentModel;
+	using System.Globalization;
+	using System.IO;
+	using System.Linq;
+	using System.Net;
+	using System.Net.Http;
+	using System.Net.Http.Headers;
+	using System.Threading.Tasks;
+	using Common.Logging;
+	using Newtonsoft.Json;
+
 	/// <summary>
 	/// Represents an extended HTTP client for communicating with web servers.
 	/// </summary>

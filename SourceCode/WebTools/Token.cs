@@ -4,10 +4,10 @@
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
 
-using Newtonsoft.Json;
-
 namespace WebTools
 {
+	using Newtonsoft.Json;
+
 	/// <summary>
 	/// Represents a server response token.
 	/// </summary>

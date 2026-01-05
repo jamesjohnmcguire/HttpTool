@@ -4,14 +4,12 @@
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
 
-using Abot2.Core;
-using Abot2.Poco;
-using AngleSharp.Dom;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace WebTools
 {
+	using System.Collections.Generic;
+	using Abot2.Core;
+	using Abot2.Poco;
+
 	/// <summary>
 	/// Manages hyper link parsing.
 	/// </summary>

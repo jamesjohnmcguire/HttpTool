@@ -4,10 +4,10 @@
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
 
-using System;
-
 namespace WebTools
 {
+	using System;
+
 	/// <summary>
 	/// Represents an enumeration of types of errors.
 	/// </summary>

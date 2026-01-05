@@ -4,13 +4,13 @@
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
 
-using System;
-using System.Collections;
-using System.Globalization;
-using System.Net;
-
 namespace WebTools
 {
+	using System;
+	using System.Collections;
+	using System.Globalization;
+	using System.Net;
+
 	/// <summary>
 	/// Provides support for cookie storage.
 	/// </summary>

@@ -4,28 +4,28 @@
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
 
-using Abot2.Core;
-using Abot2.Crawler;
-using Abot2.Poco;
-using Common.Logging;
-using HtmlAgilityPack;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Reflection;
-using System.Resources;
-using System.Threading;
-using System.Threading.Tasks;
-
-[assembly: CLSCompliant(false)]
+[assembly: System.CLSCompliant(false)]
 
 namespace WebTools
 {
+	using System;
+	using System.Collections.Generic;
+	using System.Globalization;
+	using System.IO;
+	using System.Linq;
+	using System.Net;
+	using System.Net.Http;
+	using System.Reflection;
+	using System.Resources;
+	using System.Threading;
+	using System.Threading.Tasks;
+	using Abot2.Core;
+	using Abot2.Crawler;
+	using Abot2.Poco;
+	using Common.Logging;
+	using HtmlAgilityPack;
+	using Newtonsoft.Json;
+
 	/// <summary>
 	/// Provides support for web site testing.
 	/// </summary>

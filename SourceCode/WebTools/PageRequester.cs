@@ -4,18 +4,18 @@
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
 
-using Abot2.Core;
-using Abot2.Poco;
-using Serilog;
-using System;
-using System.Globalization;
-using System.Net;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace WebTools
 {
+	using System;
+	using System.Globalization;
+	using System.Net;
+	using System.Net.Http;
+	using System.Threading;
+	using System.Threading.Tasks;
+	using Abot2.Core;
+	using Abot2.Poco;
+	using Serilog;
+
 	/// <summary>
 	/// Represents a page request.
 	/// </summary>

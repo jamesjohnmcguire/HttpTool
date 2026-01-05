@@ -4,11 +4,10 @@
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
 
-using Newtonsoft.Json;
-using System;
-
 namespace WebTools
 {
+	using Newtonsoft.Json;
+
 	/// <summary>
 	/// Represents a basic message from the server.
 	/// </summary>

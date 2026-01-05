@@ -4,14 +4,11 @@
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace WebTools
 {
+	using System;
+	using System.Collections.Generic;
+
 	/// <summary>
 	/// Represents a page validation result.
 	/// </summary>
