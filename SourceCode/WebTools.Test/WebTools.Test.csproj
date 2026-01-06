@@ -2,7 +2,6 @@
 
 	<PropertyGroup>
 		<AnalysisMode>All</AnalysisMode>
-		<CodeAnalysisRuleSet>..\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
 		<EnableNETAnalyzers>true</EnableNETAnalyzers>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<IsPackable>false</IsPackable>
