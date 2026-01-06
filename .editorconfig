@@ -1,4 +1,12 @@
-﻿[*.cs]
+﻿[*]
+indent_size = 4
+indent_style = tab
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{cs,csproj,props,vb}]
+charset = utf-8
+end_of_line = lf
 
 # IDE1005: Delegate invocation can be simplified.
 csharp_style_conditional_delegate_call = false
