@@ -3,7 +3,6 @@
 	<PropertyGroup>
 		<AnalysisMode>All</AnalysisMode>
 		<EnableNETAnalyzers>true</EnableNETAnalyzers>
-		<ImplicitUsings>enable</ImplicitUsings>
 		<IsPackable>false</IsPackable>
 		<Nullable>enable</Nullable>
 		<TargetFramework>net10.0</TargetFramework>
@@ -34,6 +33,5 @@
 	<ItemGroup>
 		<AdditionalFiles Include="../stylecop.json" />
 	</ItemGroup>
-
 
 </Project>
