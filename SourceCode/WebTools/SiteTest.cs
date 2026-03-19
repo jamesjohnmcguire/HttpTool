@@ -595,7 +595,11 @@ namespace WebTools
 
 				if (index != -1)
 				{
+#if NETSTANDARD2_1_OR_GREATER
 					string cleanUri = url.AbsoluteUri[..index];
+#else
+					string cleanUri = url.AbsoluteUri.Substring(0, index);
+#endif
 					url = new Uri(cleanUri);
 				}
 
