@@ -1,15 +1,83 @@
 [*]
+charset = utf-8
+guidelines = 80
+guidelines_style = 2px solid lime
 indent_size = 4
 indent_style = tab
 insert_final_newline = true
+max_line_length = 80
 trim_trailing_whitespace = true
 
-[*.{cs,csproj,props,vb}]
-charset = utf-8
+[*.{bat, cmd}]
+end_of_line = crlf
+
+[*.{cs, csproj, props, resx}]
 end_of_line = lf
 
-# IDE1005: Delegate invocation can be simplified.
-csharp_style_conditional_delegate_call = false
+[*.cs]
+# Renove require space after 'new' keyword
+dotnet_diagnostic.SA1000.severity = warning
+csharp_space_after_keywords_in_control_flow_statements = true
+csharp_space_between_method_call_empty_parameter_list_parentheses = false
+csharp_space_between_method_call_parameter_list_parentheses = false
+
+dotnet_diagnostic.max_line_length.severity = warning
+
+csharp_space_after_cast = false
 
 # IDE0017: Simplify object initialization
 dotnet_style_object_initializer = false
+
+# IDE0028: Collection initialization can be simplified
+dotnet_style_collection_initializer	= false
+
+# CA1812: Avoid uninstantiated internal classes
+dotnet_diagnostic.CA1812.severity = none
+
+# CA1819: Properties should not return arrays
+dotnet_diagnostic.CA1819.severity = none
+
+# CA1859: Use concrete types when possible for improved performance
+dotnet_diagnostic.CA1859.severity = none
+
+# IDE0045: Use conditional expression for assignment
+dotnet_diagnostic.IDE0045.severity = none
+
+dotnet_diagnostic.IDE0055.severity = none
+
+dotnet_diagnostic.IDE0100.severity = none
+
+# RCS1033: Remove redundant boolean literal
+dotnet_diagnostic.RCS1033.severity = none
+
+# RCS1049: Simplify boolean comparison
+dotnet_diagnostic.RCS1049.severity = none
+
+# RCS1179: Unnecessary assignment
+dotnet_diagnostic.RCS1179.severity = none
+
+# RCS1212: Remove redundant assignment
+dotnet_diagnostic.RCS1212.severity = none
+
+# RCS1254: Normalize formatting of call chain
+dotnet_diagnostic.RCS1254.severity = warning
+
+dotnet_diagnostic.SA1000.severity = warning
+
+# SA1010: Opening square brackets should be spaced correctly
+dotnet_diagnostic.SA1010.severity = none
+
+# SA1101: Prefix local calls with this
+dotnet_diagnostic.SA1101.severity = none
+
+# SA1305: Field names must not use hungarian notation
+dotnet_diagnostic.SA1305.severity = none
+
+# SA1413: Use Trailing Commas In MultiLine Initializers
+dotnet_diagnostic.SA1413.severity = none
+
+# Require space after 'new' keyword
+dotnet_diagnostic.SA1000.severity = none
+csharp_space_after_keywords_in_control_flow_statements = true
+csharp_space_between_method_call_empty_parameter_list_parentheses = false
+csharp_space_between_method_call_parameter_list_parentheses = false
