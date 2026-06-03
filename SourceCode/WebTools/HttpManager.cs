@@ -45,7 +45,7 @@ namespace WebTools
 			Justification = "HttpClientHandler is exceptional case")]
 		public HttpManager()
 		{
-			HttpClientHandler clientHandler = new ();
+			HttpClientHandler clientHandler = new();
 
 			clientHandler.AllowAutoRedirect = true;
 			clientHandler.CheckCertificateRevocationList = true;
@@ -188,7 +188,7 @@ namespace WebTools
 		/// <param name="value">The value of the cookie.</param>
 		public void AddCookie(string name, string value)
 		{
-			Cookie cookie = new (name, value);
+			Cookie cookie = new(name, value);
 			cookieJar.Add(cookie);
 		}
 
@@ -200,7 +200,7 @@ namespace WebTools
 		/// <param name="value">The value of the cookie.</param>
 		public void AddCookie(Uri domain, string name, string value)
 		{
-			Cookie cookie = new (name, value);
+			Cookie cookie = new(name, value);
 			cookieJar.Add(domain, cookie);
 		}
 
@@ -231,7 +231,7 @@ namespace WebTools
 			{
 				if (uri != null && parameters != null)
 				{
-					using FormUrlEncodedContent content = new (parameters);
+					using FormUrlEncodedContent content = new(parameters);
 
 					string requestUrl = uri.AbsoluteUri;
 					bool isComplete = Uri.IsWellFormedUriString(
@@ -311,11 +311,11 @@ namespace WebTools
 
 			foreach (var item in items)
 			{
-				KeyValuePair<string, string> pair = new (item.Key, item.Value);
+				KeyValuePair<string, string> pair = new(item.Key, item.Value);
 				parameters.Add(pair);
 			}
 
-			Uri uri = new (query);
+			Uri uri = new(query);
 			return await
 				Request(method, uri, parameters).ConfigureAwait(false);
 		}
@@ -430,13 +430,13 @@ namespace WebTools
 				endPoint);
 
 			// make up the form data
-			using (MultipartFormDataContent content = new ())
+			using (MultipartFormDataContent content = new())
 			{
 				content.Headers.ContentType.MediaType = "multipart/form-data";
 
 				// add the file
-				using FileStream fileStream = new (fileName, FileMode.Open);
-				using StreamContent stream = new (fileStream);
+				using FileStream fileStream = new(fileName, FileMode.Open);
+				using StreamContent stream = new(fileStream);
 				content.Add(stream, fieldName, fileName);
 
 				IList<StringContent> contents =
@@ -451,7 +451,7 @@ namespace WebTools
 						{
 							// gets disposed in finally
 #pragma warning disable CA2000 // Dispose objects before losing scope
-							StringContent parameter = new (keypair.Value);
+							StringContent parameter = new(keypair.Value);
 #pragma warning restore CA2000 // Dispose objects before losing scope
 							contents.Add(parameter);
 
@@ -459,7 +459,7 @@ namespace WebTools
 						}
 					}
 
-					Uri uri = new (requestUrl);
+					Uri uri = new(requestUrl);
 
 					using HttpResponseMessage httpResponseMessage =
 						await Client.PostAsync(
@@ -511,7 +511,7 @@ namespace WebTools
 
 				formData.Add(fileStreamContent, fieldName, filePath);
 
-				Uri uri = new (endPoint);
+				Uri uri = new(endPoint);
 				HttpResponseMessage responseMessage = await client.PostAsync(
 					uri, formData).ConfigureAwait(false);
 
@@ -608,7 +608,7 @@ namespace WebTools
 						Host,
 						requestUrl);
 
-					uri = new (requestUrl);
+					uri = new(requestUrl);
 				}
 			}
 
@@ -622,7 +622,7 @@ namespace WebTools
 
 			try
 			{
-				Uri uri = new (requestUrl);
+				Uri uri = new(requestUrl);
 
 				responseContent = await client.GetStringAsync(uri).
 						ConfigureAwait(false);
@@ -671,7 +671,7 @@ namespace WebTools
 				if (method == HttpMethod.Post)
 				{
 					HttpResponseMessage response = null;
-					Uri uri = new (requestUrl);
+					Uri uri = new(requestUrl);
 
 					// save this as clients may want know this
 					RequestMessage = new HttpRequestMessage();
@@ -780,7 +780,7 @@ namespace WebTools
 			string responseContent = null;
 			IsError = false;
 
-			using FormUrlEncodedContent content = new (parameters);
+			using FormUrlEncodedContent content = new(parameters);
 
 			responseContent = await GetResponse(method, requestUrl, content).
 				ConfigureAwait(false);

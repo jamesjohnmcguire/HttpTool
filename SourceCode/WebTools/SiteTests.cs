@@ -35,7 +35,7 @@ namespace WebTools
 			"Parse error", "データベースエラーが発生しました"
 		};
 
-		private static readonly ResourceManager StringTable = new (
+		private static readonly ResourceManager StringTable = new(
 			"WebTools.Resources", Assembly.GetExecutingAssembly());
 
 		/// <summary>
@@ -162,7 +162,7 @@ namespace WebTools
 		{
 			bool result = true;
 
-			HtmlDocument agilityPackHtmlDocument = new ();
+			HtmlDocument agilityPackHtmlDocument = new();
 			agilityPackHtmlDocument.LoadHtml(pageContent);
 
 			IEnumerable<HtmlParseError> parseErrors =

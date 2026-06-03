@@ -39,7 +39,7 @@ namespace WebTools
 			"GIF", "JPG", "JPEG", "PDF", "PNG"
 		};
 
-		private static readonly ResourceManager StringTable = new (
+		private static readonly ResourceManager StringTable = new(
 			"WebTools.Resources", Assembly.GetExecutingAssembly());
 
 		private readonly HttpManager client;
@@ -266,7 +266,7 @@ namespace WebTools
 			baseUri = uri;
 			string message;
 
-			CrawlConfiguration crawlConfiguration = new ();
+			CrawlConfiguration crawlConfiguration = new();
 
 			crawlConfiguration.MaxConcurrentThreads = 4;
 			crawlConfiguration.UserAgentString =
@@ -282,10 +282,10 @@ namespace WebTools
 			crawlConfiguration.IsRespectRobotsDotTextEnabled = false;
 			crawlConfiguration.IsSendingCookiesEnabled = true;
 
-			WebContentExtractor contentExtractor = new ();
-			CookieContainer cookieContainer = new ();
+			WebContentExtractor contentExtractor = new();
+			CookieContainer cookieContainer = new();
 
-			using PageRequester pageRequester = new (
+			using PageRequester pageRequester = new(
 				crawlConfiguration,
 				contentExtractor,
 				cookieContainer);
@@ -295,9 +295,9 @@ namespace WebTools
 				pageRequester.AddCookie(uri, cookie.Key, cookie.Value);
 			}
 
-			HyperLinkParser parser = new ();
+			HyperLinkParser parser = new();
 
-			using PoliteWebCrawler crawler = new (
+			using PoliteWebCrawler crawler = new(
 				crawlConfiguration,
 				null,
 				null,
@@ -436,7 +436,7 @@ namespace WebTools
 		{
 			bool result = true;
 
-			HtmlDocument agilityPackHtmlDocument = new ();
+			HtmlDocument agilityPackHtmlDocument = new();
 			agilityPackHtmlDocument.LoadHtml(pageContent);
 
 			HtmlNodeCollection nodes =
@@ -460,7 +460,7 @@ namespace WebTools
 						string imageUrl =
 							GetAbsoluteUrlString(baseUrl, source.Value);
 
-						Uri imageUri = new (imageUrl);
+						Uri imageUri = new(imageUrl);
 						bool exists = await
 							UrlExists(imageUri).ConfigureAwait(false);
 
@@ -492,7 +492,7 @@ namespace WebTools
 		private async void ProcessPageCrawlCompleted(
 			object sender, PageCrawlCompletedArgs arguments)
 		{
-			using SemaphoreSlim semaphoreSlim = new (1, 1);
+			using SemaphoreSlim semaphoreSlim = new(1, 1);
 			await semaphoreSlim.WaitAsync().ConfigureAwait(false);
 
 			try
@@ -604,7 +604,7 @@ namespace WebTools
 				}
 
 				// Do only Head request to avoid download full file.
-				using HttpRequestMessage message = new (HttpMethod.Head, url);
+				using HttpRequestMessage message = new(HttpMethod.Head, url);
 
 				HttpResponseMessage response =
 					await httpClient.SendAsync(message).ConfigureAwait(false);
@@ -629,7 +629,7 @@ namespace WebTools
 			{
 				result = false;
 
-				using SemaphoreSlim semaphoreSlim = new (1, 1);
+				using SemaphoreSlim semaphoreSlim = new(1, 1);
 
 				await semaphoreSlim.WaitAsync().ConfigureAwait(false);
 
@@ -656,7 +656,7 @@ namespace WebTools
 				"http://validator.w3.org/nu/?doc={0}&out=json",
 				url);
 
-			Uri uri = new (validator);
+			Uri uri = new(validator);
 			string response =
 				await client.RequestUriBody(uri).ConfigureAwait(false);
 

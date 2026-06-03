@@ -31,7 +31,7 @@ namespace WebTools
 			string header, string host)
 		{
 			ArrayList cookieList;
-			CookieCollection cookieCollection = new ();
+			CookieCollection cookieCollection = new();
 
 			if (!string.IsNullOrWhiteSpace(header))
 			{
@@ -58,7 +58,7 @@ namespace WebTools
 
 			string[] cookieParts = cookHeader.Split(',');
 
-			ArrayList cookieList = new ();
+			ArrayList cookieList = new();
 			int index = 0;
 
 			while (index < cookieParts.Length)
@@ -93,7 +93,7 @@ namespace WebTools
 		private static CookieCollection ConvertCookieArraysToCookieCollection(
 			ArrayList cookieList, string host)
 		{
-			CookieCollection cc = new ();
+			CookieCollection cc = new();
 
 			string[] cookieParts;
 
@@ -105,7 +105,7 @@ namespace WebTools
 				cookieParts = cookieText.Split(';');
 
 				string strCNameAndCValue;
-				Cookie cookTemp = new ();
+				Cookie cookTemp = new();
 
 				for (int subIndex = 0; subIndex < cookieParts.Length;
 					subIndex++)
@@ -126,7 +126,7 @@ namespace WebTools
 #else
 							string firstName = strCNameAndCValue[..firstEqual];
 							string allValue =
-								strCNameAndCValue[(firstEqual + 1) ..];
+								strCNameAndCValue[(firstEqual + 1)..];
 #endif
 							cookTemp.Name = firstName;
 							cookTemp.Value = allValue;
@@ -183,7 +183,7 @@ namespace WebTools
 			{
 				if (!string.IsNullOrWhiteSpace(cookiePart))
 				{
-					cookTemp = new ();
+					cookTemp = new();
 
 					string[] nameValuePairTemp;
 

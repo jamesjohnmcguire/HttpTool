@@ -28,7 +28,7 @@ namespace HttpTool
 			System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
 		private static readonly ResourceManager StringTable =
-			new ("HttpTool.Resources", Assembly.GetExecutingAssembly());
+			new("HttpTool.Resources", Assembly.GetExecutingAssembly());
 
 		private static FileVersionInfo GetAssemblyInformation()
 		{
@@ -52,37 +52,37 @@ namespace HttpTool
 		{
 			IList<Command> commands = new List<Command>();
 
-			Command help = new ("help");
+			Command help = new("help");
 			help.Description = "Show this information";
 			commands.Add(help);
 
 			IList<CommandOption> options = new List<CommandOption>();
 
-			CommandOption cookie = new ("c", "cookie", false);
+			CommandOption cookie = new("c", "cookie", false);
 			options.Add(cookie);
 
-			Command agilityPack = new ("agilitypack", options, 0, "Run agility pack tests");
+			Command agilityPack = new("agilitypack", options, 0, "Run agility pack tests");
 			commands.Add(agilityPack);
 
-			Command empty = new ("empty", options, 0, "Run empty page tests");
+			Command empty = new("empty", options, 0, "Run empty page tests");
 			commands.Add(empty);
 
-			Command enhanced = new ("enhanced", options, 0, "Run all enhanced tests");
+			Command enhanced = new("enhanced", options, 0, "Run all enhanced tests");
 			commands.Add(enhanced);
 
-			Command images = new ("images", options, 0, "Run missing images tests");
+			Command images = new("images", options, 0, "Run missing images tests");
 			commands.Add(images);
 
-			Command redirects = new ("redirects", options, 0, "Run redirect tests");
+			Command redirects = new("redirects", options, 0, "Run redirect tests");
 			commands.Add(redirects);
 
-			Command standard = new ("standard", options, 0, "Run standard tests (default)");
+			Command standard = new("standard", options, 0, "Run standard tests (default)");
 			commands.Add(standard);
 
-			Command testall = new ("testall", options, 0, "Run all tests");
+			Command testall = new("testall", options, 0, "Run all tests");
 			commands.Add(testall);
 
-			Command validate = new ("validate", options, 0, "Run w3c HTML validation tests");
+			Command validate = new("validate", options, 0, "Run w3c HTML validation tests");
 			commands.Add(validate);
 
 			return commands;
@@ -171,7 +171,7 @@ namespace HttpTool
 				"[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] " +
 				"{Message:lj}{NewLine}{Exception}";
 
-			LoggerConfiguration configuration = new ();
+			LoggerConfiguration configuration = new();
 			LoggerSinkConfiguration sinkConfiguration = configuration.WriteTo;
 			sinkConfiguration.Console(
 				LogEventLevel.Verbose,
@@ -221,7 +221,7 @@ namespace HttpTool
 
 				IList<Command> commands = GetCommands();
 
-				CommandLineArguments commandLine = new (commands, arguments);
+				CommandLineArguments commandLine = new(commands, arguments);
 
 				arguments = UpdateArguments(arguments);
 
@@ -237,7 +237,7 @@ namespace HttpTool
 					string url = GetUrl(arguments);
 					DocumentChecks tests = GetTests(command.Name);
 
-					using SiteTest tester = new (tests);
+					using SiteTest tester = new(tests);
 
 					bool hasCookie = command.DoesOptionExist(
 						"c", "cookie");
@@ -252,7 +252,7 @@ namespace HttpTool
 						CultureInfo.InstalledUICulture);
 					Log.InfoFormat(CultureInfo.CurrentCulture, message, url);
 
-					Uri uri = new (url);
+					Uri uri = new(url);
 					await tester.Test(uri).ConfigureAwait(false);
 
 					result = true;

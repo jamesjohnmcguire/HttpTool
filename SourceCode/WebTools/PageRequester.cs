@@ -68,7 +68,7 @@ namespace WebTools
 		/// <param name="value">The value of the cookie.</param>
 		public void AddCookie(Uri domain, string name, string value)
 		{
-			Cookie cookie = new (name, value);
+			Cookie cookie = new(name, value);
 			cookieContainer.Add(domain, cookie);
 		}
 
@@ -240,12 +240,12 @@ namespace WebTools
 				// https://stackoverflow.com/questions/13159589/how-to-handle-authenticatication-with-httpwebrequest-allowautoredirect
 				var cache = new CredentialCache();
 
-				NetworkCredential credentials = new (
+				NetworkCredential credentials = new(
 					config.LoginUser,
 					config.LoginPassword);
 
-				Uri uri = new ($"http://{rootUri.Host}");
-				Uri uris = new ($"https://{rootUri.Host}");
+				Uri uri = new($"http://{rootUri.Host}");
+				Uri uris = new($"https://{rootUri.Host}");
 
 				cache.Add(uri, "Basic", credentials);
 				cache.Add(uris, "Basic", credentials);
