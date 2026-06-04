@@ -502,7 +502,7 @@ namespace WebTools
 
 				client.DefaultRequestHeaders.ConnectionClose = true;
 
-				var stream = File.OpenRead(filePath);
+				FileStream stream = File.OpenRead(filePath);
 
 				using HttpContent fileStreamContent =
 					new StreamContent(stream);
@@ -691,7 +691,7 @@ namespace WebTools
 						// determine the final redirect Location (via header)
 						if (statusCode >= 300 && statusCode <= 399)
 						{
-							var redirectUri = response.Headers.Location;
+							Uri redirectUri = response.Headers.Location;
 							if (!redirectUri.IsAbsoluteUri)
 							{
 								string authority =

@@ -290,7 +290,7 @@ namespace WebTools
 				contentExtractor,
 				cookieContainer);
 
-			foreach (var cookie in cookies)
+			foreach (KeyValuePair<string, string> cookie in cookies)
 			{
 				pageRequester.AddCookie(uri, cookie.Key, cookie.Value);
 			}
@@ -445,9 +445,9 @@ namespace WebTools
 
 			if (null != nodes)
 			{
-				foreach (var image in nodes)
+				foreach (HtmlNode image in nodes)
 				{
-					var source = image.Attributes["src"];
+					HtmlAttribute source = image.Attributes["src"];
 					string contents = source.Value;
 
 					if (!imagesChecked.Contains(contents))

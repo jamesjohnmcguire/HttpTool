@@ -113,7 +113,7 @@ namespace WebTools
 			try
 			{
 				crawledPage.RequestStarted = DateTime.Now;
-				using (var requestMessage = BuildHttpRequestMessage(uri))
+				using (HttpRequestMessage requestMessage = BuildHttpRequestMessage(uri))
 				{
 					response = await httpClient.SendAsync(
 						requestMessage, CancellationToken.None).ConfigureAwait(false);
@@ -162,7 +162,7 @@ namespace WebTools
 				{
 					if (response != null && shouldDownloadContent != null)
 					{
-						var shouldDownloadContentDecision = shouldDownloadContent(crawledPage);
+						CrawlDecision shouldDownloadContentDecision = shouldDownloadContent(crawledPage);
 						if (shouldDownloadContentDecision.Allow)
 						{
 							crawledPage.DownloadContentStarted = DateTime.Now;
