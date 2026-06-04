@@ -115,8 +115,7 @@ namespace WebTools
 						strCNameAndCValue = cookieParts[subIndex];
 						if (!string.IsNullOrWhiteSpace(strCNameAndCValue))
 						{
-							int firstEqual = strCNameAndCValue.IndexOf(
-								"=", StringComparison.Ordinal);
+							int firstEqual = strCNameAndCValue.IndexOf('=');
 #if NETSTANDARD2_0
 							string firstName =
 								strCNameAndCValue.Substring(0, firstEqual);
