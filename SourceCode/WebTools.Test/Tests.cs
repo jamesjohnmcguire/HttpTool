@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using WebTools;
 
-public class Tests
+internal class Tests
 {
 	[SetUp]
 	public void Setup()
