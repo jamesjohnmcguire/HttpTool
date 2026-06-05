@@ -4,27 +4,26 @@
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
 
-namespace WebTools
+namespace WebTools;
+
+using Newtonsoft.Json;
+
+/// <summary>
+/// Represents a server response.
+/// </summary>
+public class ServerResponse
 {
-	using Newtonsoft.Json;
+	/// <summary>
+	/// Gets or sets the error code.
+	/// </summary>
+	/// <value>The error code or brief description.</value>
+	[JsonProperty("error")]
+	public string Error { get; set; }
 
 	/// <summary>
-	/// Represents a server response.
+	/// Gets or sets the error description.
 	/// </summary>
-	public class ServerResponse
-	{
-		/// <summary>
-		/// Gets or sets the error code.
-		/// </summary>
-		/// <value>The error code or brief description.</value>
-		[JsonProperty("error")]
-		public string Error { get; set; }
-
-		/// <summary>
-		/// Gets or sets the error description.
-		/// </summary>
-		/// <value>The error description.</value>
-		[JsonProperty("error_description")]
-		public string ErrorDescription { get; set; }
-	}
+	/// <value>The error description.</value>
+	[JsonProperty("error_description")]
+	public string ErrorDescription { get; set; }
 }

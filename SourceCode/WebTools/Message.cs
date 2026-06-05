@@ -4,23 +4,22 @@
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
 
-namespace WebTools
+namespace WebTools;
+
+/// <summary>
+/// Represents a message.
+/// </summary>
+public class Message
 {
 	/// <summary>
-	/// Represents a message.
+	/// Gets or sets the name of message.
 	/// </summary>
-	public class Message
-	{
-		/// <summary>
-		/// Gets or sets the name of message.
-		/// </summary>
-		/// <value>The name of message.</value>
-		public string Name { get; set; }
+	/// <value>The name of message.</value>
+	public string Name { get; set; }
 
-		/// <summary>
-		/// Gets or sets the message description.
-		/// </summary>
-		/// <value>The message description.</value>
-		public string Description { get; set; }
-	}
+	/// <summary>
+	/// Gets or sets the message description.
+	/// </summary>
+	/// <value>The message description.</value>
+	public string Description { get; set; }
 }

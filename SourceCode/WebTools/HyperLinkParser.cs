@@ -4,24 +4,23 @@
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
 
-namespace WebTools
+namespace WebTools;
+
+using System.Collections.Generic;
+using Abot2.Core;
+using Abot2.Poco;
+
+/// <summary>
+/// Manages hyper link parsing.
+/// </summary>
+/// <seealso cref="Abot2.Core.AngleSharpHyperlinkParser" />
+public class HyperLinkParser : AngleSharpHyperlinkParser
 {
-	using System.Collections.Generic;
-	using Abot2.Core;
-	using Abot2.Poco;
-
-	/// <summary>
-	/// Manages hyper link parsing.
-	/// </summary>
-	/// <seealso cref="Abot2.Core.AngleSharpHyperlinkParser" />
-	public class HyperLinkParser : AngleSharpHyperlinkParser
+	/// <inheritdoc/>
+	protected override IEnumerable<HyperLink> GetRawHyperLinks(CrawledPage crawledPage)
 	{
-		/// <inheritdoc/>
-		protected override IEnumerable<HyperLink> GetRawHyperLinks(CrawledPage crawledPage)
-		{
-			IEnumerable<HyperLink> links = base.GetRawHyperLinks(crawledPage);
+		IEnumerable<HyperLink> links = base.GetRawHyperLinks(crawledPage);
 
-			return links;
-		}
+		return links;
 	}
 }

@@ -4,17 +4,16 @@
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
 
-namespace WebTools
+namespace WebTools;
+
+/// <summary>
+/// Provides support for supplying an error message.
+/// </summary>
+public class ErrorMessage : Message
 {
 	/// <summary>
-	/// Provides support for supplying an error message.
+	/// Gets or sets the type of error.
 	/// </summary>
-	public class ErrorMessage : Message
-	{
-		/// <summary>
-		/// Gets or sets the type of error.
-		/// </summary>
-		/// <value>The type of error.</value>
-		public Errors ErrorType { get; set; }
-	}
+	/// <value>The type of error.</value>
+	public Errors ErrorType { get; set; }
 }

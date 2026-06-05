@@ -4,49 +4,48 @@
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
 
-namespace WebTools
+namespace WebTools;
+
+using System;
+
+/// <summary>
+/// Represents an enumeration of types of errors.
+/// </summary>
+[Flags]
+public enum Errors
 {
-	using System;
+	/// <summary>
+	/// No errors
+	/// </summary>
+	None = 0,
 
 	/// <summary>
-	/// Represents an enumeration of types of errors.
+	/// Unknown error
 	/// </summary>
-	[Flags]
-	public enum Errors
-	{
-		/// <summary>
-		/// No errors
-		/// </summary>
-		None = 0,
+	UnknownError = 1,
 
-		/// <summary>
-		/// Unknown error
-		/// </summary>
-		UnknownError = 1,
+	/// <summary>
+	/// Invalide email address
+	/// </summary>
+	InvalidEmailAddress = 2,
 
-		/// <summary>
-		/// Invalide email address
-		/// </summary>
-		InvalidEmailAddress = 2,
+	/// <summary>
+	/// Password too short
+	/// </summary>
+	PasswordTooShort = 4,
 
-		/// <summary>
-		/// Password too short
-		/// </summary>
-		PasswordTooShort = 4,
+	/// <summary>
+	/// Passwords do not match
+	/// </summary>
+	PasswordsDoNotMatch = 8,
 
-		/// <summary>
-		/// Passwords do not match
-		/// </summary>
-		PasswordsDoNotMatch = 8,
+	/// <summary>
+	/// Password does not have number
+	/// </summary>
+	PasswordDoesNotHaveNumber = 16,
 
-		/// <summary>
-		/// Password does not have number
-		/// </summary>
-		PasswordDoesNotHaveNumber = 16,
-
-		/// <summary>
-		/// Unable to connect
-		/// </summary>
-		UnableToConnect = 32
-	}
+	/// <summary>
+	/// Unable to connect
+	/// </summary>
+	UnableToConnect = 32
 }

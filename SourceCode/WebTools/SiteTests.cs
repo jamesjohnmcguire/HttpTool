@@ -4,291 +4,290 @@
 // </copyright>
 /////////////////////////////////////////////////////////////////////////////
 
-namespace WebTools
+namespace WebTools;
+
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Net.Http;
+using System.Reflection;
+using System.Resources;
+using Common.Logging;
+using HtmlAgilityPack;
+
+/// <summary>
+/// Manages automated site testing.
+/// </summary>
+public static class SiteTests
 {
-	using System;
-	using System.Collections.Generic;
-	using System.Globalization;
-	using System.Linq;
-	using System.Net.Http;
-	using System.Reflection;
-	using System.Resources;
-	using Common.Logging;
-	using HtmlAgilityPack;
+	private static readonly string[] IgnoreTypes =
+	{
+		"GIF", "JPG", "JPEG", "PDF", "PNG"
+	};
+
+	private static readonly ILog Log = LogManager.GetLogger(
+		System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+	private static readonly string[] ServerErrors =
+	{
+		"A PHP Error was encountered", "A Database Error Occurred",
+		"Parse error", "データベースエラーが発生しました"
+	};
+
+	private static readonly ResourceManager StringTable = new(
+		"WebTools.Resources", Assembly.GetExecutingAssembly());
 
 	/// <summary>
-	/// Manages automated site testing.
+	/// Checks the content for errors.
 	/// </summary>
-	public static class SiteTests
+	/// <param name="uri">The URI.</param>
+	/// <param name="pageContent">Content of the page.</param>
+	/// <returns>A value indicating whether the content was free of
+	/// errors or not.</returns>
+	public static bool CheckContentErrors(Uri uri, string pageContent)
 	{
-		private static readonly string[] IgnoreTypes =
+		bool result = true;
+
+		if (uri != null)
 		{
-			"GIF", "JPG", "JPEG", "PDF", "PNG"
-		};
+			string url = uri.AbsoluteUri;
 
-		private static readonly ILog Log = LogManager.GetLogger(
-			System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+			bool isIgnoreType =
+				IgnoreTypes.Any(url.ToUpperInvariant().EndsWith);
 
-		private static readonly string[] ServerErrors =
-		{
-			"A PHP Error was encountered", "A Database Error Occurred",
-			"Parse error", "データベースエラーが発生しました"
-		};
-
-		private static readonly ResourceManager StringTable = new(
-			"WebTools.Resources", Assembly.GetExecutingAssembly());
-
-		/// <summary>
-		/// Checks the content for errors.
-		/// </summary>
-		/// <param name="uri">The URI.</param>
-		/// <param name="pageContent">Content of the page.</param>
-		/// <returns>A value indicating whether the content was free of
-		/// errors or not.</returns>
-		public static bool CheckContentErrors(Uri uri, string pageContent)
-		{
-			bool result = true;
-
-			if (uri != null)
+			if (isIgnoreType == false && pageContent != null)
 			{
-				string url = uri.AbsoluteUri;
+				bool isServerErrors =
+					ServerErrors.Any(pageContent.Contains);
 
-				bool isIgnoreType =
-					IgnoreTypes.Any(url.ToUpperInvariant().EndsWith);
-
-				if (isIgnoreType == false && pageContent != null)
+				if (isServerErrors == true)
 				{
-					bool isServerErrors =
-						ServerErrors.Any(pageContent.Contains);
+					result = false;
 
-					if (isServerErrors == true)
-					{
-						result = false;
-
-						string message = string.Format(
-							CultureInfo.InvariantCulture,
-							"Page contains error messages: {0}",
-							uri.AbsoluteUri);
-						Log.Error(message);
-					}
-				}
-			}
-
-			return result;
-		}
-
-		/// <summary>
-		/// Checks for empty content.
-		/// </summary>
-		/// <param name="uri">The URI.</param>
-		/// <param name="parentUri">The parent URI.</param>
-		/// <param name="response">The response.</param>
-		/// <param name="pageContent">Content of the page.</param>
-		/// <returns>A value indicating whether the content has content
-		/// or not.</returns>
-		public static bool CheckForEmptyContent(
-			Uri uri,
-			Uri parentUri,
-			HttpResponseMessage response,
-			string pageContent)
-		{
-			bool hasContent = true;
-			string message;
-
-			if (string.IsNullOrWhiteSpace(pageContent))
-			{
-				hasContent = false;
-
-				if (response != null)
-				{
-					if (uri != null)
-					{
-						message = string.Format(
-							CultureInfo.InvariantCulture,
-							"Page had no content {0}",
-							uri.AbsoluteUri);
-						Log.Error(message);
-					}
-
-					if (parentUri != null)
-					{
-						message = string.Format(
-							CultureInfo.InvariantCulture,
-							"Parent: {0}",
-							parentUri.AbsoluteUri);
-						Log.Error(message);
-					}
-				}
-			}
-
-			return hasContent;
-		}
-
-		/// <summary>
-		/// Checks if the hosts are different.
-		/// </summary>
-		/// <param name="originalUrl">The original URL.</param>
-		/// <param name="uri">The URI.</param>
-		/// <param name="parentUri">The parent URI.</param>
-		public static void CheckHostsDifferent(
-			Uri originalUrl, Uri uri, Uri parentUri)
-		{
-			if (originalUrl != null && uri != null)
-			{
-				string originalHost = originalUrl.Host;
-				string host = uri.Host;
-
-				if (!host.Equals(
-					originalHost, StringComparison.OrdinalIgnoreCase))
-				{
-					string parentUrl = parentUri.AbsoluteUri;
 					string message = string.Format(
 						CultureInfo.InvariantCulture,
-						"Warning: Switching hosts from {0}",
-						parentUrl);
+						"Page contains error messages: {0}",
+						uri.AbsoluteUri);
 					Log.Error(message);
 				}
 			}
 		}
 
-		/// <summary>
-		/// Checks for parse errors.
-		/// </summary>
-		/// <param name="uri">The URI.</param>
-		/// <param name="pageContent">Content of the page.</param>
-		/// <returns>A value indicating whether the content was free from
-		/// parse errors or not.</returns>
-		public static bool CheckParseErrors(Uri uri, string pageContent)
+		return result;
+	}
+
+	/// <summary>
+	/// Checks for empty content.
+	/// </summary>
+	/// <param name="uri">The URI.</param>
+	/// <param name="parentUri">The parent URI.</param>
+	/// <param name="response">The response.</param>
+	/// <param name="pageContent">Content of the page.</param>
+	/// <returns>A value indicating whether the content has content
+	/// or not.</returns>
+	public static bool CheckForEmptyContent(
+		Uri uri,
+		Uri parentUri,
+		HttpResponseMessage response,
+		string pageContent)
+	{
+		bool hasContent = true;
+		string message;
+
+		if (string.IsNullOrWhiteSpace(pageContent))
 		{
-			bool result = true;
+			hasContent = false;
 
-			HtmlDocument agilityPackHtmlDocument = new();
-			agilityPackHtmlDocument.LoadHtml(pageContent);
-
-			IEnumerable<HtmlParseError> parseErrors =
-				agilityPackHtmlDocument.ParseErrors;
-
-			if (null != parseErrors)
+			if (response != null)
 			{
-				foreach (HtmlParseError error in parseErrors)
-				{
-					// Ignoring error "End tag </option> is not required"
-					// as it doesn't really seem like a problem
-					if (uri != null &&
-						error.Code != HtmlParseErrorCode.TagNotClosed)
-					{
-						result = false;
-
-						string message = string.Format(
-							CultureInfo.InvariantCulture,
-							"HtmlAgilityPack: {0} in {1} at line: {2}",
-							error.Reason,
-							uri.AbsoluteUri,
-							error.Line);
-						Log.Error(message);
-					}
-				}
-			}
-
-			return result;
-		}
-
-		/// <summary>
-		/// Checks for redirects.
-		/// </summary>
-		/// <param name="uri">The URI.</param>
-		/// <param name="request">The request.</param>
-		/// <param name="redirectedFrom">The redirected from.</param>
-		public static void CheckRedirects(
-			Uri uri,
-			HttpRequestMessage request,
-			object redirectedFrom)
-		{
-			if (request != null)
-			{
-				string requestUri = request.RequestUri.AbsoluteUri;
-
 				if (uri != null)
 				{
-					string responseUri = uri.AbsoluteUri;
+					message = string.Format(
+						CultureInfo.InvariantCulture,
+						"Page had no content {0}",
+						uri.AbsoluteUri);
+					Log.Error(message);
+				}
 
-					if (responseUri != null)
+				if (parentUri != null)
+				{
+					message = string.Format(
+						CultureInfo.InvariantCulture,
+						"Parent: {0}",
+						parentUri.AbsoluteUri);
+					Log.Error(message);
+				}
+			}
+		}
+
+		return hasContent;
+	}
+
+	/// <summary>
+	/// Checks if the hosts are different.
+	/// </summary>
+	/// <param name="originalUrl">The original URL.</param>
+	/// <param name="uri">The URI.</param>
+	/// <param name="parentUri">The parent URI.</param>
+	public static void CheckHostsDifferent(
+		Uri originalUrl, Uri uri, Uri parentUri)
+	{
+		if (originalUrl != null && uri != null)
+		{
+			string originalHost = originalUrl.Host;
+			string host = uri.Host;
+
+			if (!host.Equals(
+				originalHost, StringComparison.OrdinalIgnoreCase))
+			{
+				string parentUrl = parentUri.AbsoluteUri;
+				string message = string.Format(
+					CultureInfo.InvariantCulture,
+					"Warning: Switching hosts from {0}",
+					parentUrl);
+				Log.Error(message);
+			}
+		}
+	}
+
+	/// <summary>
+	/// Checks for parse errors.
+	/// </summary>
+	/// <param name="uri">The URI.</param>
+	/// <param name="pageContent">Content of the page.</param>
+	/// <returns>A value indicating whether the content was free from
+	/// parse errors or not.</returns>
+	public static bool CheckParseErrors(Uri uri, string pageContent)
+	{
+		bool result = true;
+
+		HtmlDocument agilityPackHtmlDocument = new();
+		agilityPackHtmlDocument.LoadHtml(pageContent);
+
+		IEnumerable<HtmlParseError> parseErrors =
+			agilityPackHtmlDocument.ParseErrors;
+
+		if (null != parseErrors)
+		{
+			foreach (HtmlParseError error in parseErrors)
+			{
+				// Ignoring error "End tag </option> is not required"
+				// as it doesn't really seem like a problem
+				if (uri != null &&
+					error.Code != HtmlParseErrorCode.TagNotClosed)
+				{
+					result = false;
+
+					string message = string.Format(
+						CultureInfo.InvariantCulture,
+						"HtmlAgilityPack: {0} in {1} at line: {2}",
+						error.Reason,
+						uri.AbsoluteUri,
+						error.Line);
+					Log.Error(message);
+				}
+			}
+		}
+
+		return result;
+	}
+
+	/// <summary>
+	/// Checks for redirects.
+	/// </summary>
+	/// <param name="uri">The URI.</param>
+	/// <param name="request">The request.</param>
+	/// <param name="redirectedFrom">The redirected from.</param>
+	public static void CheckRedirects(
+		Uri uri,
+		HttpRequestMessage request,
+		object redirectedFrom)
+	{
+		if (request != null)
+		{
+			string requestUri = request.RequestUri.AbsoluteUri;
+
+			if (uri != null)
+			{
+				string responseUri = uri.AbsoluteUri;
+
+				if (responseUri != null)
+				{
+					IsRedirect(requestUri, responseUri);
+
+					if (redirectedFrom != null)
 					{
-						IsRedirect(requestUri, responseUri);
-
-						if (redirectedFrom != null)
-						{
-							// Special case.
-							string message = StringTable.GetString(
-								"REDIRECTED",
-								CultureInfo.InstalledUICulture);
-							Log.InfoFormat(
-								CultureInfo.InvariantCulture,
-								message,
-								requestUri,
-								responseUri);
-						}
+						// Special case.
+						string message = StringTable.GetString(
+							"REDIRECTED",
+							CultureInfo.InstalledUICulture);
+						Log.InfoFormat(
+							CultureInfo.InvariantCulture,
+							message,
+							requestUri,
+							responseUri);
 					}
 				}
 			}
 		}
+	}
 
-		/// <summary>
-		/// Determines whether the specified request URI is a redirect.
-		/// </summary>
-		/// <param name="requestUri">The request URI.</param>
-		/// <param name="responseUri">The response URI.</param>
-		/// <returns>
-		///   <c>true</c> if the specified request URI is a redirect;
-		///   otherwise, <c>false</c>.
-		/// </returns>
-		public static bool IsRedirect(string requestUri, string responseUri)
+	/// <summary>
+	/// Determines whether the specified request URI is a redirect.
+	/// </summary>
+	/// <param name="requestUri">The request URI.</param>
+	/// <param name="responseUri">The response URI.</param>
+	/// <returns>
+	///   <c>true</c> if the specified request URI is a redirect;
+	///   otherwise, <c>false</c>.
+	/// </returns>
+	public static bool IsRedirect(string requestUri, string responseUri)
+	{
+		bool redirected = false;
+
+		if (!string.IsNullOrWhiteSpace(requestUri) &&
+			!string.IsNullOrWhiteSpace(responseUri))
 		{
-			bool redirected = false;
-
-			if (!string.IsNullOrWhiteSpace(requestUri) &&
-				!string.IsNullOrWhiteSpace(responseUri))
+			if (!requestUri.Equals(
+				responseUri, StringComparison.OrdinalIgnoreCase))
 			{
-				if (!requestUri.Equals(
-					responseUri, StringComparison.OrdinalIgnoreCase))
-				{
-					// This is a redirect
-					string message = StringTable.GetString(
-						"REDIRECTED",
-						CultureInfo.InstalledUICulture);
-					Log.InfoFormat(
-						CultureInfo.InvariantCulture,
-						message,
-						requestUri,
-						responseUri);
+				// This is a redirect
+				string message = StringTable.GetString(
+					"REDIRECTED",
+					CultureInfo.InstalledUICulture);
+				Log.InfoFormat(
+					CultureInfo.InvariantCulture,
+					message,
+					requestUri,
+					responseUri);
 
-					redirected = true;
-				}
+				redirected = true;
 			}
-
-			return redirected;
 		}
 
-		/// <summary>
-		/// Determines whether the specified request URI is a redirect.
-		/// </summary>
-		/// <param name="requestUri">The request URI.</param>
-		/// <param name="responseUri">The response URI.</param>
-		/// <returns>
-		///   <c>true</c> if the specified request URI is a redirect;
-		///   otherwise, <c>false</c>.
-		/// </returns>
-		public static bool IsRedirect(Uri requestUri, Uri responseUri)
+		return redirected;
+	}
+
+	/// <summary>
+	/// Determines whether the specified request URI is a redirect.
+	/// </summary>
+	/// <param name="requestUri">The request URI.</param>
+	/// <param name="responseUri">The response URI.</param>
+	/// <returns>
+	///   <c>true</c> if the specified request URI is a redirect;
+	///   otherwise, <c>false</c>.
+	/// </returns>
+	public static bool IsRedirect(Uri requestUri, Uri responseUri)
+	{
+		bool redirected = false;
+
+		if (requestUri != null && responseUri != null)
 		{
-			bool redirected = false;
-
-			if (requestUri != null && responseUri != null)
-			{
-				redirected = IsRedirect(
-					requestUri.AbsoluteUri, responseUri.AbsoluteUri);
-			}
-
-			return redirected;
+			redirected = IsRedirect(
+				requestUri.AbsoluteUri, responseUri.AbsoluteUri);
 		}
+
+		return redirected;
 	}
 }
