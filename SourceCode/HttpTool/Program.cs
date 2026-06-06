@@ -194,7 +194,7 @@ internal sealed class Program
 
 		bool resultCode = await Run(arguments).ConfigureAwait(false);
 
-		if (true == resultCode)
+		if (resultCode == true)
 		{
 			returnCode = 0;
 		}

@@ -237,7 +237,7 @@ public class HttpManager : IDisposable, INotifyPropertyChanged
 				bool isComplete = Uri.IsWellFormedUriString(
 					requestUrl, UriKind.Absolute);
 
-				if (false == isComplete)
+				if (isComplete == false)
 				{
 					requestUrl = string.Format(
 					CultureInfo.InvariantCulture,
@@ -387,8 +387,8 @@ public class HttpManager : IDisposable, INotifyPropertyChanged
 			Log.Error(CultureInfo.InvariantCulture, m => m(
 				exception.ToString()));
 
-			if (false ==
-				exception.CancellationToken.IsCancellationRequested)
+			if (exception.CancellationToken.IsCancellationRequested ==
+				false)
 			{
 				Log.Error(CultureInfo.InvariantCulture, m => m(
 					"likely a time out"));
@@ -600,7 +600,7 @@ public class HttpManager : IDisposable, INotifyPropertyChanged
 			bool isComplete = Uri.IsWellFormedUriString(
 				requestUrl, UriKind.Absolute);
 
-			if (false == isComplete)
+			if (isComplete == false)
 			{
 				requestUrl = string.Format(
 					CultureInfo.InvariantCulture,
@@ -726,7 +726,7 @@ public class HttpManager : IDisposable, INotifyPropertyChanged
 					GetResponse(method, requestUrl, content).
 					ConfigureAwait(false);
 
-				if (false == response.IsSuccessStatusCode)
+				if (response.IsSuccessStatusCode == false)
 				{
 					IsError = true;
 

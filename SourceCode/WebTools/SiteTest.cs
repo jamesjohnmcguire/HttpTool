@@ -192,7 +192,7 @@ public class SiteTest : IDisposable
 								pageContent);
 					}
 
-					if (true == hasContent)
+					if (hasContent == true)
 					{
 						isActiveTest = Tests.HasFlag(
 							DocumentChecks.ContentErrors);
@@ -443,7 +443,7 @@ public class SiteTest : IDisposable
 			agilityPackHtmlDocument.DocumentNode.SelectNodes(
 				@"//img[@src]");
 
-		if (null != nodes)
+		if (nodes != null)
 		{
 			foreach (HtmlNode image in nodes)
 			{
@@ -464,7 +464,7 @@ public class SiteTest : IDisposable
 					bool exists = await
 						UrlExists(imageUri).ConfigureAwait(false);
 
-					if (false == exists)
+					if (exists == false)
 					{
 						result = false;
 
@@ -562,7 +562,7 @@ public class SiteTest : IDisposable
 
 	private void SaveDocument(Uri uri, string pageContent)
 	{
-		if (true == SavePage)
+		if (SavePage == true)
 		{
 			string[] parts = uri.LocalPath.Split('/');
 			string path = parts.Last() + uri.Query;

@@ -168,7 +168,7 @@ public static class SiteTests
 		IEnumerable<HtmlParseError> parseErrors =
 			agilityPackHtmlDocument.ParseErrors;
 
-		if (null != parseErrors)
+		if (parseErrors != null)
 		{
 			foreach (HtmlParseError error in parseErrors)
 			{
