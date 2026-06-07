@@ -202,12 +202,6 @@ internal sealed class Program
 		return returnCode;
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	// Run
-	/// <summary>
-	/// The main processing function.
-	/// </summary>
-	/////////////////////////////////////////////////////////////////////
 	private static async Task<bool> Run(string[] arguments)
 	{
 		bool result = false;
