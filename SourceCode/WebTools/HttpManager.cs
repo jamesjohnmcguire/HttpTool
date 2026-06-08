@@ -507,7 +507,7 @@ public class HttpManager : IDisposable, INotifyPropertyChanged
 			using HttpContent fileStreamContent =
 				new StreamContent(stream);
 
-			using var formData = new MultipartFormDataContent();
+			using MultipartFormDataContent formData = new MultipartFormDataContent();
 
 			formData.Add(fileStreamContent, fieldName, filePath);
 
