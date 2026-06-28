@@ -365,7 +365,7 @@ public class SiteTest : IDisposable
 
 	private static string GetAbsoluteUrlString(string baseUrl, string url)
 	{
-		var uri = new Uri(url, UriKind.RelativeOrAbsolute);
+		Uri uri = new Uri(url, UriKind.RelativeOrAbsolute);
 		if (!uri.IsAbsoluteUri)
 		{
 			uri = new Uri(new Uri(baseUrl), uri);

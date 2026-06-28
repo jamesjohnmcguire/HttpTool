@@ -108,7 +108,7 @@ public class PageRequester : Abot2.Core.PageRequester
 			httpClient = BuildHttpClient(httpClientHandler);
 		}
 
-		var crawledPage = new CrawledPage(uri);
+		CrawledPage crawledPage = new CrawledPage(uri);
 		HttpResponseMessage response = null;
 		try
 		{
@@ -205,7 +205,7 @@ public class PageRequester : Abot2.Core.PageRequester
 			throw new ArgumentNullException(nameof(rootUri));
 		}
 
-		var httpClientHandler = new HttpClientHandler
+		HttpClientHandler httpClientHandler = new HttpClientHandler
 		{
 			MaxAutomaticRedirections = config.HttpRequestMaxAutoRedirects,
 			UseDefaultCredentials = config.UseDefaultCredentials
@@ -238,7 +238,7 @@ public class PageRequester : Abot2.Core.PageRequester
 		{
 			// Added to handle redirects clearing auth headers which result in 401...
 			// https://stackoverflow.com/questions/13159589/how-to-handle-authenticatication-with-httpwebrequest-allowautoredirect
-			var cache = new CredentialCache();
+			CredentialCache cache = new CredentialCache();
 
 			NetworkCredential credentials = new(
 				config.LoginUser,
