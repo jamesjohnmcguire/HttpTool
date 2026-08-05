@@ -116,16 +116,17 @@ public static class CookieStore
 					if (!string.IsNullOrWhiteSpace(strCNameAndCValue))
 					{
 						int firstEqual = strCNameAndCValue.IndexOf('=');
+						int firstEqualPlusOne = firstEqual + 1;
 #if NETSTANDARD2_0
 						string firstName =
 							strCNameAndCValue.Substring(0, firstEqual);
 						string allValue = strCNameAndCValue.Substring(
-							firstEqual + 1,
-							strCNameAndCValue.Length - (firstEqual + 1));
+							firstEqualPlusOne,
+							strCNameAndCValue.Length - (firstEqualPlusOne));
 #else
 						string firstName = strCNameAndCValue[..firstEqual];
 						string allValue =
-							strCNameAndCValue[(firstEqual + 1)..];
+							strCNameAndCValue[firstEqualPlusOne..];
 #endif
 						cookTemp.Name = firstName;
 						cookTemp.Value = allValue;
