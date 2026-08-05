@@ -1,0 +1,10 @@
+<Project>
+
+	<PropertyGroup>
+		<AnalysisMode>All</AnalysisMode>
+		<Company>Digital Zen Works</Company>
+		<Copyright>Copyright © 2006 - 2026 Digital Zen Works</Copyright>
+		<EnableNETAnalyzers>true</EnableNETAnalyzers>
+	</PropertyGroup>
+
+</Project>
