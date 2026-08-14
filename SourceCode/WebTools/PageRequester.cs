@@ -119,7 +119,7 @@ public class PageRequester : Abot2.Core.PageRequester
 					requestMessage, CancellationToken.None).ConfigureAwait(false);
 			}
 
-			var statusCode = Convert.ToInt32(
+			int statusCode = Convert.ToInt32(
 				response.StatusCode, CultureInfo.InvariantCulture);
 
 			if (statusCode < 200 || statusCode > 399)
