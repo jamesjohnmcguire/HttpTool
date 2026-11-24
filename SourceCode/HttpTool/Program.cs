@@ -22,6 +22,9 @@ using Serilog.Configuration;
 using Serilog.Events;
 using WebTools;
 
+/// <summary>
+/// Runs HTTP and document checks from the command line.
+/// </summary>
 internal sealed class Program
 {
 	private static readonly ILog Log = LogManager.GetLogger(

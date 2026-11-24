@@ -15,42 +15,42 @@ using System;
 public enum DocumentChecks
 {
 	/// <summary>
-	/// No document checks
+	/// No document checks.
 	/// </summary>
 	None = 0,
 
 	/// <summary>
-	/// Basic document checks
+	/// Basic document checks.
 	/// </summary>
 	Basic = 1,
 
 	/// <summary>
-	/// Redirect checks
+	/// Redirect checks.
 	/// </summary>
 	Redirect = 2,
 
 	/// <summary>
-	/// Empty content checks
+	/// Empty content checks.
 	/// </summary>
 	EmptyContent = 4,
 
 	/// <summary>
-	/// Content error checks
+	/// Content error checks.
 	/// </summary>
 	ContentErrors = 8,
 
 	/// <summary>
-	/// Parse error checks
+	/// Parse error checks.
 	/// </summary>
 	ParseErrors = 16,
 
 	/// <summary>
-	/// Image exists checks
+	/// Image exists checks.
 	/// </summary>
 	ImagesExist = 32,
 
 	/// <summary>
-	/// W3c validation checks
+	/// W3C validation checks.
 	/// </summary>
 	W3cValidation = 64
 }
