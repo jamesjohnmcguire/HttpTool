@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using WebTools;
 
-internal class Tests
+internal sealed class Tests
 {
 	[SetUp]
 	public void Setup()
