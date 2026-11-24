@@ -30,7 +30,7 @@ internal class Tests
 	[Test]
 	public async Task TestHttpMinerBasic()
 	{
-		HttpManager client = new HttpManager();
+		using HttpManager client = new HttpManager();
 
 		Uri uri = new("https://www.digitalzenworks.com");
 		string response =
@@ -42,7 +42,7 @@ internal class Tests
 	[Test]
 	public async Task TestHttpMinerExtended()
 	{
-		HttpManager client = new HttpManager();
+		using HttpManager client = new HttpManager();
 
 		Uri uri = new("https://www.digitalzenworks.com");
 
@@ -63,10 +63,11 @@ internal class Tests
 	[Test]
 	public void TestHttpMinerSimple()
 	{
-		HttpManager client = new HttpManager();
+		using HttpManager client = new HttpManager();
 
 		Uri uri = new("https://www.digitalzenworks.com");
-		HttpResponseMessage response = client.RequestUriResponse(uri);
+		using HttpResponseMessage response =
+			client.RequestUriResponse(uri);
 
 		Assert.That(response, Is.Not.Null);
 	}
@@ -74,7 +75,7 @@ internal class Tests
 	[Test]
 	public async Task TestHttpMinerExtendedUploadFile()
 	{
-		HttpManager client = new HttpManager();
+		using HttpManager client = new HttpManager();
 
 		string temporaryPath = Path.GetTempFileName();
 
